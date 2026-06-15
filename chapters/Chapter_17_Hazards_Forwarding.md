@@ -121,17 +121,20 @@ ADD x4, x1, x5    # Uses x1 IMMEDIATELY
 
 ```verilog
 module hazard_detection_unit(
-    // ID stage
+    // ID stage (consumer — used for load-use stall detection)
     input wire [4:0] id_rs1,
     input wire [4:0] id_rs2,
-    // EX stage
+    // EX stage: sources of the instruction in EX (used for forwarding),
+    //           plus its rd / mem_read (to detect a load feeding the next instr)
+    input wire [4:0] ex_rs1,
+    input wire [4:0] ex_rs2,
     input wire [4:0] ex_rd,
     input wire ex_reg_write,
     input wire ex_mem_read,
-    // MEM stage
+    // MEM stage = EX/MEM register output (forward source 2'b10)
     input wire [4:0] mem_rd,
     input wire mem_reg_write,
-    // WB stage
+    // WB stage = MEM/WB register output (forward source 2'b01)
     input wire [4:0] wb_rd,
     input wire wb_reg_write,
     // Outputs
@@ -139,31 +142,25 @@ module hazard_detection_unit(
     output wire [1:0] forward_a,
     output wire [1:0] forward_b
 );
-    // Load-Use Hazard Detection (must stall)
-    wire load_use_hazard = ex_mem_read && 
+    // Load-Use Hazard: a load is in EX and the next instruction (in ID) needs
+    // its result. Forwarding can't help (data arrives a cycle too late) -> stall.
+    wire load_use_hazard = ex_mem_read &&
                           ((ex_rd == id_rs1) || (ex_rd == id_rs2)) &&
                           (ex_rd != 0);
-    
+
     assign stall = load_use_hazard;
-    
-    // Forward A (rs1)
-    assign forward_a = 
-        // EX hazard (forward from EX/MEM)
-        (ex_reg_write && (ex_rd != 0) && (ex_rd == id_rs1)) ? 2'b10 :
-        // MEM hazard (forward from MEM/WB)
-        (mem_reg_write && (mem_rd != 0) && (mem_rd == id_rs1) &&
-         !(ex_reg_write && (ex_rd != 0) && (ex_rd == id_rs1))) ? 2'b01 :
-        // No forwarding
+
+    // Forwarding feeds the instruction in EX. Compare ITS source registers
+    // (ex_rs1/ex_rs2) against the destinations sitting in EX/MEM (mem_rd -> 2'b10)
+    // and MEM/WB (wb_rd -> 2'b01). EX/MEM has priority (most recent value).
+    assign forward_a =
+        (mem_reg_write && (mem_rd != 0) && (mem_rd == ex_rs1)) ? 2'b10 :
+        (wb_reg_write  && (wb_rd  != 0) && (wb_rd  == ex_rs1)) ? 2'b01 :
         2'b00;
-    
-    // Forward B (rs2)
-    assign forward_b = 
-        // EX hazard (forward from EX/MEM)
-        (ex_reg_write && (ex_rd != 0) && (ex_rd == id_rs2)) ? 2'b10 :
-        // MEM hazard (forward from MEM/WB)
-        (mem_reg_write && (mem_rd != 0) && (mem_rd == id_rs2) &&
-         !(ex_reg_write && (ex_rd != 0) && (ex_rd == id_rs2))) ? 2'b01 :
-        // No forwarding
+
+    assign forward_b =
+        (mem_reg_write && (mem_rd != 0) && (mem_rd == ex_rs2)) ? 2'b10 :
+        (wb_reg_write  && (wb_rd  != 0) && (wb_rd  == ex_rs2)) ? 2'b01 :
         2'b00;
 endmodule
 ```
@@ -227,7 +224,8 @@ module ex_stage_with_forwarding(
     // Outputs
     output wire [31:0] alu_result,
     output wire branch_taken,
-    output wire [31:0] branch_target
+    output wire [31:0] branch_target,
+    output wire [31:0] store_data   // forwarded rs2 — the value a store writes
 );
     wire [31:0] alu_a, alu_b;
     wire [31:0] forwarded_rs1, forwarded_rs2;
@@ -265,16 +263,20 @@ module ex_stage_with_forwarding(
         .negative()
     );
     
-    // Branch comparator
+    // Branch comparator (drives a separate net, then AND with branch —
+    // driving branch_taken from both the port and an assign is illegal)
+    wire comp_taken;
     branch_comparator branch_comp(
         .rs1_data(forwarded_rs1),
         .rs2_data(forwarded_rs2),
         .funct3(funct3),
-        .branch_taken(branch_taken)
+        .branch_taken(comp_taken)
     );
     
-    assign branch_taken = branch & branch_taken;
-    assign branch_target = pc_plus_4 + immediate;
+    assign branch_taken = branch & comp_taken;
+    // Target is relative to the branch's OWN PC; we carry pc_plus_4 (= branchPC+4)
+    assign branch_target = (pc_plus_4 - 32'd4) + immediate;
+    assign store_data = forwarded_rs2;   // stores must use the forwarded value
 endmodule
 ```
 
@@ -455,6 +457,7 @@ module riscv_pipelined_with_hazards(
     
     // EX stage signals
     wire [31:0] ex_alu_result, ex_branch_target;
+    wire [31:0] ex_store_data;   // forwarded rs2 for stores
     wire ex_branch_taken;
     wire [1:0] forward_a, forward_b;
     
@@ -482,6 +485,8 @@ module riscv_pipelined_with_hazards(
     hazard_detection_unit hazard_unit(
         .id_rs1(id_rs1_addr),
         .id_rs2(id_rs2_addr),
+        .ex_rs1(ex_rs1_addr),
+        .ex_rs2(ex_rs2_addr),
         .ex_rd(ex_rd_addr),
         .ex_reg_write(ex_reg_write),
         .ex_mem_read(ex_mem_read),
@@ -614,16 +619,16 @@ module riscv_pipelined_with_hazards(
         .funct3(ex_funct3),
         .alu_result(ex_alu_result),
         .branch_taken(ex_branch_taken),
-        .branch_target(ex_branch_target)
+        .branch_target(ex_branch_target),
+        .store_data(ex_store_data)
     );
     
     // EX/MEM Pipeline Register
     ex_mem_register ex_mem_reg(
         .clk(clk),
         .reset(reset),
-        .flush(1'b0),  // EX/MEM holds an instruction older than a branch in EX; never flush it
         .alu_result_in(ex_alu_result),
-        .rs2_data_in(ex_rs2_data),
+        .rs2_data_in(ex_store_data),
         .pc_plus_4_in(ex_pc_plus_4),
         .rd_addr_in(ex_rd_addr),
         .funct3_in(ex_funct3),

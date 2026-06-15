@@ -293,7 +293,108 @@ module id_ex_register(
     end
 endmodule
 
-// Similar for EX/MEM and MEM/WB
+// EX/MEM Pipeline Register
+module ex_mem_register(
+    input wire clk,
+    input wire reset,
+    // Inputs
+    input wire [31:0] alu_result_in,
+    input wire [31:0] rs2_data_in,
+    input wire [31:0] pc_plus_4_in,
+    input wire [4:0] rd_addr_in,
+    input wire [2:0] funct3_in,
+    // Control signals in
+    input wire reg_write_in,
+    input wire mem_read_in,
+    input wire mem_write_in,
+    input wire mem_to_reg_in,
+    input wire jump_in,
+    // Outputs
+    output reg [31:0] alu_result_out,
+    output reg [31:0] rs2_data_out,
+    output reg [31:0] pc_plus_4_out,
+    output reg [4:0] rd_addr_out,
+    output reg [2:0] funct3_out,
+    // Control signals out
+    output reg reg_write_out,
+    output reg mem_read_out,
+    output reg mem_write_out,
+    output reg mem_to_reg_out,
+    output reg jump_out
+);
+    // Note: EX/MEM needs no flush. An instruction here is OLDER than a branch
+    // resolving in EX, so it must always complete; bubbles arrive naturally
+    // from a flushed/stalled ID/EX register upstream.
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            alu_result_out <= 32'h00000000;
+            rs2_data_out   <= 32'h00000000;
+            pc_plus_4_out  <= 32'h00000000;
+            rd_addr_out    <= 5'b00000;
+            funct3_out     <= 3'b000;
+            reg_write_out  <= 0;
+            mem_read_out   <= 0;
+            mem_write_out  <= 0;
+            mem_to_reg_out <= 0;
+            jump_out       <= 0;
+        end else begin
+            alu_result_out <= alu_result_in;
+            rs2_data_out   <= rs2_data_in;
+            pc_plus_4_out  <= pc_plus_4_in;
+            rd_addr_out    <= rd_addr_in;
+            funct3_out     <= funct3_in;
+            reg_write_out  <= reg_write_in;
+            mem_read_out   <= mem_read_in;
+            mem_write_out  <= mem_write_in;
+            mem_to_reg_out <= mem_to_reg_in;
+            jump_out       <= jump_in;
+        end
+    end
+endmodule
+
+// MEM/WB Pipeline Register
+module mem_wb_register(
+    input wire clk,
+    input wire reset,
+    // Inputs
+    input wire [31:0] alu_result_in,
+    input wire [31:0] mem_data_in,
+    input wire [31:0] pc_plus_4_in,
+    input wire [4:0] rd_addr_in,
+    // Control signals in
+    input wire reg_write_in,
+    input wire mem_to_reg_in,
+    input wire jump_in,
+    // Outputs
+    output reg [31:0] alu_result_out,
+    output reg [31:0] mem_data_out,
+    output reg [31:0] pc_plus_4_out,
+    output reg [4:0] rd_addr_out,
+    // Control signals out
+    output reg reg_write_out,
+    output reg mem_to_reg_out,
+    output reg jump_out
+);
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            alu_result_out <= 32'h00000000;
+            mem_data_out   <= 32'h00000000;
+            pc_plus_4_out  <= 32'h00000000;
+            rd_addr_out    <= 5'b00000;
+            reg_write_out  <= 0;
+            mem_to_reg_out <= 0;
+            jump_out       <= 0;
+        end else begin
+            alu_result_out <= alu_result_in;
+            mem_data_out   <= mem_data_in;
+            pc_plus_4_out  <= pc_plus_4_in;
+            rd_addr_out    <= rd_addr_in;
+            reg_write_out  <= reg_write_in;
+            mem_to_reg_out <= mem_to_reg_in;
+            jump_out       <= jump_in;
+        end
+    end
+endmodule
 ```
 
 ---
@@ -415,19 +516,32 @@ module id_stage(
         .immediate(immediate)
     );
     
-    // Control Unit
+    // Control Unit (Chapter 14): produces the 2-bit alu_op plus control bits.
+    // alu_control (Chapter 14) then turns alu_op + funct fields into the 4-bit
+    // ALU control that travels down the pipeline with the instruction.
+    wire [1:0] alu_op;
     control_unit ctrl(
         .opcode(opcode),
         .funct3(funct3),
         .funct7(funct7),
-        .reg_write(reg_write),
-        .mem_read(mem_read),
-        .mem_write(mem_write),
-        .mem_to_reg(mem_to_reg),
-        .alu_control(alu_control),
-        .alu_src(alu_src),
         .branch(branch),
-        .jump(jump)
+        .mem_read(mem_read),
+        .mem_to_reg(mem_to_reg),
+        .alu_op(alu_op),
+        .mem_write(mem_write),
+        .alu_src(alu_src),
+        .reg_write(reg_write),
+        .jump(jump),
+        .auipc(),
+        .lui()
+    );
+
+    alu_control alu_ctrl(
+        .alu_op(alu_op),
+        .funct3(funct3),
+        .funct7(funct7),
+        .is_rtype(opcode == 7'b0110011),
+        .alu_control_out(alu_control)
     );
 endmodule
 ```
@@ -475,7 +589,8 @@ module ex_stage(
     );
     
     assign branch_taken = branch & comp_taken;
-    assign branch_target = pc_plus_4 + immediate;
+    // Target is relative to the branch's OWN PC; we carry pc_plus_4 (= branchPC+4)
+    assign branch_target = (pc_plus_4 - 32'd4) + immediate;
 endmodule
 ```
 
