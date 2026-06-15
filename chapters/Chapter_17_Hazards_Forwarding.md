@@ -221,6 +221,7 @@ module ex_stage_with_forwarding(
     input wire alu_src,
     input wire branch,
     input wire [2:0] funct3,
+    input wire lui,
     // Outputs
     output wire [31:0] alu_result,
     output wire branch_taken,
@@ -229,6 +230,7 @@ module ex_stage_with_forwarding(
 );
     wire [31:0] alu_a, alu_b;
     wire [31:0] forwarded_rs1, forwarded_rs2;
+    wire [31:0] alu_core;
     wire zero;
     
     // Forwarding mux for rs1
@@ -258,10 +260,12 @@ module ex_stage_with_forwarding(
         .a(alu_a),
         .b(alu_b),
         .alu_control(alu_control),
-        .result(alu_result),
+        .result(alu_core),
         .zero(zero),
         .negative()
     );
+    // LUI writes the upper immediate directly (it has no register operands)
+    assign alu_result = lui ? immediate : alu_core;
     
     // Branch comparator (drives a separate net, then AND with branch —
     // driving branch_taken from both the port and an assign is illegal)
@@ -410,8 +414,18 @@ endmodule
 module riscv_pipelined_with_hazards(
     input wire clk,
     input wire reset,
+    // Instruction interface (instruction memory / cache lives outside the core)
+    input wire cache_stall,             // freeze the front of the pipeline (e.g. cache miss)
+    input wire [31:0] instruction,      // fetched word for address pc_debug
+    // Data memory interface
+    output wire [31:0] data_address,
+    output wire [31:0] data_write,
+    output wire data_read_enable,
+    output wire data_write_enable,
+    output wire [2:0] data_funct3,
+    input wire [31:0] data_read,
     // Debug
-    output wire [31:0] pc_debug,
+    output wire [31:0] pc_debug,        // current instruction-fetch address
     output wire [31:0] cycles_debug,
     output wire [31:0] stalls_debug
 );
@@ -517,9 +531,10 @@ module riscv_pipelined_with_hazards(
     if_stage if_stage_inst(
         .clk(clk),
         .reset(reset),
-        .stall(!pc_write),
+        .stall(!pc_write || cache_stall),
         .branch_taken(ex_branch_taken),
         .branch_target(ex_branch_target),
+        .instruction_in(instruction),
         .pc(if_pc),
         .instruction(if_instruction),
         .pc_plus_4(if_pc_plus_4)
@@ -529,7 +544,7 @@ module riscv_pipelined_with_hazards(
     if_id_register if_id_reg(
         .clk(clk),
         .reset(reset),
-        .stall(!if_id_write),
+        .stall(!if_id_write || cache_stall),
         .flush(if_id_flush),
         .instruction_in(if_instruction),
         .pc_plus_4_in(if_pc_plus_4),
@@ -559,10 +574,12 @@ module riscv_pipelined_with_hazards(
         .alu_control(id_alu_control),
         .alu_src(id_alu_src),
         .branch(id_branch),
-        .jump(id_jump)
+        .jump(id_jump),
+        .lui(id_lui)
     );
     
     assign id_funct3 = id_instruction[14:12];
+    wire id_lui, ex_lui;   // LUI control, plumbed ID -> EX
     
     // ID/EX Pipeline Register
     id_ex_register id_ex_reg(
@@ -577,6 +594,7 @@ module riscv_pipelined_with_hazards(
         .rs1_addr_in(id_rs1_addr),
         .rs2_addr_in(id_rs2_addr),
         .funct3_in(id_funct3),
+        .lui_in(id_lui),
         .reg_write_in(id_reg_write),
         .mem_read_in(id_mem_read),
         .mem_write_in(id_mem_write),
@@ -593,6 +611,7 @@ module riscv_pipelined_with_hazards(
         .rs1_addr_out(ex_rs1_addr),
         .rs2_addr_out(ex_rs2_addr),
         .funct3_out(ex_funct3),
+        .lui_out(ex_lui),
         .reg_write_out(ex_reg_write),
         .mem_read_out(ex_mem_read),
         .mem_write_out(ex_mem_write),
@@ -617,6 +636,7 @@ module riscv_pipelined_with_hazards(
         .alu_src(ex_alu_src),
         .branch(ex_branch),
         .funct3(ex_funct3),
+        .lui(ex_lui),
         .alu_result(ex_alu_result),
         .branch_taken(ex_branch_taken),
         .branch_target(ex_branch_target),
@@ -651,12 +671,17 @@ module riscv_pipelined_with_hazards(
     
     // MEM Stage
     mem_stage mem_stage_inst(
-        .clk(clk),
         .alu_result(mem_alu_result),
         .rs2_data(mem_rs2_data),
         .mem_read(mem_mem_read),
         .mem_write(mem_mem_write),
         .funct3(mem_funct3),
+        .data_address(data_address),
+        .data_write(data_write),
+        .data_mem_read(data_read_enable),
+        .data_mem_write(data_write_enable),
+        .data_size(data_funct3),
+        .read_data(data_read),
         .mem_data(mem_data)
     );
     
@@ -798,11 +823,30 @@ endmodule
 module pipeline_hazards_tb;
     reg clk, reset;
     wire [31:0] pc_debug, cycles, stalls;
-    
+
+    // External memories (the core exposes instruction + data buses)
+    wire [31:0] instruction, data_address, data_write, data_read;
+    wire data_read_enable, data_write_enable;
+    wire [2:0] data_funct3;
+
+    instruction_memory imem(.address(pc_debug), .instruction(instruction));
+    data_memory dmem(
+        .clk(clk), .address(data_address), .write_data(data_write),
+        .mem_write(data_write_enable), .mem_read(data_read_enable),
+        .mem_size(data_funct3), .read_data(data_read));
+
     // DUT
     riscv_pipelined_with_hazards dut(
         .clk(clk),
         .reset(reset),
+        .cache_stall(1'b0),
+        .instruction(instruction),
+        .data_address(data_address),
+        .data_write(data_write),
+        .data_read_enable(data_read_enable),
+        .data_write_enable(data_write_enable),
+        .data_funct3(data_funct3),
+        .data_read(data_read),
         .pc_debug(pc_debug),
         .cycles_debug(cycles),
         .stalls_debug(stalls)

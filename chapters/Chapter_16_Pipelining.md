@@ -235,6 +235,7 @@ module id_ex_register(
     input wire branch_in,
     input wire jump_in,
     input wire [2:0] funct3_in,
+    input wire lui_in,
     // Outputs
     output reg [31:0] pc_plus_4_out,
     output reg [31:0] rs1_data_out,
@@ -252,7 +253,8 @@ module id_ex_register(
     output reg alu_src_out,
     output reg branch_out,
     output reg jump_out,
-    output reg [2:0] funct3_out
+    output reg [2:0] funct3_out,
+    output reg lui_out
 );
     always @(posedge clk or posedge reset) begin
         if (reset || flush) begin
@@ -272,6 +274,7 @@ module id_ex_register(
             branch_out <= 0;
             jump_out <= 0;
             funct3_out <= 3'b000;
+            lui_out <= 0;
         end else begin
             pc_plus_4_out <= pc_plus_4_in;
             rs1_data_out <= rs1_data_in;
@@ -289,6 +292,7 @@ module id_ex_register(
             branch_out <= branch_in;
             jump_out <= jump_in;
             funct3_out <= funct3_in;
+            lui_out <= lui_in;
         end
     end
 endmodule
@@ -434,6 +438,7 @@ module if_stage(
     input wire stall,
     input wire branch_taken,
     input wire [31:0] branch_target,
+    input wire [31:0] instruction_in,   // fetched word from external instruction memory
     output reg [31:0] pc,
     output wire [31:0] instruction,
     output wire [31:0] pc_plus_4
@@ -452,11 +457,9 @@ module if_stage(
     assign pc_next = branch_taken ? branch_target : (pc + 4);
     assign pc_plus_4 = pc + 4;
     
-    // Instruction memory
-    instruction_memory imem(
-        .address(pc),
-        .instruction(instruction)
-    );
+    // Instruction comes from outside (instruction memory / cache lives in the
+    // SoC, not inside the pipeline) — pc is exposed as the fetch address.
+    assign instruction = instruction_in;
 endmodule
 ```
 
@@ -487,7 +490,8 @@ module id_stage(
     output wire [3:0] alu_control,
     output wire alu_src,
     output wire branch,
-    output wire jump
+    output wire jump,
+    output wire lui
 );
     // Extract instruction fields
     wire [6:0] opcode = instruction[6:0];
@@ -533,7 +537,7 @@ module id_stage(
         .reg_write(reg_write),
         .jump(jump),
         .auipc(),
-        .lui()
+        .lui(lui)
     );
 
     alu_control alu_ctrl(
@@ -598,23 +602,26 @@ endmodule
 
 ```verilog
 module mem_stage(
-    input wire clk,
-    input wire [31:0] alu_result,
-    input wire [31:0] rs2_data,
+    // Data-memory bus — the memory now lives outside the pipeline (SoC/cache)
+    input wire [31:0] alu_result,     // = data address
+    input wire [31:0] rs2_data,       // = store data
     input wire mem_read,
     input wire mem_write,
     input wire [2:0] funct3,
-    output wire [31:0] mem_data
+    output wire [31:0] data_address,
+    output wire [31:0] data_write,
+    output wire data_mem_read,
+    output wire data_mem_write,
+    output wire [2:0] data_size,
+    input wire [31:0] read_data,      // load result from external data memory
+    output wire [31:0] mem_data       // forwarded to WB
 );
-    data_memory dmem(
-        .clk(clk),
-        .address(alu_result),
-        .write_data(rs2_data),
-        .mem_write(mem_write),
-        .mem_read(mem_read),
-        .mem_size(funct3),
-        .read_data(mem_data)
-    );
+    assign data_address   = alu_result;
+    assign data_write     = rs2_data;
+    assign data_mem_read  = mem_read;
+    assign data_mem_write = mem_write;
+    assign data_size      = funct3;
+    assign mem_data       = read_data;
 endmodule
 ```
 
@@ -693,12 +700,17 @@ module riscv_pipelined(
     wire [31:0] wb_data;
     
     // IF Stage
+    // Instruction memory (internal to this self-contained pipeline; loads program.hex)
+    wire [31:0] if_imem_data;
+    instruction_memory imem(.address(if_pc), .instruction(if_imem_data));
+
     if_stage if_stage_inst(
         .clk(clk),
         .reset(reset),
         .stall(if_stall),
         .branch_taken(ex_branch_taken),
         .branch_target(ex_branch_target),
+        .instruction_in(if_imem_data),
         .pc(if_pc),
         .instruction(if_instruction),
         .pc_plus_4(if_pc_plus_4)
@@ -762,6 +774,7 @@ module riscv_pipelined(
         .branch_in(id_branch),
         .jump_in(id_jump),
         .funct3_in(id_instruction[14:12]),
+        .lui_in(1'b0),
         .pc_plus_4_out(ex_pc_plus_4),
         .rs1_data_out(ex_rs1_data),
         .rs2_data_out(ex_rs2_data),
@@ -822,14 +835,32 @@ module riscv_pipelined(
     );
     
     // MEM Stage
+    // Data memory (internal to this self-contained pipeline)
+    wire [31:0] d_addr, d_wdata, d_rdata;
+    wire d_read, d_write;
+    wire [2:0] d_size;
     mem_stage mem_stage_inst(
-        .clk(clk),
         .alu_result(mem_alu_result),
         .rs2_data(mem_rs2_data),
         .mem_read(mem_mem_read),
         .mem_write(mem_mem_write),
         .funct3(mem_funct3),
+        .data_address(d_addr),
+        .data_write(d_wdata),
+        .data_mem_read(d_read),
+        .data_mem_write(d_write),
+        .data_size(d_size),
+        .read_data(d_rdata),
         .mem_data(mem_data)
+    );
+    data_memory dmem(
+        .clk(clk),
+        .address(d_addr),
+        .write_data(d_wdata),
+        .mem_write(d_write),
+        .mem_read(d_read),
+        .mem_size(d_size),
+        .read_data(d_rdata)
     );
     
     // MEM/WB Pipeline Register

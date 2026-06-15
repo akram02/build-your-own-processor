@@ -785,6 +785,7 @@ endmodule
 module cache_benchmark;
     reg clk, reset;
     wire [31:0] pc, cycles, hits, misses;
+    real hit_rate, miss_rate, amat;   // module level: Verilog forbids declarations mid-block
     
     riscv_with_cache dut(
         .clk(clk),
@@ -822,9 +823,9 @@ module cache_benchmark;
         $display("Miss Rate: %.2f%%", (misses * 100.0) / (hits + misses));
         
         // Calculate AMAT
-        real hit_rate = hits / (hits + misses + 0.0);
-        real miss_rate = 1.0 - hit_rate;
-        real amat = 1.0 + (miss_rate * 100.0);
+        hit_rate = hits / (hits + misses + 0.0);
+        miss_rate = 1.0 - hit_rate;
+        amat = 1.0 + (miss_rate * 100.0);
         $display("AMAT: %.2f cycles", amat);
         $display("Speedup vs no cache: %.2fx", 100.0 / amat);
         $display("========================================");

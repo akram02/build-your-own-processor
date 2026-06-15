@@ -611,22 +611,30 @@ module riscv_soc(
     wire timer_int;
     wire [7:0] interrupt_sources = {5'b0, timer_int, uart_tx_done, uart_rx_ready};
     
-    // CPU Core
-    riscv_with_cache cpu(
+    // Instruction memory (loads program.hex); the CPU exposes pc as the fetch address
+    wire [31:0] cpu_instruction;
+    wire [2:0]  cpu_data_funct3;
+    instruction_memory imem(
+        .address(cpu_instr_addr),
+        .instruction(cpu_instruction)
+    );
+
+    // CPU Core = the Chapter-17 pipelined RISC-V (external memory interface)
+    riscv_pipelined_with_hazards cpu(
         .clk(clk),
         .reset(reset),
-        .instr_addr(cpu_instr_addr),
-        .data_addr(cpu_data_addr),
-        .write_data(cpu_write_data),
-        .read_data(cpu_read_data),
-        .read_enable(cpu_read),
-        .write_enable(cpu_write),
-        .ready(cpu_ready),
-        .interrupt_req(interrupt_request),
-        .interrupt_id(interrupt_id),
-        .interrupt_ack(interrupt_ack),
-        .pc_debug(pc_debug)
+        .cache_stall(1'b0),                 // single-cycle memory: never stalls
+        .instruction(cpu_instruction),
+        .data_address(cpu_data_addr),
+        .data_write(cpu_write_data),
+        .data_read_enable(cpu_read),
+        .data_write_enable(cpu_write),
+        .data_funct3(cpu_data_funct3),
+        .data_read(cpu_read_data),
+        .pc_debug(cpu_instr_addr)
     );
+    assign pc_debug = cpu_instr_addr;
+    assign interrupt_ack = 1'b0;            // this core does not service interrupts
     
     // System Bus
     system_bus bus(
@@ -710,18 +718,17 @@ module riscv_soc(
         .interrupt_ack(interrupt_ack)
     );
     
-    // Memory System (from Chapter 18)
-    memory_system mem_sys(
+    // Data memory: single-cycle RAM for the bus's memory region (word accesses)
+    data_memory dmem(
         .clk(clk),
-        .reset(reset),
-        .instr_address(cpu_instr_addr),
-        .data_address(bus_mem_addr),
-        .data_write(bus_mem_wdata),
-        .data_read(bus_mem_read),
-        .data_write_enable(bus_mem_write),
-        .data_read_out(mem_read_data),
-        .data_ready(mem_ready)
+        .address(bus_mem_addr),
+        .write_data(bus_mem_wdata),
+        .mem_write(bus_mem_write),
+        .mem_read(bus_mem_read),
+        .mem_size(3'b010),
+        .read_data(mem_read_data)
     );
+    assign mem_ready = 1'b1;   // combinational RAM is always ready
 endmodule
 ```
 
