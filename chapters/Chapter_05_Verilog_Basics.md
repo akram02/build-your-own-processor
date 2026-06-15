@@ -318,7 +318,7 @@ wire [3:0] result = {a, b};  // 4'b1011
 
 // Replication
 wire [7:0] all_ones = {8{1'b1}};  // 8'b11111111
-wire [3:0] pattern = {4{1'b1, 1'b0}};  // Won't work - must be single bit
+wire [7:0] pattern = {4{2'b10}};  // 8'b10101010 - replicand can be a multi-bit group too
 wire [7:0] zeros = {8{1'b0}};  // 8'b00000000
 ```
 

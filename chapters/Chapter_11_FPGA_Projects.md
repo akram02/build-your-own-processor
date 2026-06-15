@@ -440,7 +440,7 @@ module vga_pll(
             clk_div <= ~clk_div;
     end
     
-    assign clk_out = clk_div;  // ~13.5 MHz (not perfect but works)
+    assign clk_out = clk_div;  // 27 MHz / 8 = 3.375 MHz (NOT VGA-ready; use real PLL for 25.175 MHz)
     assign locked = 1;
 endmodule
 ```

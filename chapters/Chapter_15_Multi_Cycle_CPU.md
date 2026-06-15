@@ -11,7 +11,7 @@
 
 ```
 ✅ Multi-Cycle Architecture - better efficiency
-✅ FSM Control Unit - 5-state machine
+✅ FSM Control Unit - 9-state machine
 ✅ Resource Sharing - one ALU, one memory
 ✅ Instruction/Data Registers - store values
 ✅ Better Performance - faster average
@@ -283,15 +283,15 @@ module multi_cycle_control(
     output reg [1:0] reg_src
 );
     // State definitions
-    localparam FETCH     = 3'b000;
-    localparam DECODE    = 3'b001;
-    localparam EX_R      = 3'b010;  // R-type execute
-    localparam EX_I      = 3'b011;  // I-type execute
-    localparam EX_LOAD   = 3'b100;  // Load address calc
-    localparam EX_STORE  = 3'b101;  // Store address calc
-    localparam EX_BRANCH = 3'b110;  // Branch execute
-    localparam MEMORY    = 3'b111;  // Memory access
-    localparam WRITEBACK = 3'b1000; // Write back
+    localparam FETCH     = 4'b0000;
+    localparam DECODE    = 4'b0001;
+    localparam EX_R      = 4'b0010;  // R-type execute
+    localparam EX_I      = 4'b0011;  // I-type execute
+    localparam EX_LOAD   = 4'b0100;  // Load address calc
+    localparam EX_STORE  = 4'b0101;  // Store address calc
+    localparam EX_BRANCH = 4'b0110;  // Branch execute
+    localparam MEMORY    = 4'b0111;  // Memory access
+    localparam WRITEBACK = 4'b1000;  // Write back
     
     reg [3:0] state, next_state;
     
@@ -421,9 +421,18 @@ module multi_cycle_control(
             WRITEBACK: begin
                 reg_write = 1;
                 case (opcode)
-                    7'b0000011: reg_src = 2'b01;  // Memory
-                    7'b1101111, 7'b1100111: reg_src = 2'b10;  // PC+4
-                    default: reg_src = 2'b00;  // ALU
+                    7'b0000011: reg_src = 2'b01;  // Memory (load)
+                    7'b1101111: begin             // JAL
+                        reg_src   = 2'b10;        // rd <- old_pc + 4 (return address)
+                        pc_write  = 1;            // and take the jump
+                        pc_source = 2'b10;        // JAL target
+                    end
+                    7'b1100111: begin             // JALR
+                        reg_src   = 2'b10;        // rd <- old_pc + 4 (return address)
+                        pc_write  = 1;
+                        pc_source = 2'b11;        // JALR target
+                    end
+                    default: reg_src = 2'b00;  // ALU result
                 endcase
             end
         endcase
@@ -434,6 +443,29 @@ endmodule
 ---
 
 ## ১৫.৪ Datapath Components with Registers
+
+### Program Counter (with write-enable):
+
+Single-cycle-এ PC প্রতি clock-এ আপডেট হতো। Multi-cycle-এ এক instruction অনেক
+cycle ধরে চলে, তাই PC শুধু নির্দিষ্ট cycle-এ আপডেট হওয়া উচিত — এর জন্য একটা
+`pc_write` enable লাগে (Chapter 14-এর PC-তে যেটা ছিল না):
+
+```verilog
+module program_counter(
+    input wire clk,
+    input wire reset,
+    input wire pc_write,        // write-enable: PC শুধু এটা 1 হলে আপডেট হয়
+    input wire [31:0] pc_next,
+    output reg [31:0] pc
+);
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            pc <= 32'h00000000;  // Start at address 0
+        else if (pc_write)
+            pc <= pc_next;
+    end
+endmodule
+```
 
 ### Instruction Register:
 
@@ -577,6 +609,8 @@ module riscv_multi_cycle(
     wire [31:0] alu_a, alu_b, alu_result, alu_out;
     wire [31:0] mdr;
     wire [31:0] rs1_data, rs2_data, rd_data;
+    wire [31:0] branch_target, jal_target, jalr_target;
+    reg  [31:0] old_pc;  // address of the instruction in progress (PC before FETCH's +4)
     
     // Control signals
     wire pc_write, pc_write_cond, ir_write;
@@ -603,9 +637,24 @@ module riscv_multi_cycle(
         .pc(pc)
     );
     
+    // Old-PC register: PC is bumped to PC+4 during FETCH, so we save the
+    // instruction's own address here to compute correct PC-relative targets
+    // and the JAL/JALR return address (old_pc + 4).
+    always @(posedge clk or posedge reset) begin
+        if (reset)         old_pc <= 32'h00000000;
+        else if (ir_write) old_pc <= pc;   // ir_write is asserted only in FETCH
+    end
+
+    // PC-relative / jump targets (all relative to the instruction's own PC)
+    assign branch_target = old_pc + immediate;        // BEQ/BNE/BLT/...
+    assign jal_target    = old_pc + immediate;        // JAL
+    assign jalr_target   = (a + immediate) & ~32'h1;  // JALR: clear bit 0
+
     // PC source mux
-    assign pc_next = (pc_source == 2'b00) ? alu_result :  // Sequential/Jump
-                     (pc_source == 2'b01) ? alu_out :     // Branch target
+    assign pc_next = (pc_source == 2'b00) ? alu_result :    // PC+4 (sequential)
+                     (pc_source == 2'b01) ? branch_target : // Branch target
+                     (pc_source == 2'b10) ? jal_target :    // JAL target
+                     (pc_source == 2'b11) ? jalr_target :   // JALR target
                      pc;
     
     // Instruction Register
@@ -658,11 +707,12 @@ module riscv_multi_cycle(
         .alu_b(alu_b)
     );
     
-    // ALU Control
+    // ALU Control (reuses the alu_control module from Chapter 14)
     alu_control alu_ctrl_inst(
         .alu_op(alu_op),
         .funct3(funct3),
         .funct7(funct7),
+        .is_rtype(opcode == 7'b0110011),  // R-type only (so ADDI never decodes as SUB)
         .alu_control_out(alu_control_sig)
     );
     
@@ -701,9 +751,9 @@ module riscv_multi_cycle(
     );
     
     // Write-back Mux
-    assign rd_data = (reg_src == 2'b00) ? alu_out :     // ALU result
-                     (reg_src == 2'b01) ? mdr :          // Memory
-                     (reg_src == 2'b10) ? (pc + 4) :     // PC+4 (JAL/JALR)
+    assign rd_data = (reg_src == 2'b00) ? alu_out :        // ALU result
+                     (reg_src == 2'b01) ? mdr :            // Memory (load)
+                     (reg_src == 2'b10) ? (old_pc + 4) :   // return address (JAL/JALR)
                      32'h00000000;
     
     // Memory Interface
@@ -851,8 +901,8 @@ So similar performance
 
 ### Stats:
 ```
-States: 5 (FSM)
-Registers added: 4 (IR, A, B, ALUOut, MDR)
+States: 9 (FSM)
+Registers added: 5 (IR, A, B, ALUOut, MDR)
 Average CPI: 4.1
 Clock speedup: 4×
 Hardware saved: 30%

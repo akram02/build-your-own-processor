@@ -250,7 +250,7 @@ module uart #(
     always @(*) begin
         case (reg_addr)
             UART_DATA: read_data = {24'h0, rx_data};
-            UART_STATUS: read_data = {30'h0, tx_busy, rx_ready};
+            UART_STATUS: read_data = {30'h0, tx_busy, rx_ready};  // bit0=rx_ready, bit1=tx_busy
             default: read_data = 32'h0;
         endcase
     end
@@ -597,6 +597,10 @@ module riscv_soc(
     // Memory system
     wire [31:0] mem_read_data;
     wire mem_ready;
+    // Bus -> memory side (driven by the bus and gated by its address decode;
+    // kept separate from the CPU's own request nets to avoid multiple drivers)
+    wire [31:0] bus_mem_addr, bus_mem_wdata;
+    wire bus_mem_read, bus_mem_write;
     
     // Peripheral data
     wire [31:0] uart_data, gpio_data, timer_data, intc_data;
@@ -607,22 +611,30 @@ module riscv_soc(
     wire timer_int;
     wire [7:0] interrupt_sources = {5'b0, timer_int, uart_tx_done, uart_rx_ready};
     
-    // CPU Core
-    riscv_with_cache cpu(
+    // Instruction memory (loads program.hex); the CPU exposes pc as the fetch address
+    wire [31:0] cpu_instruction;
+    wire [2:0]  cpu_data_funct3;
+    instruction_memory imem(
+        .address(cpu_instr_addr),
+        .instruction(cpu_instruction)
+    );
+
+    // CPU Core = the Chapter-17 pipelined RISC-V (external memory interface)
+    riscv_pipelined_with_hazards cpu(
         .clk(clk),
         .reset(reset),
-        .instr_addr(cpu_instr_addr),
-        .data_addr(cpu_data_addr),
-        .write_data(cpu_write_data),
-        .read_data(cpu_read_data),
-        .read_enable(cpu_read),
-        .write_enable(cpu_write),
-        .ready(cpu_ready),
-        .interrupt_req(interrupt_request),
-        .interrupt_id(interrupt_id),
-        .interrupt_ack(interrupt_ack),
-        .pc_debug(pc_debug)
+        .cache_stall(1'b0),                 // single-cycle memory: never stalls
+        .instruction(cpu_instruction),
+        .data_address(cpu_data_addr),
+        .data_write(cpu_write_data),
+        .data_read_enable(cpu_read),
+        .data_write_enable(cpu_write),
+        .data_funct3(cpu_data_funct3),
+        .data_read(cpu_read_data),
+        .pc_debug(cpu_instr_addr)
     );
+    assign pc_debug = cpu_instr_addr;
+    assign interrupt_ack = 1'b0;            // this core does not service interrupts
     
     // System Bus
     system_bus bus(
@@ -634,10 +646,10 @@ module riscv_soc(
         .write_enable(cpu_write),
         .read_data(cpu_read_data),
         .ready(cpu_ready),
-        .mem_address(cpu_data_addr),
-        .mem_write_data(cpu_write_data),
-        .mem_read(cpu_read),
-        .mem_write(cpu_write),
+        .mem_address(bus_mem_addr),
+        .mem_write_data(bus_mem_wdata),
+        .mem_read(bus_mem_read),
+        .mem_write(bus_mem_write),
         .mem_read_data(mem_read_data),
         .mem_ready(mem_ready),
         .uart_select(uart_sel),
@@ -706,18 +718,17 @@ module riscv_soc(
         .interrupt_ack(interrupt_ack)
     );
     
-    // Memory System (from Chapter 18)
-    memory_system mem_sys(
+    // Data memory: single-cycle RAM for the bus's memory region (word accesses)
+    data_memory dmem(
         .clk(clk),
-        .reset(reset),
-        .instr_address(cpu_instr_addr),
-        .data_address(cpu_data_addr),
-        .data_write(cpu_write_data),
-        .data_read_enable(cpu_read),
-        .data_write_enable(cpu_write),
-        .data_read_out(mem_read_data),
-        .data_ready(mem_ready)
+        .address(bus_mem_addr),
+        .write_data(bus_mem_wdata),
+        .mem_write(bus_mem_write),
+        .mem_read(bus_mem_read),
+        .mem_size(3'b010),
+        .read_data(mem_read_data)
     );
+    assign mem_ready = 1'b1;   // combinational RAM is always ready
 endmodule
 ```
 
@@ -736,8 +747,8 @@ void uart_putc(char c) {
     volatile unsigned int *uart_data = (unsigned int*)UART_DATA;
     volatile unsigned int *uart_status = (unsigned int*)UART_STATUS;
     
-    // Wait for TX ready
-    while (*uart_status & 0x1);
+    // Wait while TX is busy (bit1 = tx_busy; bit0 is rx_ready)
+    while (*uart_status & 0x2);
     
     // Send character
     *uart_data = c;
@@ -782,9 +793,9 @@ print_loop:
     beqz t2, print_done
     
 wait_tx:
-    lw t3, 0(t1)       # Check TX busy
-    andi t3, t3, 1
-    bnez t3, wait_tx
+    lw t3, 0(t1)       # Read UART status
+    andi t3, t3, 2     # bit1 = tx_busy
+    bnez t3, wait_tx   # spin while transmitting
     
     sw t2, 0(t0)       # Send character
     addi a0, a0, 1

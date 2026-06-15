@@ -384,7 +384,7 @@ Track at: tinytapeout.com/runs
 ### What Happens at Fab:
 
 ```
-Skywater Fab (Oregon, USA):
+SkyWater Fab (Bloomington, Minnesota, USA):
 1. Create masks (patterns)
 2. Wafer processing (~50 steps)
    - Oxidation

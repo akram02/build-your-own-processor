@@ -136,7 +136,7 @@ Pipeline solution:
 Balance point:
 5-7 stages: Good for embedded/low-power
 10-20 stages: Desktop processors
-20-31 stages: Intel Pentium 4 (too deep!)
+20-31 stages: Intel Pentium 4 (Northwood 20, Prescott 31 — too deep!)
 
 We'll use 5 stages: Classic RISC!
 ```
@@ -234,6 +234,8 @@ module id_ex_register(
     input wire alu_src_in,
     input wire branch_in,
     input wire jump_in,
+    input wire [2:0] funct3_in,
+    input wire lui_in,
     // Outputs
     output reg [31:0] pc_plus_4_out,
     output reg [31:0] rs1_data_out,
@@ -250,7 +252,9 @@ module id_ex_register(
     output reg [3:0] alu_control_out,
     output reg alu_src_out,
     output reg branch_out,
-    output reg jump_out
+    output reg jump_out,
+    output reg [2:0] funct3_out,
+    output reg lui_out
 );
     always @(posedge clk or posedge reset) begin
         if (reset || flush) begin
@@ -269,6 +273,8 @@ module id_ex_register(
             alu_src_out <= 0;
             branch_out <= 0;
             jump_out <= 0;
+            funct3_out <= 3'b000;
+            lui_out <= 0;
         end else begin
             pc_plus_4_out <= pc_plus_4_in;
             rs1_data_out <= rs1_data_in;
@@ -285,11 +291,114 @@ module id_ex_register(
             alu_src_out <= alu_src_in;
             branch_out <= branch_in;
             jump_out <= jump_in;
+            funct3_out <= funct3_in;
+            lui_out <= lui_in;
         end
     end
 endmodule
 
-// Similar for EX/MEM and MEM/WB
+// EX/MEM Pipeline Register
+module ex_mem_register(
+    input wire clk,
+    input wire reset,
+    // Inputs
+    input wire [31:0] alu_result_in,
+    input wire [31:0] rs2_data_in,
+    input wire [31:0] pc_plus_4_in,
+    input wire [4:0] rd_addr_in,
+    input wire [2:0] funct3_in,
+    // Control signals in
+    input wire reg_write_in,
+    input wire mem_read_in,
+    input wire mem_write_in,
+    input wire mem_to_reg_in,
+    input wire jump_in,
+    // Outputs
+    output reg [31:0] alu_result_out,
+    output reg [31:0] rs2_data_out,
+    output reg [31:0] pc_plus_4_out,
+    output reg [4:0] rd_addr_out,
+    output reg [2:0] funct3_out,
+    // Control signals out
+    output reg reg_write_out,
+    output reg mem_read_out,
+    output reg mem_write_out,
+    output reg mem_to_reg_out,
+    output reg jump_out
+);
+    // Note: EX/MEM needs no flush. An instruction here is OLDER than a branch
+    // resolving in EX, so it must always complete; bubbles arrive naturally
+    // from a flushed/stalled ID/EX register upstream.
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            alu_result_out <= 32'h00000000;
+            rs2_data_out   <= 32'h00000000;
+            pc_plus_4_out  <= 32'h00000000;
+            rd_addr_out    <= 5'b00000;
+            funct3_out     <= 3'b000;
+            reg_write_out  <= 0;
+            mem_read_out   <= 0;
+            mem_write_out  <= 0;
+            mem_to_reg_out <= 0;
+            jump_out       <= 0;
+        end else begin
+            alu_result_out <= alu_result_in;
+            rs2_data_out   <= rs2_data_in;
+            pc_plus_4_out  <= pc_plus_4_in;
+            rd_addr_out    <= rd_addr_in;
+            funct3_out     <= funct3_in;
+            reg_write_out  <= reg_write_in;
+            mem_read_out   <= mem_read_in;
+            mem_write_out  <= mem_write_in;
+            mem_to_reg_out <= mem_to_reg_in;
+            jump_out       <= jump_in;
+        end
+    end
+endmodule
+
+// MEM/WB Pipeline Register
+module mem_wb_register(
+    input wire clk,
+    input wire reset,
+    // Inputs
+    input wire [31:0] alu_result_in,
+    input wire [31:0] mem_data_in,
+    input wire [31:0] pc_plus_4_in,
+    input wire [4:0] rd_addr_in,
+    // Control signals in
+    input wire reg_write_in,
+    input wire mem_to_reg_in,
+    input wire jump_in,
+    // Outputs
+    output reg [31:0] alu_result_out,
+    output reg [31:0] mem_data_out,
+    output reg [31:0] pc_plus_4_out,
+    output reg [4:0] rd_addr_out,
+    // Control signals out
+    output reg reg_write_out,
+    output reg mem_to_reg_out,
+    output reg jump_out
+);
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            alu_result_out <= 32'h00000000;
+            mem_data_out   <= 32'h00000000;
+            pc_plus_4_out  <= 32'h00000000;
+            rd_addr_out    <= 5'b00000;
+            reg_write_out  <= 0;
+            mem_to_reg_out <= 0;
+            jump_out       <= 0;
+        end else begin
+            alu_result_out <= alu_result_in;
+            mem_data_out   <= mem_data_in;
+            pc_plus_4_out  <= pc_plus_4_in;
+            rd_addr_out    <= rd_addr_in;
+            reg_write_out  <= reg_write_in;
+            mem_to_reg_out <= mem_to_reg_in;
+            jump_out       <= jump_in;
+        end
+    end
+endmodule
 ```
 
 ---
@@ -329,6 +438,7 @@ module if_stage(
     input wire stall,
     input wire branch_taken,
     input wire [31:0] branch_target,
+    input wire [31:0] instruction_in,   // fetched word from external instruction memory
     output reg [31:0] pc,
     output wire [31:0] instruction,
     output wire [31:0] pc_plus_4
@@ -347,11 +457,9 @@ module if_stage(
     assign pc_next = branch_taken ? branch_target : (pc + 4);
     assign pc_plus_4 = pc + 4;
     
-    // Instruction memory
-    instruction_memory imem(
-        .address(pc),
-        .instruction(instruction)
-    );
+    // Instruction comes from outside (instruction memory / cache lives in the
+    // SoC, not inside the pipeline) — pc is exposed as the fetch address.
+    assign instruction = instruction_in;
 endmodule
 ```
 
@@ -382,7 +490,8 @@ module id_stage(
     output wire [3:0] alu_control,
     output wire alu_src,
     output wire branch,
-    output wire jump
+    output wire jump,
+    output wire lui
 );
     // Extract instruction fields
     wire [6:0] opcode = instruction[6:0];
@@ -411,19 +520,32 @@ module id_stage(
         .immediate(immediate)
     );
     
-    // Control Unit
+    // Control Unit (Chapter 14): produces the 2-bit alu_op plus control bits.
+    // alu_control (Chapter 14) then turns alu_op + funct fields into the 4-bit
+    // ALU control that travels down the pipeline with the instruction.
+    wire [1:0] alu_op;
     control_unit ctrl(
         .opcode(opcode),
         .funct3(funct3),
         .funct7(funct7),
-        .reg_write(reg_write),
-        .mem_read(mem_read),
-        .mem_write(mem_write),
-        .mem_to_reg(mem_to_reg),
-        .alu_control(alu_control),
-        .alu_src(alu_src),
         .branch(branch),
-        .jump(jump)
+        .mem_read(mem_read),
+        .mem_to_reg(mem_to_reg),
+        .alu_op(alu_op),
+        .mem_write(mem_write),
+        .alu_src(alu_src),
+        .reg_write(reg_write),
+        .jump(jump),
+        .auipc(),
+        .lui(lui)
+    );
+
+    alu_control alu_ctrl(
+        .alu_op(alu_op),
+        .funct3(funct3),
+        .funct7(funct7),
+        .is_rtype(opcode == 7'b0110011),
+        .alu_control_out(alu_control)
     );
 endmodule
 ```
@@ -460,16 +582,19 @@ module ex_stage(
         .negative()
     );
     
-    // Branch comparator
+    // Branch comparator (drives a separate net, then AND with branch —
+    // driving branch_taken from both the port and an assign is illegal)
+    wire comp_taken;
     branch_comparator branch_comp(
         .rs1_data(rs1_data),
         .rs2_data(rs2_data),
         .funct3(funct3),
-        .branch_taken(branch_taken)
+        .branch_taken(comp_taken)
     );
     
-    assign branch_taken = branch & branch_taken;
-    assign branch_target = pc_plus_4 + immediate;
+    assign branch_taken = branch & comp_taken;
+    // Target is relative to the branch's OWN PC; we carry pc_plus_4 (= branchPC+4)
+    assign branch_target = (pc_plus_4 - 32'd4) + immediate;
 endmodule
 ```
 
@@ -477,23 +602,26 @@ endmodule
 
 ```verilog
 module mem_stage(
-    input wire clk,
-    input wire [31:0] alu_result,
-    input wire [31:0] rs2_data,
+    // Data-memory bus — the memory now lives outside the pipeline (SoC/cache)
+    input wire [31:0] alu_result,     // = data address
+    input wire [31:0] rs2_data,       // = store data
     input wire mem_read,
     input wire mem_write,
     input wire [2:0] funct3,
-    output wire [31:0] mem_data
+    output wire [31:0] data_address,
+    output wire [31:0] data_write,
+    output wire data_mem_read,
+    output wire data_mem_write,
+    output wire [2:0] data_size,
+    input wire [31:0] read_data,      // load result from external data memory
+    output wire [31:0] mem_data       // forwarded to WB
 );
-    data_memory dmem(
-        .clk(clk),
-        .address(alu_result),
-        .write_data(rs2_data),
-        .mem_write(mem_write),
-        .mem_read(mem_read),
-        .mem_size(funct3),
-        .read_data(mem_data)
-    );
+    assign data_address   = alu_result;
+    assign data_write     = rs2_data;
+    assign data_mem_read  = mem_read;
+    assign data_mem_write = mem_write;
+    assign data_size      = funct3;
+    assign mem_data       = read_data;
 endmodule
 ```
 
@@ -546,6 +674,7 @@ module riscv_pipelined(
     wire ex_reg_write, ex_mem_read, ex_mem_write;
     wire ex_mem_to_reg, ex_alu_src, ex_branch, ex_jump;
     wire [3:0] ex_alu_control;
+    wire [2:0] ex_funct3;
     wire id_ex_flush;
     
     // EX stage signals
@@ -571,12 +700,17 @@ module riscv_pipelined(
     wire [31:0] wb_data;
     
     // IF Stage
+    // Instruction memory (internal to this self-contained pipeline; loads program.hex)
+    wire [31:0] if_imem_data;
+    instruction_memory imem(.address(if_pc), .instruction(if_imem_data));
+
     if_stage if_stage_inst(
         .clk(clk),
         .reset(reset),
         .stall(if_stall),
         .branch_taken(ex_branch_taken),
         .branch_target(ex_branch_target),
+        .instruction_in(if_imem_data),
         .pc(if_pc),
         .instruction(if_instruction),
         .pc_plus_4(if_pc_plus_4)
@@ -639,6 +773,8 @@ module riscv_pipelined(
         .alu_src_in(id_alu_src),
         .branch_in(id_branch),
         .jump_in(id_jump),
+        .funct3_in(id_instruction[14:12]),
+        .lui_in(1'b0),
         .pc_plus_4_out(ex_pc_plus_4),
         .rs1_data_out(ex_rs1_data),
         .rs2_data_out(ex_rs2_data),
@@ -653,7 +789,8 @@ module riscv_pipelined(
         .alu_control_out(ex_alu_control),
         .alu_src_out(ex_alu_src),
         .branch_out(ex_branch),
-        .jump_out(ex_jump)
+        .jump_out(ex_jump),
+        .funct3_out(ex_funct3)
     );
     
     // EX Stage
@@ -665,7 +802,7 @@ module riscv_pipelined(
         .alu_control(ex_alu_control),
         .alu_src(ex_alu_src),
         .branch(ex_branch),
-        .funct3(id_instruction[14:12]),
+        .funct3(ex_funct3),
         .alu_result(ex_alu_result),
         .branch_taken(ex_branch_taken),
         .branch_target(ex_branch_target)
@@ -684,6 +821,7 @@ module riscv_pipelined(
         .mem_write_in(ex_mem_write),
         .mem_to_reg_in(ex_mem_to_reg),
         .jump_in(ex_jump),
+        .funct3_in(ex_funct3),
         .alu_result_out(mem_alu_result),
         .rs2_data_out(mem_rs2_data),
         .pc_plus_4_out(mem_pc_plus_4),
@@ -692,18 +830,37 @@ module riscv_pipelined(
         .mem_read_out(mem_mem_read),
         .mem_write_out(mem_mem_write),
         .mem_to_reg_out(mem_mem_to_reg),
-        .jump_out(mem_jump)
+        .jump_out(mem_jump),
+        .funct3_out(mem_funct3)
     );
     
     // MEM Stage
+    // Data memory (internal to this self-contained pipeline)
+    wire [31:0] d_addr, d_wdata, d_rdata;
+    wire d_read, d_write;
+    wire [2:0] d_size;
     mem_stage mem_stage_inst(
-        .clk(clk),
         .alu_result(mem_alu_result),
         .rs2_data(mem_rs2_data),
         .mem_read(mem_mem_read),
         .mem_write(mem_mem_write),
         .funct3(mem_funct3),
+        .data_address(d_addr),
+        .data_write(d_wdata),
+        .data_mem_read(d_read),
+        .data_mem_write(d_write),
+        .data_size(d_size),
+        .read_data(d_rdata),
         .mem_data(mem_data)
+    );
+    data_memory dmem(
+        .clk(clk),
+        .address(d_addr),
+        .write_data(d_wdata),
+        .mem_write(d_write),
+        .mem_read(d_read),
+        .mem_size(d_size),
+        .read_data(d_rdata)
     );
     
     // MEM/WB Pipeline Register

@@ -62,7 +62,7 @@ module led_blink(
     
     always @(posedge clk) begin
         counter <= counter + 1;
-        led <= counter[24];  // Blink at ~1.6 Hz
+        led <= counter[24];  // Blink at ~0.8 Hz (full on+off cycle ≈ 1.24s)
     end
 endmodule
 ```

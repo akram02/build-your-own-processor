@@ -547,7 +547,7 @@ Power:
 Physical:
 - Technology: Sky130 (130nm)
 - Die area: 0.04 mm²
-- Package: QFN-24 (recommended)
+- Package: QFN-64 (TinyTapeout standard)
 
 IO:
 - GPIO: 8 input, 8 output

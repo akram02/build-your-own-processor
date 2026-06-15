@@ -542,11 +542,15 @@ module memory_system(
         .miss_count(data_misses)
     );
     
-    // Memory arbiter (prioritize data access)
-    assign mem_address = dmem_read ? dmem_address : imem_address;
+    // Memory arbiter (prioritize data access over instruction fetch).
+    // Data has the port whenever it reads OR writes; otherwise instruction
+    // fetch gets it. (The instruction cache must stall while data has the
+    // port — never let mem_write steer to the instruction address.)
+    wire dmem_access = dmem_read || dmem_write;
+    assign mem_address    = dmem_access ? dmem_address : imem_address;
     assign mem_write_data = dmem_write_data;
-    assign mem_read = dmem_read || imem_read;
-    assign mem_write = dmem_write;
+    assign mem_read       = dmem_access ? dmem_read : imem_read;
+    assign mem_write      = dmem_write;
 endmodule
 ```
 
@@ -640,6 +644,9 @@ module main_memory #(
     localparam IDLE = 1'b0;
     localparam BUSY = 1'b1;
     reg state;
+    reg op_is_write;           // latched op type (the strobe may drop during the wait)
+    reg [31:0] addr_latched;   // latched address
+    reg [31:0] wdata_latched;  // latched write data
     
     always @(posedge clk or posedge reset) begin
         if (reset) begin
@@ -652,6 +659,9 @@ module main_memory #(
                     ready <= 0;
                     if (read_enable || write_enable) begin
                         access_counter <= 0;
+                        op_is_write   <= write_enable;  // latch op + address + data now
+                        addr_latched  <= address;
+                        wdata_latched <= write_data;
                         state <= BUSY;
                     end
                 end
@@ -661,18 +671,18 @@ module main_memory #(
                         access_counter <= access_counter + 1;
                     end else begin
                         // Access complete
-                        if (read_enable) begin
-                            // Read
-                            read_data <= {memory[address + 3],
-                                        memory[address + 2],
-                                        memory[address + 1],
-                                        memory[address]};
-                        end else if (write_enable) begin
+                        if (!op_is_write) begin
+                            // Read (use latched address/op — the strobe may have dropped)
+                            read_data <= {memory[addr_latched + 3],
+                                        memory[addr_latched + 2],
+                                        memory[addr_latched + 1],
+                                        memory[addr_latched]};
+                        end else begin
                             // Write
-                            memory[address] <= write_data[7:0];
-                            memory[address + 1] <= write_data[15:8];
-                            memory[address + 2] <= write_data[23:16];
-                            memory[address + 3] <= write_data[31:24];
+                            memory[addr_latched]     <= wdata_latched[7:0];
+                            memory[addr_latched + 1] <= wdata_latched[15:8];
+                            memory[addr_latched + 2] <= wdata_latched[23:16];
+                            memory[addr_latched + 3] <= wdata_latched[31:24];
                         end
                         ready <= 1;
                         state <= IDLE;
@@ -775,6 +785,7 @@ endmodule
 module cache_benchmark;
     reg clk, reset;
     wire [31:0] pc, cycles, hits, misses;
+    real hit_rate, miss_rate, amat;   // module level: Verilog forbids declarations mid-block
     
     riscv_with_cache dut(
         .clk(clk),
@@ -812,9 +823,9 @@ module cache_benchmark;
         $display("Miss Rate: %.2f%%", (misses * 100.0) / (hits + misses));
         
         // Calculate AMAT
-        real hit_rate = hits / (hits + misses + 0.0);
-        real miss_rate = 1.0 - hit_rate;
-        real amat = 1.0 + (miss_rate * 100.0);
+        hit_rate = hits / (hits + misses + 0.0);
+        miss_rate = 1.0 - hit_rate;
+        amat = 1.0 + (miss_rate * 100.0);
         $display("AMAT: %.2f cycles", amat);
         $display("Speedup vs no cache: %.2fx", 100.0 / amat);
         $display("========================================");

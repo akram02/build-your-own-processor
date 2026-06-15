@@ -76,10 +76,11 @@ Comparison:
 ### Available Layers:
 
 ```
-Metal Layers: 5 layers
-- Metal1 (local interconnect)
-- Metal2-Metal3 (routing)
-- Metal4-Metal5 (power, long routes)
+Metal Layers: 5 routing layers (Metal1–Metal5)
+- li1: separate local-interconnect layer (sits below Metal1)
+- Metal1-Metal2 (fine routing, 140nm)
+- Metal3-Metal4 (thicker routing, 300nm)
+- Metal5 (thick — power, long routes, 1600nm)
 
 Device Layers:
 - N-diffusion (NMOS transistors)
@@ -213,13 +214,17 @@ Metal1:
 - Min spacing: 140nm
 - Min area: 0.083 µm²
 
-Metal2-3:
+Metal2:
 - Min width: 140nm
 - Min spacing: 140nm
 
-Metal4-5:
-- Min width: 290nm
-- Min spacing: 290nm
+Metal3-4:
+- Min width: 300nm
+- Min spacing: 300nm
+
+Metal5:
+- Min width: 1600nm (1.6µm)
+- Min spacing: 1600nm
 
 Polysilicon:
 - Min width: 150nm

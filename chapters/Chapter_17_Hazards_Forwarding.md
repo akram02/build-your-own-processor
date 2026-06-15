@@ -87,10 +87,10 @@ CORRECT VALUE! ✅
    - Current instruction in EX
    - Forward from EX/MEM
 
-2. MEM Hazard (Load-to-Use)
+2. MEM Hazard (ALU result, 2 instructions back)
    - Previous instruction in MEM/WB
    - Current instruction in EX
-   - Forward from MEM/WB
+   - Forward from MEM/WB  (NOT a load-use case; see case 3)
 
 3. Load-Use Hazard
    - Previous is LOAD (data not ready)
@@ -121,17 +121,20 @@ ADD x4, x1, x5    # Uses x1 IMMEDIATELY
 
 ```verilog
 module hazard_detection_unit(
-    // ID stage
+    // ID stage (consumer — used for load-use stall detection)
     input wire [4:0] id_rs1,
     input wire [4:0] id_rs2,
-    // EX stage
+    // EX stage: sources of the instruction in EX (used for forwarding),
+    //           plus its rd / mem_read (to detect a load feeding the next instr)
+    input wire [4:0] ex_rs1,
+    input wire [4:0] ex_rs2,
     input wire [4:0] ex_rd,
     input wire ex_reg_write,
     input wire ex_mem_read,
-    // MEM stage
+    // MEM stage = EX/MEM register output (forward source 2'b10)
     input wire [4:0] mem_rd,
     input wire mem_reg_write,
-    // WB stage
+    // WB stage = MEM/WB register output (forward source 2'b01)
     input wire [4:0] wb_rd,
     input wire wb_reg_write,
     // Outputs
@@ -139,31 +142,25 @@ module hazard_detection_unit(
     output wire [1:0] forward_a,
     output wire [1:0] forward_b
 );
-    // Load-Use Hazard Detection (must stall)
-    wire load_use_hazard = ex_mem_read && 
+    // Load-Use Hazard: a load is in EX and the next instruction (in ID) needs
+    // its result. Forwarding can't help (data arrives a cycle too late) -> stall.
+    wire load_use_hazard = ex_mem_read &&
                           ((ex_rd == id_rs1) || (ex_rd == id_rs2)) &&
                           (ex_rd != 0);
-    
+
     assign stall = load_use_hazard;
-    
-    // Forward A (rs1)
-    assign forward_a = 
-        // EX hazard (forward from EX/MEM)
-        (ex_reg_write && (ex_rd != 0) && (ex_rd == id_rs1)) ? 2'b10 :
-        // MEM hazard (forward from MEM/WB)
-        (mem_reg_write && (mem_rd != 0) && (mem_rd == id_rs1) &&
-         !(ex_reg_write && (ex_rd != 0) && (ex_rd == id_rs1))) ? 2'b01 :
-        // No forwarding
+
+    // Forwarding feeds the instruction in EX. Compare ITS source registers
+    // (ex_rs1/ex_rs2) against the destinations sitting in EX/MEM (mem_rd -> 2'b10)
+    // and MEM/WB (wb_rd -> 2'b01). EX/MEM has priority (most recent value).
+    assign forward_a =
+        (mem_reg_write && (mem_rd != 0) && (mem_rd == ex_rs1)) ? 2'b10 :
+        (wb_reg_write  && (wb_rd  != 0) && (wb_rd  == ex_rs1)) ? 2'b01 :
         2'b00;
-    
-    // Forward B (rs2)
-    assign forward_b = 
-        // EX hazard (forward from EX/MEM)
-        (ex_reg_write && (ex_rd != 0) && (ex_rd == id_rs2)) ? 2'b10 :
-        // MEM hazard (forward from MEM/WB)
-        (mem_reg_write && (mem_rd != 0) && (mem_rd == id_rs2) &&
-         !(ex_reg_write && (ex_rd != 0) && (ex_rd == id_rs2))) ? 2'b01 :
-        // No forwarding
+
+    assign forward_b =
+        (mem_reg_write && (mem_rd != 0) && (mem_rd == ex_rs2)) ? 2'b10 :
+        (wb_reg_write  && (wb_rd  != 0) && (wb_rd  == ex_rs2)) ? 2'b01 :
         2'b00;
 endmodule
 ```
@@ -224,13 +221,16 @@ module ex_stage_with_forwarding(
     input wire alu_src,
     input wire branch,
     input wire [2:0] funct3,
+    input wire lui,
     // Outputs
     output wire [31:0] alu_result,
     output wire branch_taken,
-    output wire [31:0] branch_target
+    output wire [31:0] branch_target,
+    output wire [31:0] store_data   // forwarded rs2 — the value a store writes
 );
     wire [31:0] alu_a, alu_b;
     wire [31:0] forwarded_rs1, forwarded_rs2;
+    wire [31:0] alu_core;
     wire zero;
     
     // Forwarding mux for rs1
@@ -260,21 +260,27 @@ module ex_stage_with_forwarding(
         .a(alu_a),
         .b(alu_b),
         .alu_control(alu_control),
-        .result(alu_result),
+        .result(alu_core),
         .zero(zero),
         .negative()
     );
+    // LUI writes the upper immediate directly (it has no register operands)
+    assign alu_result = lui ? immediate : alu_core;
     
-    // Branch comparator
+    // Branch comparator (drives a separate net, then AND with branch —
+    // driving branch_taken from both the port and an assign is illegal)
+    wire comp_taken;
     branch_comparator branch_comp(
         .rs1_data(forwarded_rs1),
         .rs2_data(forwarded_rs2),
         .funct3(funct3),
-        .branch_taken(branch_taken)
+        .branch_taken(comp_taken)
     );
     
-    assign branch_taken = branch & branch_taken;
-    assign branch_target = pc_plus_4 + immediate;
+    assign branch_taken = branch & comp_taken;
+    // Target is relative to the branch's OWN PC; we carry pc_plus_4 (= branchPC+4)
+    assign branch_target = (pc_plus_4 - 32'd4) + immediate;
+    assign store_data = forwarded_rs2;   // stores must use the forwarded value
 endmodule
 ```
 
@@ -305,18 +311,18 @@ Duration:
 module stall_controller(
     input wire stall_request,
     output reg pc_write,
-    output reg if_id_write,
-    output reg id_ex_flush
+    output reg if_id_write
 );
+    // On a load-use stall: freeze PC and IF/ID. The ID/EX bubble is inserted
+    // by the ID/EX register's own flush input (id_ex_flush || stall), so this
+    // controller must NOT also drive id_ex_flush (that was a double-driver).
     always @(*) begin
         if (stall_request) begin
             pc_write = 0;       // Don't update PC
             if_id_write = 0;    // Keep IF/ID same
-            id_ex_flush = 1;    // Insert bubble (NOP)
         end else begin
             pc_write = 1;       // Normal operation
             if_id_write = 1;
-            id_ex_flush = 0;
         end
     end
 endmodule
@@ -351,7 +357,7 @@ Branch decision made in EX stage (cycle 3)
 But we fetch next instruction in cycle 2!
 
 Options:
-1. Always stall (3 cycle penalty) ❌
+1. Always stall (2 cycle penalty) ❌
 2. Predict not-taken (flush if wrong) ✅
 3. Predict taken (complex)
 4. Branch prediction (advanced)
@@ -367,7 +373,7 @@ Predict Not-Taken:
 2. If branch NOT taken: Continue
 3. If branch taken: Flush & jump
 
-Branch taken (3 cycle penalty):
+Branch taken (2 cycle penalty):
 Cycle: 1   2   3   4   5   6
 BEQ:   IF  ID  EX  MEM WB
 +4:        IF  ID  XX  (flush)
@@ -383,18 +389,18 @@ XX = flushed instructions (wasted work)
 module branch_controller(
     input wire branch_taken,
     output reg if_id_flush,
-    output reg id_ex_flush,
-    output reg ex_mem_flush
+    output reg id_ex_flush
 );
+    // Branch resolves in EX, so only the two younger instructions (in IF/ID
+    // and ID/EX) are on the wrong path. The instruction in EX/MEM is OLDER
+    // than the branch and must complete — do NOT flush EX/MEM.
     always @(*) begin
         if (branch_taken) begin
-            if_id_flush = 1;   // Flush IF/ID
-            id_ex_flush = 1;   // Flush ID/EX
-            ex_mem_flush = 1;  // Flush EX/MEM
+            if_id_flush = 1;   // Flush IF/ID (branch+8, wrong path)
+            id_ex_flush = 1;   // Flush ID/EX (branch+4, wrong path)
         end else begin
             if_id_flush = 0;
             id_ex_flush = 0;
-            ex_mem_flush = 0;
         end
     end
 endmodule
@@ -408,8 +414,18 @@ endmodule
 module riscv_pipelined_with_hazards(
     input wire clk,
     input wire reset,
+    // Instruction interface (instruction memory / cache lives outside the core)
+    input wire cache_stall,             // freeze the front of the pipeline (e.g. cache miss)
+    input wire [31:0] instruction,      // fetched word for address pc_debug
+    // Data memory interface
+    output wire [31:0] data_address,
+    output wire [31:0] data_write,
+    output wire data_read_enable,
+    output wire data_write_enable,
+    output wire [2:0] data_funct3,
+    input wire [31:0] data_read,
     // Debug
-    output wire [31:0] pc_debug,
+    output wire [31:0] pc_debug,        // current instruction-fetch address
     output wire [31:0] cycles_debug,
     output wire [31:0] stalls_debug
 );
@@ -455,6 +471,7 @@ module riscv_pipelined_with_hazards(
     
     // EX stage signals
     wire [31:0] ex_alu_result, ex_branch_target;
+    wire [31:0] ex_store_data;   // forwarded rs2 for stores
     wire ex_branch_taken;
     wire [1:0] forward_a, forward_b;
     
@@ -464,7 +481,6 @@ module riscv_pipelined_with_hazards(
     wire mem_reg_write, mem_mem_read, mem_mem_write;
     wire mem_mem_to_reg, mem_jump;
     wire [2:0] mem_funct3;
-    wire ex_mem_flush;
     
     // MEM stage signals
     wire [31:0] mem_data;
@@ -483,6 +499,8 @@ module riscv_pipelined_with_hazards(
     hazard_detection_unit hazard_unit(
         .id_rs1(id_rs1_addr),
         .id_rs2(id_rs2_addr),
+        .ex_rs1(ex_rs1_addr),
+        .ex_rs2(ex_rs2_addr),
         .ex_rd(ex_rd_addr),
         .ex_reg_write(ex_reg_write),
         .ex_mem_read(ex_mem_read),
@@ -499,25 +517,24 @@ module riscv_pipelined_with_hazards(
     stall_controller stall_ctrl(
         .stall_request(stall),
         .pc_write(pc_write),
-        .if_id_write(if_id_write),
-        .id_ex_flush(id_ex_flush)
+        .if_id_write(if_id_write)
     );
     
     // Branch controller
     branch_controller branch_ctrl(
         .branch_taken(ex_branch_taken),
         .if_id_flush(if_id_flush),
-        .id_ex_flush(id_ex_flush),  // Also flush on branch
-        .ex_mem_flush(ex_mem_flush)
+        .id_ex_flush(id_ex_flush)   // branch resolves in EX → flush IF/ID + ID/EX only
     );
     
     // IF Stage
     if_stage if_stage_inst(
         .clk(clk),
         .reset(reset),
-        .stall(!pc_write),
+        .stall(!pc_write || cache_stall),
         .branch_taken(ex_branch_taken),
         .branch_target(ex_branch_target),
+        .instruction_in(instruction),
         .pc(if_pc),
         .instruction(if_instruction),
         .pc_plus_4(if_pc_plus_4)
@@ -527,7 +544,7 @@ module riscv_pipelined_with_hazards(
     if_id_register if_id_reg(
         .clk(clk),
         .reset(reset),
-        .stall(!if_id_write),
+        .stall(!if_id_write || cache_stall),
         .flush(if_id_flush),
         .instruction_in(if_instruction),
         .pc_plus_4_in(if_pc_plus_4),
@@ -557,10 +574,12 @@ module riscv_pipelined_with_hazards(
         .alu_control(id_alu_control),
         .alu_src(id_alu_src),
         .branch(id_branch),
-        .jump(id_jump)
+        .jump(id_jump),
+        .lui(id_lui)
     );
     
     assign id_funct3 = id_instruction[14:12];
+    wire id_lui, ex_lui;   // LUI control, plumbed ID -> EX
     
     // ID/EX Pipeline Register
     id_ex_register id_ex_reg(
@@ -575,6 +594,7 @@ module riscv_pipelined_with_hazards(
         .rs1_addr_in(id_rs1_addr),
         .rs2_addr_in(id_rs2_addr),
         .funct3_in(id_funct3),
+        .lui_in(id_lui),
         .reg_write_in(id_reg_write),
         .mem_read_in(id_mem_read),
         .mem_write_in(id_mem_write),
@@ -591,6 +611,7 @@ module riscv_pipelined_with_hazards(
         .rs1_addr_out(ex_rs1_addr),
         .rs2_addr_out(ex_rs2_addr),
         .funct3_out(ex_funct3),
+        .lui_out(ex_lui),
         .reg_write_out(ex_reg_write),
         .mem_read_out(ex_mem_read),
         .mem_write_out(ex_mem_write),
@@ -615,18 +636,19 @@ module riscv_pipelined_with_hazards(
         .alu_src(ex_alu_src),
         .branch(ex_branch),
         .funct3(ex_funct3),
+        .lui(ex_lui),
         .alu_result(ex_alu_result),
         .branch_taken(ex_branch_taken),
-        .branch_target(ex_branch_target)
+        .branch_target(ex_branch_target),
+        .store_data(ex_store_data)
     );
     
     // EX/MEM Pipeline Register
     ex_mem_register ex_mem_reg(
         .clk(clk),
         .reset(reset),
-        .flush(ex_mem_flush),
         .alu_result_in(ex_alu_result),
-        .rs2_data_in(ex_rs2_data),
+        .rs2_data_in(ex_store_data),
         .pc_plus_4_in(ex_pc_plus_4),
         .rd_addr_in(ex_rd_addr),
         .funct3_in(ex_funct3),
@@ -649,12 +671,17 @@ module riscv_pipelined_with_hazards(
     
     // MEM Stage
     mem_stage mem_stage_inst(
-        .clk(clk),
         .alu_result(mem_alu_result),
         .rs2_data(mem_rs2_data),
         .mem_read(mem_mem_read),
         .mem_write(mem_mem_write),
         .funct3(mem_funct3),
+        .data_address(data_address),
+        .data_write(data_write),
+        .data_mem_read(data_read_enable),
+        .data_mem_write(data_write_enable),
+        .data_size(data_funct3),
+        .read_data(data_read),
         .mem_data(mem_data)
     );
     
@@ -796,11 +823,30 @@ endmodule
 module pipeline_hazards_tb;
     reg clk, reset;
     wire [31:0] pc_debug, cycles, stalls;
-    
+
+    // External memories (the core exposes instruction + data buses)
+    wire [31:0] instruction, data_address, data_write, data_read;
+    wire data_read_enable, data_write_enable;
+    wire [2:0] data_funct3;
+
+    instruction_memory imem(.address(pc_debug), .instruction(instruction));
+    data_memory dmem(
+        .clk(clk), .address(data_address), .write_data(data_write),
+        .mem_write(data_write_enable), .mem_read(data_read_enable),
+        .mem_size(data_funct3), .read_data(data_read));
+
     // DUT
     riscv_pipelined_with_hazards dut(
         .clk(clk),
         .reset(reset),
+        .cache_stall(1'b0),
+        .instruction(instruction),
+        .data_address(data_address),
+        .data_write(data_write),
+        .data_read_enable(data_read_enable),
+        .data_write_enable(data_write_enable),
+        .data_funct3(data_funct3),
+        .data_read(data_read),
         .pc_debug(pc_debug),
         .cycles_debug(cycles),
         .stalls_debug(stalls)
@@ -937,7 +983,7 @@ endmodule
 Hazard types handled: 3
 Forwarding paths: 2
 Stall cases: 1
-Branch penalty: 3 cycles
+Branch penalty: 2 cycles
 Real CPI: 1.3-1.5
 Real speedup: 3.5-4.0×
 Level: Pipeline Expert! 🏆
