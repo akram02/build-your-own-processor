@@ -177,9 +177,9 @@ Build real chip - RTL থেকে silicon
 
 ### তোমার সময়:
 ```
-✅ Beginner Path:   ৩-৪ ঘণ্টা/দিন × ৬ মাস
-✅ Fast Track:      ৫-৬ ঘণ্টা/দিন × ৩ মাস
-✅ Weekend Warrior: ১০-১২ ঘণ্টা/সপ্তাহ × ৯ মাস
+✅ Beginner Path:   ৩-৪ ঘণ্টা/দিন × ~১২ মাস
+✅ Fast Track:      ৫-৬ ঘণ্টা/দিন × ~৪ মাস
+✅ Weekend Warrior: ১০-১২ ঘণ্টা/সপ্তাহ × ~১৮-২৪ মাস
 ```
 
 ---
@@ -452,10 +452,10 @@ This work is licensed under [Creative Commons Attribution-ShareAlike 4.0 Interna
 - OpenLane Community
 - All Bangladeshi processor enthusiasts
 
-### Special Thanks:
-- সব contributors যারা এই প্রজেক্টে সাহায্য করেছে
-- Community members যারা feedback দিয়েছে
-- Students যারা এই বই test করেছে
+### আর তোমাকে! 🙌
+যে তুমি এই বইটা খুললে আর শূন্য থেকে নিজের চিপ বানানোর স্বপ্ন দেখলে — তুমিই
+এই যাত্রার আসল নায়ক। বানানো শেষে **Pull Request** পাঠিয়ে এই তালিকায় নিজের
+নাম যোগ করো; পরের জন তোমার নাম দেখে অনুপ্রাণিত হোক! 🚀
 
 ---
 
@@ -479,13 +479,13 @@ This work is licensed under [Creative Commons Attribution-ShareAlike 4.0 Interna
 → Start Week 1 tomorrow
 ```
 
-#### 3️⃣ Community তে Join করো First
+#### 3️⃣ প্রশ্ন আছে? Community তে এসো
 ```bash
-→ Join Facebook Group
-→ Introduce yourself
-→ Ask questions
-→ Learn from others
-→ Then start!
+→ GitHub Discussions এ এসো
+→ নিজের পরিচয় দাও
+→ প্রশ্ন করো, আটকে গেলে সাহায্য নাও
+→ অন্যদের build দেখে অনুপ্রাণিত হও
+→ তারপর শুরু করো!
 ```
 
 ---
