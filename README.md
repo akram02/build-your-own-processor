@@ -52,13 +52,13 @@ Month 12:   ✅ তোমার হাতে আসল Chip! 🎉
 
 ### ✅ Budget Friendly
 - সব software **ফ্রি**
-- Hardware মাত্র ৩,০০০-৫,০০০ টাকা
+- Hardware: Tang Nano 9K board ~২,০০০ টাকা (cable/breadboard সহ ~২,৫০০-৩,০০০)
 - বাংলাদেশ থেকে সব কিনতে পারবে
 
-### ✅ Proven Path
-- হাজারো students ইতিমধ্যে শিখেছে
-- Step-by-step গাইড
-- Community support
+### ✅ Step-by-Step Path
+- প্রতিটা ধাপ ছোট ছোট করে সাজানো
+- Step-by-step গাইড, প্রতি অধ্যায়ে hands-on project
+- সব Verilog কোড simulation-এ পরীক্ষিত
 
 ---
 
@@ -244,7 +244,7 @@ Build real chip - RTL থেকে silicon
 
 ### Build Your Processor (তোমার প্রসেসর বানাও)
 
-#### [📕 Chapter 12: Computer Architecture](chapters/Chapter_12_Computer_Architecture.md)
+#### [📕 Chapter 12: Processor Architecture](chapters/Chapter_12_Processor_Architecture.md)
 **Learn:** How CPUs work | Von Neumann | Harvard
 **Time:** 3 days
 
@@ -308,23 +308,24 @@ Build real chip - RTL থেকে silicon
 
 ## 🎯 Learning Paths
 
-### 🐢 Beginner Path (6 মাস)
+### 🐢 Beginner Path (~12 মাস)
 **Best for:** সম্পূর্ণ নতুন, সময় আছে
 ```
-Month 1: Chapters 1-4 (Foundation)
-Month 2: Chapters 5-8 (Verilog)
-Month 3: Chapters 9-11 (FPGA)
-Month 4-5: Chapters 12-15 (CPU)
-Month 6: Chapters 20-25 (VLSI)
+Month 1-2:   Chapters 1-4   (Foundation)
+Month 3-4:   Chapters 5-8   (Verilog)
+Month 5-6:   Chapters 9-11  (FPGA)
+Month 7-10:  Chapters 12-19 (CPU: single-cycle → pipeline → SoC)
+Month 11-12: Chapters 20-25 (VLSI & fabrication)
 ```
 
-### 🏃 Fast Track (3 মাস)
+### 🏃 Fast Track (~4 মাস)
 **Best for:** Programming জানো, intense শিখতে চাও
 ```
-Week 1-2: Chapters 1-4 (Speed run)
-Week 3-4: Chapters 5-8 (Verilog)
-Week 5-8: Chapters 9-15 (FPGA + CPU)
-Week 9-12: Chapters 20-25 (VLSI)
+Week 1-2:   Chapters 1-4   (Speed run)
+Week 3-4:   Chapters 5-8   (Verilog)
+Week 5-9:   Chapters 9-15  (FPGA + single/multi-cycle CPU)
+Week 10-13: Chapters 16-19 (Pipeline + hazards + SoC)
+Week 14-16: Chapters 20-25 (VLSI)
 ```
 
 ### 🎯 Project-Based (Flexible)
@@ -339,31 +340,20 @@ Week 9-12: Chapters 20-25 (VLSI)
 
 ---
 
-## 💪 Success Stories
+## 💪 তোমার গল্প হোক প্রথম
 
-> "আমি CSE 2nd year student। এই বই follow করে আমি নিজের processor বানিয়েছি! এখন FPGA তে C program চালাতে পারি। Mind-blowing experience!" 
-> — **Arif, BUET**
-
-> "Programming জানতাম কিন্তু hardware একদম বুঝতাম না। এই বই পড়ে 4 মাসে RISC-V CPU বানিয়ে ফেলেছি। এখন hardware interview দিতে পারি!"
-> — **Nadia, NSU**
-
-> "আমার বয়স 16, SSC pass করেছি। এই বই follow করে processor বানিয়ে ফেলেছি! এখন BUET এ chance পেয়েছি!"
-> — **Fahim, Dhaka**
+এই বইটি নতুন — তুমি হতে পারো প্রথম দিকের একজন যে শূন্য থেকে নিজের RISC-V
+প্রসেসর বানিয়ে fabricate করল। বানানো শেষ হলে **#BuildYourOwnProcessor**
+দিয়ে তোমার build শেয়ার করো, আর Pull Request পাঠিয়ে এখানে তোমার গল্প যোগ করো!
 
 ---
 
 ## 🤝 Community & Support
 
-### Join Our Community:
-- 💬 [Facebook Group](https://facebook.com/groups/processor-builders-bd)
-- 💻 [Discord Server](https://discord.gg/processor-design)
-- 🐦 [Twitter](https://twitter.com/buildyourCPU)
-- 📺 [YouTube Channel](https://youtube.com/processor-design-bangla)
-
 ### Get Help:
-- 🐛 [Report Issues](https://github.com/yourusername/build-your-own-processor/issues)
-- 💡 [Discussions](https://github.com/yourusername/build-your-own-processor/discussions)
-- 📧 Email: processor.bangla@gmail.com
+- 🐛 [Issues / বাগ রিপোর্ট](https://github.com/akram02/build-your-own-processor/issues)
+- 💡 [Discussions / প্রশ্ন](https://github.com/akram02/build-your-own-processor/discussions)
+- 🤝 Pull Request পাঠিয়ে contribute করো (নিচে Contributing দেখো)
 
 ---
 
@@ -415,7 +405,7 @@ Week 9-12: Chapters 20-25 (VLSI)
 💻 Total Code:         5,000+ lines Verilog
 ⏱️ Reading Time:       200-300 hours
 🛠️ Building Time:      500-1000 hours
-🎯 Success Rate:       95% (complete করলে)
+🧪 CPU Designs:        Single-cycle, multi-cycle, pipelined — simulation-tested
 ```
 
 ---
