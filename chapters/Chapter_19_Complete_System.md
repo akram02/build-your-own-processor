@@ -717,7 +717,7 @@ module riscv_soc(
         .instr_address(cpu_instr_addr),
         .data_address(bus_mem_addr),
         .data_write(bus_mem_wdata),
-        .data_read_enable(bus_mem_read),
+        .data_read(bus_mem_read),
         .data_write_enable(bus_mem_write),
         .data_read_out(mem_read_data),
         .data_ready(mem_ready)
