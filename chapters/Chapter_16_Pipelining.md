@@ -136,7 +136,7 @@ Pipeline solution:
 Balance point:
 5-7 stages: Good for embedded/low-power
 10-20 stages: Desktop processors
-20-31 stages: Intel Pentium 4 (too deep!)
+20-31 stages: Intel Pentium 4 (Northwood 20, Prescott 31 — too deep!)
 
 We'll use 5 stages: Classic RISC!
 ```
@@ -234,6 +234,7 @@ module id_ex_register(
     input wire alu_src_in,
     input wire branch_in,
     input wire jump_in,
+    input wire [2:0] funct3_in,
     // Outputs
     output reg [31:0] pc_plus_4_out,
     output reg [31:0] rs1_data_out,
@@ -250,7 +251,8 @@ module id_ex_register(
     output reg [3:0] alu_control_out,
     output reg alu_src_out,
     output reg branch_out,
-    output reg jump_out
+    output reg jump_out,
+    output reg [2:0] funct3_out
 );
     always @(posedge clk or posedge reset) begin
         if (reset || flush) begin
@@ -269,6 +271,7 @@ module id_ex_register(
             alu_src_out <= 0;
             branch_out <= 0;
             jump_out <= 0;
+            funct3_out <= 3'b000;
         end else begin
             pc_plus_4_out <= pc_plus_4_in;
             rs1_data_out <= rs1_data_in;
@@ -285,6 +288,7 @@ module id_ex_register(
             alu_src_out <= alu_src_in;
             branch_out <= branch_in;
             jump_out <= jump_in;
+            funct3_out <= funct3_in;
         end
     end
 endmodule
@@ -460,15 +464,17 @@ module ex_stage(
         .negative()
     );
     
-    // Branch comparator
+    // Branch comparator (drives a separate net, then AND with branch —
+    // driving branch_taken from both the port and an assign is illegal)
+    wire comp_taken;
     branch_comparator branch_comp(
         .rs1_data(rs1_data),
         .rs2_data(rs2_data),
         .funct3(funct3),
-        .branch_taken(branch_taken)
+        .branch_taken(comp_taken)
     );
     
-    assign branch_taken = branch & branch_taken;
+    assign branch_taken = branch & comp_taken;
     assign branch_target = pc_plus_4 + immediate;
 endmodule
 ```
@@ -546,6 +552,7 @@ module riscv_pipelined(
     wire ex_reg_write, ex_mem_read, ex_mem_write;
     wire ex_mem_to_reg, ex_alu_src, ex_branch, ex_jump;
     wire [3:0] ex_alu_control;
+    wire [2:0] ex_funct3;
     wire id_ex_flush;
     
     // EX stage signals
@@ -639,6 +646,7 @@ module riscv_pipelined(
         .alu_src_in(id_alu_src),
         .branch_in(id_branch),
         .jump_in(id_jump),
+        .funct3_in(id_instruction[14:12]),
         .pc_plus_4_out(ex_pc_plus_4),
         .rs1_data_out(ex_rs1_data),
         .rs2_data_out(ex_rs2_data),
@@ -653,7 +661,8 @@ module riscv_pipelined(
         .alu_control_out(ex_alu_control),
         .alu_src_out(ex_alu_src),
         .branch_out(ex_branch),
-        .jump_out(ex_jump)
+        .jump_out(ex_jump),
+        .funct3_out(ex_funct3)
     );
     
     // EX Stage
@@ -665,7 +674,7 @@ module riscv_pipelined(
         .alu_control(ex_alu_control),
         .alu_src(ex_alu_src),
         .branch(ex_branch),
-        .funct3(id_instruction[14:12]),
+        .funct3(ex_funct3),
         .alu_result(ex_alu_result),
         .branch_taken(ex_branch_taken),
         .branch_target(ex_branch_target)
@@ -684,6 +693,7 @@ module riscv_pipelined(
         .mem_write_in(ex_mem_write),
         .mem_to_reg_in(ex_mem_to_reg),
         .jump_in(ex_jump),
+        .funct3_in(ex_funct3),
         .alu_result_out(mem_alu_result),
         .rs2_data_out(mem_rs2_data),
         .pc_plus_4_out(mem_pc_plus_4),
@@ -692,7 +702,8 @@ module riscv_pipelined(
         .mem_read_out(mem_mem_read),
         .mem_write_out(mem_mem_write),
         .mem_to_reg_out(mem_mem_to_reg),
-        .jump_out(mem_jump)
+        .jump_out(mem_jump),
+        .funct3_out(mem_funct3)
     );
     
     // MEM Stage
