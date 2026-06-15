@@ -87,10 +87,10 @@ CORRECT VALUE! ✅
    - Current instruction in EX
    - Forward from EX/MEM
 
-2. MEM Hazard (Load-to-Use)
+2. MEM Hazard (ALU result, 2 instructions back)
    - Previous instruction in MEM/WB
    - Current instruction in EX
-   - Forward from MEM/WB
+   - Forward from MEM/WB  (NOT a load-use case; see case 3)
 
 3. Load-Use Hazard
    - Previous is LOAD (data not ready)
@@ -305,18 +305,18 @@ Duration:
 module stall_controller(
     input wire stall_request,
     output reg pc_write,
-    output reg if_id_write,
-    output reg id_ex_flush
+    output reg if_id_write
 );
+    // On a load-use stall: freeze PC and IF/ID. The ID/EX bubble is inserted
+    // by the ID/EX register's own flush input (id_ex_flush || stall), so this
+    // controller must NOT also drive id_ex_flush (that was a double-driver).
     always @(*) begin
         if (stall_request) begin
             pc_write = 0;       // Don't update PC
             if_id_write = 0;    // Keep IF/ID same
-            id_ex_flush = 1;    // Insert bubble (NOP)
         end else begin
             pc_write = 1;       // Normal operation
             if_id_write = 1;
-            id_ex_flush = 0;
         end
     end
 endmodule
@@ -351,7 +351,7 @@ Branch decision made in EX stage (cycle 3)
 But we fetch next instruction in cycle 2!
 
 Options:
-1. Always stall (3 cycle penalty) ❌
+1. Always stall (2 cycle penalty) ❌
 2. Predict not-taken (flush if wrong) ✅
 3. Predict taken (complex)
 4. Branch prediction (advanced)
@@ -367,7 +367,7 @@ Predict Not-Taken:
 2. If branch NOT taken: Continue
 3. If branch taken: Flush & jump
 
-Branch taken (3 cycle penalty):
+Branch taken (2 cycle penalty):
 Cycle: 1   2   3   4   5   6
 BEQ:   IF  ID  EX  MEM WB
 +4:        IF  ID  XX  (flush)
@@ -383,18 +383,18 @@ XX = flushed instructions (wasted work)
 module branch_controller(
     input wire branch_taken,
     output reg if_id_flush,
-    output reg id_ex_flush,
-    output reg ex_mem_flush
+    output reg id_ex_flush
 );
+    // Branch resolves in EX, so only the two younger instructions (in IF/ID
+    // and ID/EX) are on the wrong path. The instruction in EX/MEM is OLDER
+    // than the branch and must complete — do NOT flush EX/MEM.
     always @(*) begin
         if (branch_taken) begin
-            if_id_flush = 1;   // Flush IF/ID
-            id_ex_flush = 1;   // Flush ID/EX
-            ex_mem_flush = 1;  // Flush EX/MEM
+            if_id_flush = 1;   // Flush IF/ID (branch+8, wrong path)
+            id_ex_flush = 1;   // Flush ID/EX (branch+4, wrong path)
         end else begin
             if_id_flush = 0;
             id_ex_flush = 0;
-            ex_mem_flush = 0;
         end
     end
 endmodule
@@ -464,7 +464,6 @@ module riscv_pipelined_with_hazards(
     wire mem_reg_write, mem_mem_read, mem_mem_write;
     wire mem_mem_to_reg, mem_jump;
     wire [2:0] mem_funct3;
-    wire ex_mem_flush;
     
     // MEM stage signals
     wire [31:0] mem_data;
@@ -499,16 +498,14 @@ module riscv_pipelined_with_hazards(
     stall_controller stall_ctrl(
         .stall_request(stall),
         .pc_write(pc_write),
-        .if_id_write(if_id_write),
-        .id_ex_flush(id_ex_flush)
+        .if_id_write(if_id_write)
     );
     
     // Branch controller
     branch_controller branch_ctrl(
         .branch_taken(ex_branch_taken),
         .if_id_flush(if_id_flush),
-        .id_ex_flush(id_ex_flush),  // Also flush on branch
-        .ex_mem_flush(ex_mem_flush)
+        .id_ex_flush(id_ex_flush)   // branch resolves in EX → flush IF/ID + ID/EX only
     );
     
     // IF Stage
@@ -624,7 +621,7 @@ module riscv_pipelined_with_hazards(
     ex_mem_register ex_mem_reg(
         .clk(clk),
         .reset(reset),
-        .flush(ex_mem_flush),
+        .flush(1'b0),  // EX/MEM holds an instruction older than a branch in EX; never flush it
         .alu_result_in(ex_alu_result),
         .rs2_data_in(ex_rs2_data),
         .pc_plus_4_in(ex_pc_plus_4),
@@ -937,7 +934,7 @@ endmodule
 Hazard types handled: 3
 Forwarding paths: 2
 Stall cases: 1
-Branch penalty: 3 cycles
+Branch penalty: 2 cycles
 Real CPI: 1.3-1.5
 Real speedup: 3.5-4.0×
 Level: Pipeline Expert! 🏆
