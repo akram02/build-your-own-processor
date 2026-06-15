@@ -30,7 +30,7 @@
 ### What is RISC-V?
 
 ```
-RISC-V = Fifth generation RISC architecture
+RISC-V = UC Berkeley-র পঞ্চম (5th) RISC ISA (RISC-I, RISC-II, SOAR, SPUR, তারপর RISC-V)
 
 Key facts:
 ✅ Open source (free to use!)
@@ -338,7 +338,7 @@ Format:
 └─────┴───────────┴────────┴────────┴──────┴──────┴─┴────────┘
  1bit   6 bits     5 bits   5 bits  3 bits  4bits 1  7 bits
 
-Immediate: PC-relative, multiply by 2
+Immediate: PC-relative byte offset; imm[0] সবসময় 0 (2-byte aligned)
 Range: ±4KB
 
 Examples:
@@ -383,7 +383,7 @@ Format:
 └─────┴──────────┴──┴───────────┴────────┴────────┘
  1bit   10 bits   1    8 bits     5 bits   7 bits
 
-Immediate: PC-relative, multiply by 2
+Immediate: PC-relative byte offset; imm[0] সবসময় 0 (2-byte aligned)
 Range: ±1MB
 
 Example:

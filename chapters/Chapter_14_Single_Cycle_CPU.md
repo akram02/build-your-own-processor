@@ -502,6 +502,7 @@ module alu_control(
     input wire [1:0] alu_op,
     input wire [2:0] funct3,
     input wire [6:0] funct7,
+    input wire is_rtype,   // 1 only for R-type (OP); ADDI must never become SUB
     output reg [3:0] alu_control_out
 );
     always @(*) begin
@@ -516,8 +517,10 @@ module alu_control(
             
             2'b10: begin  // R-type or I-type
                 case (funct3)
-                    3'b000: begin  // ADD/SUB
-                        if (funct7[5] && alu_op == 2'b10)
+                    3'b000: begin  // ADD / SUB
+                        // SUB only for R-type. For I-type (ADDI) instr[30] is an
+                        // immediate bit, NOT funct7 — there is no SUBI in RV32I.
+                        if (funct7[5] && is_rtype)
                             alu_control_out = 4'b0001;  // SUB
                         else
                             alu_control_out = 4'b0000;  // ADD
@@ -653,6 +656,7 @@ module riscv_single_cycle(
         .alu_op(alu_op),
         .funct3(funct3),
         .funct7(funct7),
+        .is_rtype(opcode == 7'b0110011),  // R-type only
         .alu_control_out(alu_control_sig)
     );
     

@@ -1095,8 +1095,8 @@ Q1 Q0 ──┘                      └── D0  ├─[2 D-FFs]─ Q1 Q0
 Input sequence: 1 1 0 1 0 1 1
 
 Expected detections at:
-Position 3: "101" ✓
-Position 5: "101" ✓
+Position 4: "101" ✓  (input positions 2-3-4, detection completes when the last 1 arrives)
+Position 6: "101" ✓  (overlapping: input positions 4-5-6)
 ```
 
 ---
