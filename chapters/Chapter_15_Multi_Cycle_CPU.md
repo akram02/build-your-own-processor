@@ -1037,7 +1037,7 @@ single-cycle-এর CPI কম (1.0) কিন্তু clock period বড়; 
 
 ### Execution Time Comparison
 
-ধরা যাক একটা ছোট প্রোগ্রাম, **10টি instruction**:
+ধরা যাক একটা ছোট প্রোগ্রাম, **১০টি instruction**:
 
 | ধরন | সংখ্যা | cycle/instr (multi) | মোট cycle |
 |---|---|---|---|
@@ -1163,7 +1163,7 @@ cycle-ধরে অনুসরণ করো, আর single-cycle-এর সা�
 ✅ Professional optimization! 🎉
 ```
 
-### তুমি বানিয়েছো:
+### তুমি বানিয়েছ:
 ```
 ✅ Multi-cycle RISC-V processor
 ✅ 9-state FSM controller (5 stages → 9 states)

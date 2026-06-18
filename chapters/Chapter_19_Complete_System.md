@@ -787,9 +787,9 @@ endmodule
 
 | Bit | উৎস | কখন ওঠে |
 |---|---|---|
-| **bit 0** | `rx_ready` (UART) | নতuন byte এসেছে |
+| **bit 0** | `rx_ready` (UART) | নতুন byte এসেছে |
 | **bit 1** | `tx_done` (UART) | byte পাঠানো শেষ |
-| **bit 2** | `timer_int` (Timer) | counter, COMPARE-এ পৌঁছেছে |
+| **bit 2** | `timer_int` (Timer) | counter COMPARE-এ পৌঁছেছে |
 | bit 3–7 | — | অব্যবহৃত |
 
 > ⚠️ **একটা গুরুত্বপূর্ণ note (technical flag, কোড ঠিক আছে):** এই chapter-এর CPU
@@ -923,7 +923,7 @@ endmodule
 
 এই মুহূর্তটার জন্যই এতক্ষণের সব পরিশ্রম! আমাদের কাছে এখন আছে CPU (আগের
 chapter-গুলোর), চারটা peripheral, একটা bus, আর memory। এবার সবগুলোকে এক জায়গায়
-জুড়ে একটা পূর্ণ **SoC** বানাব — section-এর শুরুর সেই block diagram-টা এবার
+জুড়ে একটা পূর্ণ **SoC** বানাব — chapter-এর শুরুর সেই block diagram-টা এবার
 জীবন্ত Verilog হয়ে উঠবে।
 
 ভাবো এটা একটা **wiring diagram** — অনেকটা electrician যেভাবে বাড়ির সব যন্ত্র এক
