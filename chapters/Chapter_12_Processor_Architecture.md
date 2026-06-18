@@ -292,7 +292,13 @@ wire [1:0] reg_a  = ir[3:2];
 wire [1:0] reg_b  = ir[1:0];
 ```
 
-### 3. Register File:
+লক্ষ করো instruction-টাকে আলাদা করে পড়তে কোনো জটিল হিসাব লাগছে না — শুধু সঠিক bit-গুলো কেটে নেওয়া হচ্ছে। উপরের bit-field ছবিটা মনে আছে? উপরের ৪ bit (`ir[7:4]`) opcode, পরের ২ bit (`ir[3:2]`) Reg A, শেষ ২ bit (`ir[1:0]`) Reg B। Fixed-size instruction-এর এটাই বড় সুবিধা — প্রতিটা ক্ষেত্র সবসময় একই জায়গায় থাকে, তাই decode করা প্রায় বিনামূল্যে। এই সরলতাই RISC-কে এত শক্তিশালী করে।
+
+### ৩. Register File:
+
+ALU যখন যোগ করবে, তখন সংখ্যা দুটো কোথা থেকে আসবে? প্রতিবার ধীরগতির memory-তে যাওয়া অপচয় হবে। তাই processor-এর ভেতরেই অল্প কিছু অতি-দ্রুত storage রাখা হয় — এদের বলে **register**, আর এদের একসাথে রাখা সংগ্রহটাকে বলে **Register File**। এগুলো processor-এর হাতের নাগালে থাকা ছোট্ট workbench: যে data নিয়ে এখন কাজ হচ্ছে, তা এখানেই রাখা থাকে।
+
+একটা ব্যাপার খেয়াল করার মতো — এই register file-এ **দুটো read port আর একটা write port**। কেন দুটো read? কারণ `ADD R1, R2`-এর মতো instruction-এ ALU-র একই সময়ে **দুটো** operand লাগে, তাই দুটো register একসাথে পড়তে পারা চাই। আর read গুলো **combinational** (`assign` দিয়ে, সাথে সাথে মান পাওয়া যায়), কিন্তু write হয় **sequential** (`posedge clk`-এ, clock-এর ধারে)। এই পার্থক্যটা গুরুত্বপূর্ণ: তুমি যেকোনো মুহূর্তে register পড়তে পারো, কিন্তু নতুন মান লেখা হয় শুধু clock-এর টিক্-এ, আর তাও যখন `write_enable` চালু থাকে — অর্থাৎ আবারও control unit-ই ঠিক করে দেয় কখন লেখা হবে।
 
 ```verilog
 // Register File - fast storage
@@ -330,7 +336,18 @@ module register_file(
 endmodule
 ```
 
-### 4. ALU (Arithmetic Logic Unit):
+### ৪. ALU (Arithmetic Logic Unit):
+
+এসে গেছি processor-এর হৃদয়ে। **ALU (Arithmetic Logic Unit)** হলো সেই অংশ যেখানে আসল হিসাব-নিকাশ হয় — যোগ, বিয়োগ, AND, OR, shift, সবকিছু। তুমি Chapter 3-এ যে adder আর logic circuit বানিয়েছিলে, ALU হলো তাদেরই একটা দল, যাদের সামনে একটা switch বসানো — সেই switch দিয়ে ঠিক করা হয় এই মুহূর্তে কোন operation-টা চাই।
+
+সেই switch-টাই হলো `alu_op` input। ভেতরে একটা `case` statement বসে আছে: `alu_op` যদি `OP_ADD` হয় তো ALU যোগ করে, `OP_SUB` হলে বিয়োগ — এভাবে। তুমি একটা ক্যালকুলেটরে যেমন আগে operation বোতাম চাপো তারপর সে হিসাব করে, control unit ঠিক তেমনি `alu_op` সেট করে দেয়, আর ALU সেই অনুযায়ী কাজ করে।
+
+ALU শুধু ফলাফল দেয় না, সাথে দুটো ছোট্ট **flag**-ও দেয় যা পরে সিদ্ধান্ত নিতে কাজে লাগে:
+
+- **`zero`** — ফলাফল কি ঠিক `0`? এটাই `BEQ` (branch if equal)-এর প্রাণ: দুটো সংখ্যা সমান কিনা জানতে হলে বিয়োগ করে দেখো ফল `0` কিনা।
+- **`negative`** — ফলাফল কি ঋণাত্মক (সবচেয়ে উপরের bit `1`)? signed তুলনার সময় দরকার হয়।
+
+এই flag-গুলোই হলো datapath থেকে control unit-এর কাছে ফিরে আসা খবর — এদের সাহায্যেই processor "যদি... তাহলে..." ধরনের সিদ্ধান্ত নিতে পারে।
 
 ```verilog
 module alu(
@@ -371,7 +388,23 @@ module alu(
 endmodule
 ```
 
-### 5. Control Unit:
+### ৫. Control Unit:
+
+এতক্ষণ আমরা datapath-এর অংশগুলো বানালাম — কিন্তু এরা নিজে থেকে কিছু করে না। PC জানে না কখন এগোতে হবে, ALU জানে না কোন operation করতে হবে, register file জানে না কখন লিখতে হবে। এদের সবাইকে সঠিক সময়ে সঠিক নির্দেশ দেওয়াই **Control Unit**-এর কাজ। এ হলো সেই অর্কেস্ট্রার পরিচালক — নিজে কোনো বাদ্যযন্ত্র বাজায় না, কিন্তু তার ইশারাতেই গোটা দল একসুরে বাজে।
+
+Control unit কাজটা করে একটা **state machine (FSM)** দিয়ে — তুমি Chapter 4-এ যা শিখেছিলে। আমাদের সেই চেনা cycle-টার প্রতিটা ধাপই এখানে একেকটা state: FETCH → DECODE → EXECUTE → MEMORY → WRITEBACK, তারপর আবার FETCH। প্রতিটা state-এ control unit আলাদা control signal-এর সমাহার চালু করে — যেমন FETCH state-এ সে memory পড়ার আর IR-এ লেখার signal দেয়, আর WRITEBACK state-এ register-এ লেখার আর PC এগোনোর signal দেয়।
+
+```mermaid
+stateDiagram-v2
+    [*] --> FETCH
+    FETCH --> DECODE
+    DECODE --> EXECUTE
+    EXECUTE --> MEMORY
+    MEMORY --> WRITEBACK
+    WRITEBACK --> FETCH
+```
+
+কোডে দুটো আলাদা `always` block দেখবে, আর এই ভাগটা ইচ্ছাকৃত। প্রথমটা **sequential** (`posedge clk`) — শুধু এক state থেকে পরের state-এ যাওয়াটা সামলায়, clock-এর তালে তালে। দ্বিতীয়টা **combinational** (`always @(*)`) — বর্তমান state দেখে ঠিক করে এখন কোন কোন signal চালু থাকবে। খেয়াল করো, এই দ্বিতীয় block-এর শুরুতেই সব signal default-এ `0` করে দেওয়া হয়েছে; এটা একটা চমৎকার অভ্যাস, কারণ এতে ভুলবশত আগের মান রয়ে গিয়ে latch তৈরি হওয়ার বিপদ থাকে না। এই "state বদলানো" আর "signal তৈরি করা"-কে আলাদা রাখাটাই পরিষ্কার FSM ডিজাইনের চাবিকাঠি।
 
 ```verilog
 module control_unit(
@@ -456,132 +489,125 @@ endmodule
 
 ---
 
-## ১২.৪ Instruction Execution - Detailed
+## ১২.৪ Instruction Execution - বিস্তারিত
 
-### Fetch Stage:
+আমরা যন্ত্রাংশগুলো চিনেছি; এবার দেখি একটা instruction আসলে কীভাবে এই পাঁচটা ধাপের মধ্য দিয়ে জীবন কাটায়। ভাবো এটা যেন একটা উৎপাদন লাইন (assembly line) — প্রতিটা ধাপে instruction-টার উপর নির্দিষ্ট একটা কাজ হয়, তারপর সে পরের ধাপে এগিয়ে যায়। প্রতিটা ধাপ ঠিক এক clock cycle নেয়, তাই পাঁচ ধাপ মিলিয়ে আমাদের processor প্রতি instruction-এ পাঁচটা cycle খরচ করে। চলো একটা একটা করে দেখি।
 
-```
-Purpose: Get next instruction from memory
+### Fetch Stage (আনার ধাপ):
 
-Steps:
-1. PC → Memory Address
-2. Read instruction from memory
-3. Instruction → IR (Instruction Register)
-4. PC ← PC + 1 (for next time)
+**উদ্দেশ্য:** memory থেকে পরের instruction-টা নিয়ে আসা।
 
-Verilog pseudocode:
-address = PC;
-instruction = memory[address];
-IR = instruction;
-PC = PC + 1;
+এটা প্রতিটা instruction-এর প্রথম ধাপ — যেখানে processor বলে, "আমার পরের কাজটা কী, একটু এনে দাও।" PC যে ঠিকানাটা ধরে আছে, সেটা memory-কে দেওয়া হয়; memory সেই ঠিকানার instruction ফেরত পাঠায়; সেটাকে IR-এ তুলে রাখা হয়; আর সাথে সাথে PC এক বাড়িয়ে রাখা হয় যাতে পরের বার পরের instruction আসে। ধাপে ধাপে:
 
-Timing:
-- 1 clock cycle
-- Memory read
-- IR update
-```
+1. PC → Memory-র address-এ যায়।
+2. Memory সেই ঠিকানা থেকে instruction পড়ে।
+3. সেই instruction → IR-এ জমা হয়।
+4. PC ← PC + 1 (পরের বারের জন্য তৈরি)।
 
-### Decode Stage:
+ছবিটা যদি pseudocode-এ আঁকি:
 
 ```
-Purpose: Understand the instruction
-
-Steps:
-1. Extract opcode from IR
-2. Extract operands (registers)
-3. Generate control signals
-4. Read register values if needed
-
-Example:
-IR = 0011_01_10  (ADD R1, R2)
-     ^^^^ ^^ ^^
-     │    │  └─ Reg B (R2)
-     │    └──── Reg A (R1)
-     └───────── Opcode (ADD)
-
-Control unit generates:
-- ALU operation: ADD
-- Register read: R1, R2
-- Register write: R1
-- Memory: no access
+address     = PC;            // PC-র ঠিকানা memory-কে দাও
+instruction = memory[address]; // সেখান থেকে instruction পড়ো
+IR          = instruction;   // IR-এ ধরে রাখো
+PC          = PC + 1;        // আঙুল পরের লাইনে সরাও
 ```
 
-### Execute Stage:
+পুরোটা হয় **এক clock cycle**-এ — একটা memory read আর একটা IR update। এই ধাপ শেষে আমাদের হাতে instruction আছে, কিন্তু আমরা এখনো জানি না সেটা কী বলছে — সেটা পরের ধাপের কাজ।
+
+### Decode Stage (বোঝার ধাপ):
+
+**উদ্দেশ্য:** হাতে আসা instruction-টা আসলে কী চাইছে, তা বুঝে নেওয়া।
+
+Fetch করে আমরা ৮টা bit পেলাম — কিন্তু খালি bit তো অর্থহীন। Decode ধাপে control unit সেই bit-গুলো পড়ে বুঝে নেয়: কোন operation, কোন register-গুলো জড়িত। তারপর সে সেই অনুযায়ী control signal তৈরি করতে শুরু করে আর দরকারি register-গুলো পড়ে নেয়। ধাপে ধাপে:
+
+1. IR থেকে opcode আলাদা করো।
+2. operand (register-গুলো) আলাদা করো।
+3. সেই অনুযায়ী control signal তৈরি করো।
+4. দরকার হলে register-এর মান পড়ে নাও।
+
+একটা উদাহরণ দিয়ে দেখা যাক। ধরো IR-এ আছে `00110110`, যার মানে `ADD R1, R2`। bit-গুলো এভাবে ভাগ হয়:
 
 ```
-Purpose: Perform the operation
-
-Steps:
-1. ALU performs calculation
-2. Or memory address calculation
-3. Or branch target calculation
-
-Examples:
-
-ADD R1, R2:
-  ALU_result = R1 + R2
-
-LOAD R1, [R2]:
-  Address = R2
-
-JUMP target:
-  PC_next = target
-
-Timing:
-- 1 clock cycle
-- ALU operation
-- Result generated
+ bit:   7   6   5   4   3   2   1   0
+       ┌───────────────┬───────┬───────┐
+       │  0   0   1   1│  0   1│  1   0│
+       └───────────────┴───────┴───────┘
+        Opcode = 0011   RegA=01 RegB=10
+        (ADD)           (R1)    (R2)
 ```
 
-### Memory Stage:
+এই decode থেকে control unit বুঝে নেয় ঠিক কী করতে হবে:
+
+- **ALU operation:** ADD
+- **Register read:** R1 আর R2 (operand দুটো)
+- **Register write:** R1 (ফল এখানেই ফিরবে)
+- **Memory:** কোনো access লাগবে না
+
+লক্ষ করো — এক ঝলকে instruction-টা পুরো "পড়া" হয়ে গেল, শুধু ঠিক bit-গুলো দেখে। এটাই fixed-format RISC instruction-এর সৌন্দর্য, যা আমরা আগেই বলেছিলাম।
+
+### Execute Stage (কাজের ধাপ):
+
+**উদ্দেশ্য:** আসল operation-টা চালানো।
+
+Decode করে আমরা জেনে গেছি কী করতে হবে; Execute ধাপে সেটা সত্যিই করা হয়। বেশির ভাগ instruction-এর জন্য এর মানে ALU-কে দিয়ে হিসাব করানো। কিন্তু "হিসাব" শব্দটা একটু বড় অর্থে ভেবো — Execute ধাপে ALU তিন ধরনের কাজের যেকোনো একটা করতে পারে:
+
+1. সরাসরি **গাণিতিক/যৌক্তিক হিসাব** (যোগ, AND ইত্যাদি)।
+2. memory-র **address হিসাব করা** (LOAD/STORE-এর জন্য কোথায় যেতে হবে)।
+3. branch/jump-এর **গন্তব্য ঠিকানা হিসাব করা**।
+
+কয়েকটা উদাহরণে পরিষ্কার হবে:
 
 ```
-Purpose: Access memory if needed
-
-Operations:
-1. LOAD: Read from memory
-   data = memory[address]
-
-2. STORE: Write to memory
-   memory[address] = data
-
-3. Other instructions: Skip
-
-Timing:
-- 1 clock cycle (if memory access)
-- 0 cycles (if no access)
+ADD R1, R2     →  ALU_result = R1 + R2     (যোগফল বের করা)
+LOAD R1, [R2]  →  Address    = R2          (কোন ঠিকানা পড়তে হবে)
+JUMP target    →  PC_next    = target      (কোথায় লাফ দিতে হবে)
 ```
 
-### Writeback Stage:
+মজার ব্যাপারটা হলো — তিন ক্ষেত্রেই একই ALU ব্যবহার হচ্ছে, শুধু control unit তাকে আলাদা কাজে লাগাচ্ছে। একটা হার্ডওয়্যার, অনেক কাজে — এই পুনর্ব্যবহারই দক্ষ ডিজাইনের লক্ষণ। সময়: **এক clock cycle**, একটা ALU operation, একটা ফল তৈরি।
+
+### Memory Stage (memory-র ধাপ):
+
+**উদ্দেশ্য:** দরকার হলে memory-তে পড়া বা লেখা।
+
+সব instruction-এর memory লাগে না — শুধু LOAD আর STORE-এর জন্যই এই ধাপটা আসল কিছু করে। Execute ধাপে যে address হিসাব হয়েছিল, এখানে সেটা ব্যবহার করা হয়:
+
+1. **LOAD:** memory থেকে data পড়ে আনা → `data = memory[address]`
+2. **STORE:** register-এর data memory-তে লিখে রাখা → `memory[address] = data`
+3. **বাকি সব instruction:** এই ধাপে কিছুই করার নেই, পার হয়ে যায়।
+
+তাই সময়ের হিসাবে: memory access থাকলে **এক clock cycle**, না থাকলে কার্যত শূন্য (ধাপটা শুধু পার হয়ে যায়)। ADD-এর মতো instruction এখানে এসে যেন একটা ফাঁকা স্টেশন পার করে এগিয়ে যায়।
+
+### Writeback Stage (ফল রাখার ধাপ):
+
+**উদ্দেশ্য:** এতক্ষণের পরিশ্রমের ফলটা জমা রাখা।
+
+এ হলো শেষ ধাপ — যেখানে instruction তার ফলাফল রেখে বিদায় নেয়। হয় ALU-র ফল register-এ লেখা হয়, নয়তো memory থেকে আনা data register-এ লেখা হয়; আর সবশেষে PC update হয় যাতে পরের instruction-এর পালা শুরু হতে পারে। ধাপে ধাপে:
+
+1. ALU-র ফল register-এ লেখো, **অথবা**
+2. memory থেকে আনা data register-এ লেখো।
+3. PC update করো।
+
+দুটো উদাহরণ পাশাপাশি রাখলে পার্থক্যটা বোঝা যায় — শুধু register-এ কোন data ফিরছে সেটুকুই আলাদা:
 
 ```
-Purpose: Save results
-
-Steps:
-1. Write ALU result to register
-2. Or write memory data to register
-3. Update PC
-
-Example:
-ADD R1, R2:
-  R1 ← ALU_result
-  PC ← PC + 1
-
-LOAD R1, [R2]:
-  R1 ← memory_data
-  PC ← PC + 1
-
-Timing:
-- 1 clock cycle
-- Register write
-- PC update
+ADD R1, R2     →  R1 ← ALU_result    ;  PC ← PC + 1
+LOAD R1, [R2]  →  R1 ← memory_data   ;  PC ← PC + 1
 ```
+
+সময়: **এক clock cycle** — একটা register write আর একটা PC update। এই ধাপ শেষ হওয়ামাত্র control unit আবার FETCH state-এ ফিরে যায়, আর পুরো চক্রটা নতুন instruction নিয়ে আবার শুরু হয়। এভাবেই, ধাপের পর ধাপ, cycle-এর পর cycle, তোমার processor একটা গোটা program চালিয়ে ফেলে।
 
 ---
 
-## ১২.৫ Simple 8-bit Processor - Complete Design
+## ১২.৫ Simple 8-bit Processor - সম্পূর্ণ Design
 
-### Top-Level Architecture:
+এতক্ষণ আমরা একেকটা যন্ত্রাংশ আলাদা আলাদা বানিয়েছি — PC, IR, register file, ALU, control unit। এবার সবচেয়ে তৃপ্তিদায়ক ধাপ: এদের একটা **top-level module**-এ জুড়ে দিয়ে একটা সত্যিকারের processor বানানো! এই top module নিজে নতুন কোনো হিসাব করে না — তার পুরো কাজ হলো ছোট module-গুলোকে instantiate করা আর তাদের মধ্যে ঠিকঠাক তার (wire) জুড়ে দেওয়া। ভাবো এটা যেন একটা বর্তনী-বোর্ড (circuit board), যার উপর তুমি chip-গুলো বসিয়ে তার দিয়ে সংযোগ করছ।
+
+কোডটা পড়ার সময় তিনটে জিনিস খেয়াল রেখো, তাহলে পুরোটা জলের মতো পরিষ্কার লাগবে:
+
+- **প্রতিটা module instantiate হচ্ছে** — `program_counter pc_inst(...)`-এর মতো করে আমাদের আগের প্রতিটা block এখানে বসছে।
+- **`assign` দিয়ে তার জোড়া লাগছে** — যেমন `assign opcode = ir[7:4];` দিয়ে IR-এর bit থেকে opcode বের করে control unit-এ পাঠানো হচ্ছে, বা `assign pc_next = pc + 1;` দিয়ে PC বাড়ানোর তার বসানো হচ্ছে।
+- **এক module-এর output পরের module-এর input হচ্ছে** — register file-এর `reg_read1` সোজা ALU-র `a`-তে যাচ্ছে, ALU-র `alu_result` ঘুরে register-এর write data হয়ে ফিরছে। এই সংযোগগুলোই আমাদের আগের block-diagram-টাকে জীবন্ত করে তোলে।
 
 ```verilog
 module simple_processor(
@@ -688,11 +714,17 @@ module simple_processor(
 endmodule
 ```
 
+ব্যস — তুমি একটা সম্পূর্ণ processor বানিয়ে ফেললে! একটু থেমে এই অর্জনটা অনুভব করো: কয়েকটা ছোট, বোধগম্য module আর তাদের মাঝের কিছু তার — এটুকু দিয়েই এমন একটা যন্ত্র দাঁড়িয়ে গেল যা memory থেকে instruction পড়ে নিজে নিজে চালাতে পারে। শেষের দিকের `pc_out` আর `ir_out` debug output দুটোও খেয়াল করো — সিমুলেশনের সময় এগুলো দিয়ে তুমি ভেতরে উঁকি দিয়ে দেখতে পারবে কোন instruction-এ আছ আর PC কোথায়, যা debug করার সময় সোনার চেয়েও দামি।
+
 ---
 
 ## ১২.৬ Sample Programs
 
-### Program 1: Add Two Numbers
+তত্ত্ব অনেক হলো — এবার দেখি তোমার processor সত্যিই কিছু **করতে** পারে কিনা! এখানে তিনটে ছোট program দেওয়া হলো, ক্রমশ কঠিন হতে হতে। প্রতিটা program আসলে memory-তে রাখা কিছু ৮-bit সংখ্যা — মনে রেখো, আমাদের instruction নিজেও তো শুধু bit, যা memory-তেই থাকে (এই তো von Neumann-এর stored-program ধারণা কাজে লাগছে!)। প্রতিটা লাইনের ডান পাশে human-readable assembly, বাঁ পাশে processor যে binary দেখবে তা।
+
+### Program 1: দুটো সংখ্যা যোগ
+
+সবচেয়ে সহজটা দিয়ে শুরু — দুটো register যোগ করে থেমে যাওয়া। R1-এ যদি 5 আর R2-তে 3 থাকে, চালানোর পর R1-এ হবে 8। মাত্র দুটো instruction: একটা যোগ, একটা NOP (যা কার্যত "এখানে থামো"-র কাজ করে)।
 
 ```assembly
 ; Add R1 and R2, store in R1
@@ -709,7 +741,9 @@ Binary:
 0x01: 00000000  (NOP)
 ```
 
-### Program 2: Load and Store
+### Program 2: Load এবং Store
+
+এবার memory-কে কাজে লাগাই। এই program memory থেকে একটা সংখ্যা পড়ে (LOAD), তার সাথে R2 যোগ করে, তারপর ফলটা একই জায়গায় ফেরত লিখে রাখে (STORE)। অর্থাৎ memory-তে রাখা একটা মানকে জায়গায় বসিয়েই বাড়িয়ে দেওয়া। এখানে তুমি প্রথমবার datapath-এর পুরো যাত্রা দেখছ — memory → register → ALU → memory।
 
 ```assembly
 ; Load value from memory, add, store back
@@ -724,7 +758,9 @@ Address | Instruction | Description
 ; Result: memory[R0] = 15
 ```
 
-### Program 3: Simple Loop
+### Program 3: একটা সাধারণ Loop
+
+এবার আসল মজা — একটা **loop**! এই program একটা counter-কে বারবার এক করে বাড়ায়, প্রতিবার পরীক্ষা করে সেটা লক্ষ্যে (10) পৌঁছেছে কিনা। এখানেই BEQ আর JUMP-এর শক্তি দেখা যায়: BEQ পরীক্ষা করে "R1 কি R0-র সমান?" — যদি হয়, loop থেকে বেরিয়ে যায়; না হলে JUMP আবার শুরুতে ফিরিয়ে নিয়ে যায়। এই "পরীক্ষা করো, না হলে আবার লাফ দাও" প্যাটার্নটাই পৃথিবীর সমস্ত loop-এর মূল কাঠামো — তোমার পরিচিত যেকোনো ভাষার `for` বা `while`-এর নিচেও ঠিক এটাই ঘটছে।
 
 ```assembly
 ; Count from 0 to 10
@@ -746,106 +782,95 @@ Address | Instruction | Description
 
 ## ১২.৭ Processor Performance
 
+তোমার processor চলছে — কিন্তু কত **দ্রুত**? "দ্রুত" মাপার জন্য একটা পরিষ্কার পরিমাপ দরকার, আর সেখানেই আসে CPI আর MIPS-এর ধারণা। এই অংশটা বুঝলে তুমি বুঝবে কেন পরের chapter-গুলোতে আমরা এত কষ্ট করে pipeline বানাবো।
+
 ### Clock Cycles Per Instruction (CPI):
 
+**CPI** মানে গড়ে একটা instruction চালাতে কতগুলো clock cycle লাগে — সংখ্যাটা যত ছোট, processor তত দক্ষ। একটা আদর্শ RISC processor-এর লক্ষ্য CPI = 1, অর্থাৎ প্রতি cycle-এ একটা করে instruction শেষ। কিন্তু আমাদের সরল processor প্রতিটা instruction-কে পাঁচটা আলাদা ধাপে নিয়ে যায়, প্রতিটা ধাপে এক cycle — তাই আমাদের CPI = 5:
+
+| ধাপ | Cycle |
+|---|---|
+| Fetch | ১ |
+| Decode | ১ |
+| Execute | ১ |
+| Memory (দরকার হলে) | ১ |
+| Writeback | ১ |
+| **মোট** | **৫** |
+
+এখন স্বাভাবিক প্রশ্ন: আরও ভালো করা যায় না? **নিশ্চয়ই যায়!** খেয়াল করো, যখন একটা instruction Execute ধাপে আছে, তখন Fetch ইউনিটটা কিন্তু বসে আছে — অলস। যদি আমরা আগের instruction Execute করার সময়ই পরের instruction-টা Fetch করে ফেলতে পারতাম? এই ধারণাটার নামই **pipelining**, আর এটাই আমরা পরের chapter-গুলোতে বানাবো। আপাতত শুধু মনে রাখো — CPI = 5 আমাদের শুরুর জায়গা, শেষ নয়।
+
+### Processor Speed (গতি):
+
+CPI জানলে আসল গতি বের করা সহজ। প্রতি সেকেন্ডে কতগুলো instruction চলবে (IPS — Instructions Per Second) তা নির্ভর করে দুটো জিনিসের উপর: clock কত দ্রুত (frequency, $f$), আর প্রতি instruction-এ কত cycle লাগে (CPI)। সম্পর্কটা চমৎকার সরল:
+
+$$\text{IPS} = \frac{f}{\text{CPI}}$$
+
+চলো Tang Nano 9K board-এর বাস্তব সংখ্যা বসিয়ে দেখি, যেটা আমরা এই বইয়ে ব্যবহার করছি:
+
 ```
-Ideal RISC: CPI = 1
-Our simple processor: CPI = 5
-
-Stages:
-1. Fetch     - 1 cycle
-2. Decode    - 1 cycle
-3. Execute   - 1 cycle
-4. Memory    - 1 cycle (if needed)
-5. Writeback - 1 cycle
-
-Total: 5 cycles per instruction
-
-Can we do better?
-Yes! Pipelining! (Next chapters)
-```
-
-### Processor Speed:
-
-```
-Clock frequency: f Hz
-CPI: cycles per instruction
-Instructions per second (IPS):
-
-IPS = f / CPI
-
-Example:
-f = 27 MHz (Tang Nano 9K)
+f   = 27 MHz  = 27,000,000 cycles/sec   (Tang Nano 9K)
 CPI = 5
-IPS = 27,000,000 / 5 = 5,400,000 IPS
-    = 5.4 MIPS (Million Instructions Per Second)
 
-Not bad for a simple processor!
+IPS = 27,000,000 / 5
+    = 5,400,000 instructions/sec
+    = 5.4 MIPS   (Million Instructions Per Second)
 ```
+
+সেকেন্ডে ৫৪ লাখ instruction — তোমার নিজের হাতে গোড়া থেকে বানানো একটা সরল processor-এর জন্য মোটেও খারাপ নয়! আর মনে রেখো, CPI কমিয়ে (pipeline দিয়ে) বা clock বাড়িয়ে এই সংখ্যাটাকে আরও অনেক উপরে তোলা যায় — এটাই গোটা computer architecture বিদ্যার খেলা।
 
 ---
 
-## ১২.৮ Your 1-Week Build Plan
+## ১২.৮ তোমার ১ সপ্তাহের Build Plan
 
-### Day 1: PC and IR
-```
-□ Implement Program Counter
-□ Implement Instruction Register
-□ Test with testbench
-□ Understand control flow
-```
+পুরো processor একসাথে বানাতে গেলে পাহাড়ের মতো লাগতে পারে — তাই আমরা সেটাকে সাত দিনে, ছোট ছোট কামড়ে ভাগ করে নিচ্ছি। প্রতিদিন আগের দিনের উপর গড়ে উঠবে, ঠিক যেভাবে এই chapter-এ আমরা এক একটা block বানিয়েছি। প্রতিটা ধাপ শেষে নিজে testbench চালিয়ে নিশ্চিত হও — পরের ধাপে যাওয়ার আগে আগেরটা যেন সত্যিই কাজ করে। ধীরে চলো, কিন্তু থেমো না!
 
-### Day 2: Register File
-```
-□ Design register file
-□ Multiple read/write ports
-□ Test thoroughly
-□ Debug issues
-```
+**Day 1 — PC ও IR:** processor-এর "এখন কোথায় আছি" অংশটা দিয়ে শুরু।
+- [ ] Program Counter বানাও
+- [ ] Instruction Register বানাও
+- [ ] testbench দিয়ে test করো
+- [ ] control flow-টা ভালো করে বুঝে নাও
 
-### Day 3: ALU
-```
-□ Complete ALU implementation
-□ All operations
-□ Flag generation
-□ Test each operation
-```
+**Day 2 — Register File:** processor-এর দ্রুত storage।
+- [ ] register file ডিজাইন করো
+- [ ] একাধিক read/write port বসাও
+- [ ] ভালো করে test করো
+- [ ] সমস্যা থাকলে debug করো
 
-### Day 4: Control Unit
-```
-□ State machine design
-□ Control signal generation
-□ Instruction decoding
-□ Test FSM
-```
+**Day 3 — ALU:** হিসাব-নিকাশের হৃদয়।
+- [ ] পুরো ALU বানাও
+- [ ] সব operation যোগ করো
+- [ ] flag (zero, negative) তৈরি করো
+- [ ] প্রতিটা operation আলাদা করে test করো
 
-### Day 5: Integration
-```
-□ Connect all components
-□ Top-level module
-□ Wire everything
-□ First synthesis
-```
+**Day 4 — Control Unit:** সবাইকে পরিচালনাকারী মস্তিষ্ক।
+- [ ] state machine ডিজাইন করো
+- [ ] control signal তৈরির অংশ লেখো
+- [ ] instruction decode করাও
+- [ ] FSM-টা test করো
 
-### Day 6: Memory Interface
-```
-□ Memory controller
-□ Read/write timing
-□ Integration
-□ Test with simple program
-```
+**Day 5 — Integration:** সব অংশ এক জায়গায় জোড়া।
+- [ ] সব component যুক্ত করো
+- [ ] top-level module বানাও
+- [ ] সব তার ঠিকঠাক জোড়া দাও
+- [ ] প্রথমবার synthesis চালাও
 
-### Day 7: Testing
-```
-□ Run sample programs
-□ Debug issues
-□ Waveform analysis
-□ Documentation
-```
+**Day 6 — Memory Interface:** বাইরের memory-র সাথে সংযোগ।
+- [ ] memory controller বানাও
+- [ ] read/write timing ঠিক করো
+- [ ] সবকিছুর সাথে integrate করো
+- [ ] একটা সহজ program দিয়ে test করো
+
+**Day 7 — Testing:** সব মিলিয়ে কাজ করছে কিনা যাচাই।
+- [ ] sample program গুলো চালাও
+- [ ] যেখানে আটকায় সেখানে debug করো
+- [ ] waveform দেখে বিশ্লেষণ করো
+- [ ] কী শিখলে লিখে রাখো
 
 ---
 
 ## ১২.৯ Chapter 12 Mission Complete!
+
+একটু থেমে ভাবো তুমি ঠিক কী করলে। এই chapter শুরু করেছিলে শুধু কয়েকটা আলাদা circuit হাতে নিয়ে — gate, register, ALU। আর এখন? তুমি জানো এগুলো কীভাবে একসাথে জুড়ে একটা **জীবন্ত processor** হয়, যে memory থেকে instruction পড়ে, decode করে, চালায়, আর ফলাফল রাখে — বারবার, নিজে নিজে। "প্রসেসর কীভাবে কাজ করে?" — যে প্রশ্নটা দিয়ে এই বই শুরু হয়েছিল, তার উত্তরটা এখন আর রহস্য নয়, তোমার নিজের হাতে গড়া। এটা সত্যিকারের একটা মাইলফলক, নিজেকে একটা বাহবা দাও! 👏
 
 ### তুমি এখন জানো:
 
@@ -894,9 +919,11 @@ Level: Processor Architect! 🏆
 
 ## 🎯 Final Project
 
+পড়া আর বোঝা এক জিনিস, নিজে হাতে বাড়ানো আরেক জিনিস — আর আসল শেখা হয় দ্বিতীয়টাতেই। তাই এবার তোমার পালা: আমাদের সরল processor-টাকে নিয়ে আরও শক্তিশালী করে তোলো। নিচের feature-গুলো একটা একটা করে যোগ করার চেষ্টা করো; আটকে গেলেও চিন্তা নেই, আটকে যাওয়াটাই শেখার অংশ।
+
 ### Project: Enhanced 8-bit Processor
 
-**Add features:**
+**যেসব feature যোগ করতে পারো:**
 ```
 ✅ More instructions (16 total)
 ✅ More registers (8 total)

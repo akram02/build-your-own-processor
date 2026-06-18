@@ -307,20 +307,35 @@ flowchart TB
 
 ---
 
-## ২১.৪ Placement & Routing
+## ২১.৪ Placement আর Routing — চিপের ভেতরে শহর বসানো
 
-### Placement:
+এই দুটো ধাপই physical design-এর প্রাণ। আগের সেই **শহর বানানোর উপমা**-টা মনে
+আছে তো? Placement হলো প্রতিটা বাড়িকে তার প্লটে বসানো, আর routing হলো বাড়ির
+মাঝে রাস্তা টানা। চলো দুটোই খুলে দেখি।
+
+### Placement — কোন cell ঠিক কোথায় বসবে?
+
+Synthesis তোমাকে হাজার হাজার standard cell-এর একটা তালিকা দিয়েছে, কিন্তু
+এখনো বলেনি কোনটা চিপের কোথায় বসবে। Placement সেই কাজটাই করে — floorplan-এ
+ঠিক করা খালি জায়গায় প্রতিটা cell-কে একটা নির্দিষ্ট অবস্থানে বসিয়ে দেয়।
+
+এটা ঠিক **শহর পরিকল্পনার** মতো। যে বাড়িগুলো একে অপরের সঙ্গে অনেক
+যাতায়াত করে, সেগুলোকে কাছাকাছি বসালে রাস্তা ছোট হয়, যাতায়াত দ্রুত হয়। চিপেও
+ঠিক তাই — যে দুটো cell-এর মধ্যে অনেক সংকেত যায়, সেগুলো কাছাকাছি বসালে
+সংযোগকারী তার ছোট হয়, signal দ্রুত পৌঁছায়, power কম লাগে। আবার কোনো এলাকায়
+যেন এত বেশি cell গাদাগাদি করে না বসে যে পরে তার টানার জায়গাই না থাকে — সেই
+ভারসাম্যটাও placement-কেই রাখতে হয়।
 
 ```
-Goal: Position standard cells optimally
+লক্ষ্য: standard cell-গুলোকে সবচেয়ে ভালোভাবে বসানো
 
-Objectives:
-✅ Minimize wire length
-✅ Meet timing constraints
-✅ Reduce congestion
-✅ Balance power distribution
+যা যা মাথায় রাখতে হয়:
+✅ তারের মোট দৈর্ঘ্য কমানো (Minimize wire length)
+✅ Timing constraint মেলানো
+✅ Congestion কমানো (এক জায়গায় বেশি ভিড় নয়)
+✅ Power distribution-এ ভারসাম্য রাখা
 
-Algorithms:
+Algorithm:
 - Simulated annealing
 - Partition-based
 - Analytic methods
@@ -330,62 +345,111 @@ Tools:
 → Cadence Innovus (commercial)
 ```
 
-### Routing:
+এত বড় সমস্যা — কোটি cell-এর জন্য সেরা জায়গা বের করা — হাতে করা অসম্ভব। তাই
+টুল চালাকি করে: কখনো ধাতু ঠান্ডা হওয়ার অনুকরণে ধীরে ধীরে সাজায় (simulated
+annealing), কখনো বড় সমস্যাকে ছোট ছোট ভাগে ভাঙে (partition-based), কখনো গণিতের
+সমীকরণ কষে সরাসরি সেরা অবস্থান বের করে (analytic)। নাম জানা ভালো, কিন্তু
+চিন্তা নেই — RePlAce-এর মতো টুল এই কঠিন অঙ্কটা তোমার হয়ে কষে দেয়।
+
+### Routing — সব cell-কে তার দিয়ে জোড়া
+
+Cell বসানো হয়ে গেলে এবার সেগুলোকে আসলেই তার দিয়ে জুড়তে হবে — ঠিক যেমন শহরের
+বাড়িগুলো বসানোর পর রাস্তা বানাতে হয়। কিন্তু চিপে লক্ষ-কোটি সংযোগ, আর জায়গা
+সীমিত। তাই routing দুই ধাপে হয়, ঠিক যেমন আগে শহরের মূল হাইওয়ে আঁকা হয়, তারপর
+প্রতিটা গলির খুঁটিনাটি:
 
 ```
-Goal: Connect all pins with wires
+লক্ষ্য: সব pin-কে তার দিয়ে জোড়া
 
-Types:
+দুই ধরন:
 1. Global Routing
-   - High-level path planning
-   - Which regions to use
+   - উঁচু থেকে পথের নকশা (high-level path planning)
+   - কোন কোন এলাকা দিয়ে তার যাবে
 
 2. Detailed Routing
-   - Exact wire placement
-   - Assign to specific tracks
+   - তারের নিখুঁত অবস্থান
+   - নির্দিষ্ট track-এ বসানো
 
-Challenges:
-❌ Congestion (too many wires)
-❌ Crosstalk (interference)
-❌ Timing violations
-❌ Design rule violations
+চ্যালেঞ্জ:
+❌ Congestion (একসাথে অনেক তার, জায়গা কম)
+❌ Crosstalk (পাশের তারের সংকেতে হস্তক্ষেপ)
+❌ Timing violation
+❌ Design rule violation
 
 Tools:
 → FastRoute (open source)
 → TritonRoute (open source)
 ```
 
+প্রথমে **global routing** মোটা দাগে ঠিক করে কোন তার চিপের কোন অঞ্চল দিয়ে
+যাবে — অনেকটা GPS-এ আগে শুধু "এই হাইওয়ে ধরে যাও" বলে দেওয়ার মতো। তারপর
+**detailed routing** ঠিক করে প্রতিটা তার কোন নির্দিষ্ট track-এ, কোন layer-এ,
+ঠিক কোথায় বসবে — গলির ভেতরের প্রতিটা মোড়। এখানে আসল ঝামেলা শুরু: যদি এক
+জায়গায় অনেক বেশি তার যেতে চায় (congestion), পাশাপাশি তারের সংকেত একে অপরকে
+নষ্ট করে (crosstalk), অথবা তার এত লম্বা হয়ে যায় যে signal দেরিতে পৌঁছায়
+(timing violation) — সবই routing-কে সামলাতে হয়। তাই এটা পুরো flow-এর সবচেয়ে
+সময়সাপেক্ষ ধাপগুলোর একটা।
+
 ---
 
-## ২১.৫ Timing Analysis
+## ২১.৫ Timing Analysis — চিপ আদৌ ঠিক গতিতে চলবে তো?
 
-### Static Timing Analysis (STA):
+তোমার চিপের তার বসানো হয়ে গেছে, সব সংযোগ ঠিক আছে। কিন্তু একটা গুরুত্বপূর্ণ
+প্রশ্ন বাকি: signal কি সময়মতো গন্তব্যে পৌঁছাচ্ছে? clock-এর প্রতিটা টিক-এর
+মধ্যে data-কে এক register থেকে পরের register-এ পৌঁছাতেই হবে। দেরি হলে চিপ ভুল
+উত্তর দেবে। এই "সময় ঠিক আছে কিনা" যাচাই করার কাজটাই **Static Timing Analysis
+(STA)**।
+
+### Static Timing Analysis (STA)
+
+"Static" শব্দটা গুরুত্বপূর্ণ। STA তোমার চিপ আসলে চালিয়ে test করে না — বরং
+গাণিতিকভাবে প্রতিটা সম্ভাব্য পথের delay হিসাব করে দেখে নেয় কোনো পথে দেরি
+হচ্ছে কিনা। মূলত দুটো শর্ত মেলাতে হয়:
 
 ```
-Check if circuit meets timing:
+Circuit timing মেলে কিনা যাচাই:
 
 Setup Time:
-- Data must arrive before clock edge
+- clock edge-এর আগেই data পৌঁছাতে হবে
 - Path delay < Clock period - Setup time
 
 Hold Time:
-- Data must be stable after clock edge
+- clock edge-এর পরেও data কিছুক্ষণ স্থির থাকতে হবে
 - Path delay > Hold time
 
 Critical Path:
-- Longest delay path
-- Determines max frequency
+- সবচেয়ে দীর্ঘ delay-র পথ
+- এটাই সর্বোচ্চ frequency ঠিক করে দেয়
 
 Example:
 Register → Logic → Register
-If logic takes 8ns, clock period must be > 8ns
-Max frequency = 1/8ns = 125 MHz
+যদি logic-এ ৮ns লাগে, clock period > ৮ns হতেই হবে
+সর্বোচ্চ frequency = 1/8ns = 125 MHz
 ```
 
-### Timing Constraints:
+দুটো শর্তকে এভাবে ভাবো। **Setup time** মানে "দেরি কোরো না" — data-কে
+clock-এর পরের টিক-এর *আগেই* পৌঁছে যেতে হবে, না হলে register পুরোনো বা অর্ধেক
+মান ধরে ফেলবে। **Hold time** মানে "তাড়াহুড়োও কোরো না" — clock টিক করার ঠিক
+পরমুহূর্তে data যেন বদলে না যায়, না হলে register ঠিকমতো মান ধরার আগেই সেটা
+পাল্টে যাবে।
+
+এর মধ্যে সবচেয়ে গুরুত্বপূর্ণ ধারণা হলো **critical path** — তোমার পুরো চিপের
+যত পথ আছে তার মধ্যে সবচেয়ে ধীর (সবচেয়ে বেশি delay) পথটা। ভাবো একদল মানুষ
+একসাথে হাঁটছে, কিন্তু পুরো দল তত জোরেই যেতে পারবে যত জোরে সবচেয়ে ধীর
+মানুষটা হাঁটে। তোমার clock-ও তত দ্রুত চলতে পারবে যত দ্রুত critical path
+signal পৌঁছাতে পারে। তাই উদাহরণের মতো, যদি critical path-এ ৮ns লাগে, তবে
+clock period ৮ns-এর বেশি রাখতেই হবে — মানে সর্বোচ্চ গতি 125 MHz। চিপ আরও
+দ্রুত চালাতে চাইলে তোমাকে এই critical path-টাকেই ছোট করতে হবে।
+
+### Timing Constraint — টুলকে তোমার লক্ষ্য বলে দেওয়া
+
+STA টুল নিজে থেকে জানে না তুমি কত গতি চাও। তাই তুমি একটা **SDC** (Synopsys
+Design Constraints) ফাইলে নিজের চাহিদা লিখে দাও — "আমার clock-এর period এত,
+input এত দেরিতে আসে, output এত দেরিতে দরকার"। এই কয়েক লাইনই টুলকে বলে দেয়
+কোন মানদণ্ডে timing যাচাই করতে হবে:
 
 ```
-Create SDC (Synopsys Design Constraints) file:
+SDC (Synopsys Design Constraints) ফাইল বানাও:
 
 create_clock -period 10 [get_ports clk]
 set_input_delay 2 -clock clk [all_inputs]
@@ -396,81 +460,134 @@ Tools:
 → Synopsys PrimeTime (commercial)
 ```
 
+প্রথম লাইনটা বলছে clock-এর period 10 (মানে চিপ 100 MHz-এ চলবে), পরের দুই
+লাইন input/output-এর delay ঠিক করে দিচ্ছে। এই constraint হাতে নিয়ে OpenSTA
+তোমার প্রতিটা পথ পরীক্ষা করবে আর কোথাও setup বা hold violation থাকলে সঙ্গে
+সঙ্গে জানিয়ে দেবে।
+
 ---
 
-## ২১.৬ Physical Verification
+## ২১.৬ Physical Verification — fab-এ পাঠানোর আগের শেষ পরীক্ষা
 
-### Design Rule Check (DRC):
+ভাবো তোমার layout তৈরি, timing-ও ঠিক। কিন্তু chip fabrication ভয়ংকর ব্যয়বহুল
+আর একবার ভুল গেলে মাসের পর মাস নষ্ট। তাই পাঠানোর আগে তিনটে কড়া পরীক্ষা পাস
+করতেই হয় — এগুলোকে একসাথে বলে **physical verification**। এগুলো হলো তোমার
+চিপের final inspection, যেমন গাড়ি showroom থেকে বেরোনোর আগে শেষবার চেক করা হয়।
+
+### Design Rule Check (DRC) — নিয়ম মানা হয়েছে তো?
+
+মনে আছে ২১.৩-এ আমরা design rule নিয়ে কথা বলেছিলাম — সর্বনিম্ন প্রস্থ, ফাঁক,
+via enclosure? **DRC** হলো সেই টুল যে তোমার পুরো layout-এর প্রতিটা আকৃতি
+স্বয়ংক্রিয়ভাবে স্ক্যান করে দেখে কোথাও কোনো নিয়ম ভাঙা হয়েছে কিনা। কোনো তার
+নিয়মের চেয়ে সরু? দুটো আকৃতি বেশি কাছাকাছি? DRC সঙ্গে সঙ্গে ধরে ফেলবে।
 
 ```
-Verify layout follows manufacturing rules
+Layout fab-এর তৈরির নিয়ম মানছে কিনা যাচাই
 
-Checks:
+যা যা পরীক্ষা করে:
 ✅ Minimum width
 ✅ Minimum spacing
 ✅ Minimum area
 ✅ Via enclosure
-✅ Density rules
+✅ Density rule
 
 Tool: Magic (open source)
 ```
 
-### Layout vs Schematic (LVS):
+DRC পাস করা মানে fab নিশ্চিন্তে তোমার চিপ বানাতে পারবে — প্রতিটা আকৃতি তাদের
+যন্ত্রের ক্ষমতার মধ্যে আছে।
+
+### Layout vs Schematic (LVS) — যা এঁকেছ তাই কি বানিয়েছ?
+
+DRC দেখে তোমার আঁকা *বানানো সম্ভব* কিনা, কিন্তু সেটা *সঠিক* কিনা তা দেখে না।
+হতেই পারে তোমার layout সব নিয়ম মানছে, অথচ ভুল করে দুটো তার জুড়ে গেছে বা একটা
+সংযোগ বাদ পড়েছে। **LVS** ঠিক এটাই ধরে — সে তোমার layout থেকে একটা netlist
+বের করে আনে, তারপর সেটাকে synthesis-এর দেওয়া আসল netlist-এর সঙ্গে মিলিয়ে
+দেখে। দুটো হুবহু এক হলে তবেই পাস।
 
 ```
-Verify layout matches netlist
+Layout আসল netlist-এর সঙ্গে মেলে কিনা যাচাই
 
-Steps:
-1. Extract netlist from layout
-2. Compare with original netlist
-3. Check connectivity
-4. Report mismatches
+ধাপ:
+1. Layout থেকে netlist extract করা
+2. মূল netlist-এর সঙ্গে তুলনা করা
+3. Connectivity যাচাই করা
+4. অমিল থাকলে report করা
 
 Tool: Netgen (open source)
 ```
 
-### Antenna Rules:
+এটা যেন বাড়ি বানানোর পর blueprint মিলিয়ে দেখা — সব দরজা-জানালা ঠিক
+জায়গায় বসেছে কিনা। LVS পাস মানে তুমি যে circuit ডিজাইন করেছিলে, ঠিক সেটাই
+silicon-এ যাচ্ছে।
+
+### Antenna Rule — লুকানো বিপদ
+
+এটা একটু কৌতূহলোদ্দীপক সমস্যা। fabrication-এর সময় চিপটা layer ধরে ধরে বানানো
+হয়। কোনো লম্বা metal তার যদি কোনো transistor-এর gate-এর সঙ্গে জোড়া থাকে
+অথচ এখনো বাকি সংযোগ বসেনি, তখন ওই লম্বা তারটা একটা **antenna**-র মতো কাজ
+করে — fab-এর প্লাজমা থেকে charge জমিয়ে ফেলে। সেই জমা charge সূক্ষ্ম
+transistor gate-টাকে স্থায়ীভাবে নষ্ট করে দিতে পারে।
 
 ```
-Problem: Long wires act as antennas
-Effect: Damage transistor gates during fab
+সমস্যা: লম্বা তার antenna-র মতো কাজ করে
+ফল: fabrication-এর সময় transistor gate নষ্ট হয়
 
-Solution:
-- Add diodes
-- Break long wires
+সমাধান:
+- Diode যোগ করা
+- লম্বা তার ভেঙে দেওয়া
 - Multi-level routing
 
-Checked automatically!
+স্বয়ংক্রিয়ভাবে পরীক্ষা করা হয়!
 ```
+
+সুখবর — এই সমস্যাও টুল নিজেই ধরে ফেলে আর সমাধান (ছোট diode বসিয়ে charge
+নিরাপদে মাটিতে পাঠানো, বা তার ভেঙে দেওয়া) করে দেয়। তোমাকে শুধু জানতে হবে
+এটা কেন ঘটে।
 
 ---
 
-## ২১.৭ GDSII Format
+## ২১.৭ GDSII Format — তোমার চিপের চূড়ান্ত নকশা
 
-### What is GDSII?
+এই পুরো যাত্রার গন্তব্য একটাই ফাইল — **GDSII**। এটাই সেই চূড়ান্ত আউটপুট যেটা
+তুমি fab-এ পাঠাবে। ভাবো এটা তোমার চিপের সম্পূর্ণ blueprint: silicon-এর কোন
+layer-এ ঠিক কোন স্থানাঙ্কে কোন আকৃতি আঁকতে হবে, তার প্রতিটা খুঁটিনাটি এতে
+লেখা।
+
+### GDSII আসলে কী?
 
 ```
 GDSII = Graphic Data System II
-Industry standard for IC layouts
+IC layout-এর জন্য industry standard
 
-Contains:
+এর ভেতরে থাকে:
 - Layer information
-- Polygon coordinates  
+- Polygon coordinate
 - Cell hierarchy
-- Text labels
+- Text label
 
-File size: MB to GB!
+File size: MB থেকে GB পর্যন্ত!
 
-Viewing tools:
-→ KLayout (free, excellent!)
+দেখার টুল:
+→ KLayout (free, চমৎকার!)
 → Magic (free)
 → Cadence Virtuoso (commercial)
 ```
 
-### Layer Map:
+মূলত GDSII পুরো চিপটাকে অসংখ্য polygon (বহুভুজ) হিসেবে বর্ণনা করে — প্রতিটা
+তার, প্রতিটা transistor আসলে কয়েকটা layer-এ আঁকা আকৃতি মাত্র। বছরের পর বছর
+ধরে এটাই পুরো semiconductor শিল্পের সর্বজনীন ভাষা; দুনিয়ার যেকোনো fab এই ফাইল
+পড়ে তোমার চিপ বানাতে পারবে। তৈরি হয়ে গেলে **KLayout** দিয়ে খুলে তুমি নিজের
+চোখে দেখতে পারবে তোমার design আসলে দেখতে কেমন — সেই মুহূর্তটা সত্যিই রোমাঞ্চকর! 🤩
+
+### Layer Map — কোন সংখ্যা কোন layer
+
+GDSII-এর ভেতরে layer-গুলোকে নাম দিয়ে নয়, সংখ্যা দিয়ে চেনা হয়। প্রতিটা layer-এর
+একটা জোড়া সংখ্যা থাকে (যেমন `64/20`)। এই সংখ্যা দেখেই KLayout বা fab বুঝে
+নেয় কোন আকৃতিটা কোন layer-এর:
 
 ```
-Sky130 layers (example):
+Sky130 layer (example):
 Layer 64/20: Metal1
 Layer 65/20: Via1
 Layer 66/20: Metal2
@@ -478,14 +595,29 @@ Layer 67/20: Via2
 Layer 68/20: Metal3
 ...
 
-Each layer = different mask in fab!
+প্রতিটা layer = fab-এ আলাদা একটা mask!
 ```
+
+এখানে শেষ লাইনটা খুব তাৎপর্যপূর্ণ: **প্রতিটা layer fab-এ একটা আলাদা mask
+হয়ে যায়।** mask হলো একটা ছাঁচ — যেমন আলো ফেলে ছবি ছাপানোর negative। fab
+একটার পর একটা mask ব্যবহার করে layer ধরে ধরে তোমার চিপ silicon-এ ছাপে। তাই
+তোমার GDSII-এর প্রতিটা সংখ্যা সরাসরি একটা physical ছাঁচে রূপ নেয় — এই ফাইলটাই
+ধারণা থেকে বাস্তব silicon-এ পৌঁছানোর শেষ সেতু।
 
 ---
 
-## ২১.৮ Complete Example: Simple Counter
+## ২১.৮ পুরো একটা উদাহরণ: একটা ছোট্ট Counter
 
-### Step-by-Step VLSI Flow:
+এতক্ষণ অনেক ধারণা হলো — এবার চলো একটা ছোট্ট counter নিয়ে গোটা flow-টা চোখের
+সামনে দেখি। এই একই counter আমরা শুরুর RTL থেকে শেষের GDSII পর্যন্ত হাঁটিয়ে
+নিয়ে যাব, ঠিক ২১.১-এর ছবিটার মতো। মন দিয়ে দেখো প্রতিটা ধাপে কীভাবে একই design
+একটু একটু করে রূপ বদলায়।
+
+### ধাপে ধাপে VLSI Flow
+
+**ধাপ ১ — RTL Design.** আমরা শুরু করি চেনা জায়গা থেকে: একটা সাধারণ 8-bit
+counter, যেটা প্রতি clock-এ এক করে বাড়ে আর reset পেলে শূন্য হয়। এটাই তোমার
+পরিচিত Verilog, এর বেশি কিছু না:
 
 ```verilog
 // 1. RTL Design (counter.v)
@@ -503,7 +635,11 @@ module counter(
 endmodule
 ```
 
-### Synthesis Script:
+**ধাপ ২ — Synthesis.** এবার Yosys-কে দিয়ে ওই Verilog-টাকে আসল Sky130 cell-এ
+অনুবাদ করাই। লক্ষ্য করো script-এ আমরা ঠিক সেই `.lib` library ফাইলটা দিচ্ছি
+(২১.২-এ যেটার কথা বলেছিলাম), যাতে Yosys জানে কোন cell-এর timing/area কেমন।
+`synth` logic সাজায়, `dfflibmap` flip-flop-গুলো library-র cell-এ বসায়,
+আর `abc` চূড়ান্ত optimization করে gate-এ map করে:
 
 ```tcl
 # 2. Synthesis (synth.ys)
@@ -516,7 +652,11 @@ yosys -p "
 "
 ```
 
-### Physical Design:
+**ধাপ ৩ — Physical Design (Place & Route).** এবার সবচেয়ে দারুণ অংশ। floorplan,
+placement, CTS, routing, timing, verification — physical জগতের এই পুরো ঝক্কিটা
+**OpenLane** একটা মাত্র command-এ চালিয়ে নেয়। তোমাকে শুধু কয়েকটা setting বলে
+দিতে হবে: design-এর নাম কী, কোন Verilog ফাইল, clock period কত (এখানে 10, মানে
+100 MHz), আর clock কোন port-এ। ব্যস — বাকিটা টুলের কাজ:
 
 ```tcl
 # 3. Place & Route (OpenLane)
@@ -529,142 +669,181 @@ set ::env(CLOCK_PORT) clk
 flow.tcl -design counter
 ```
 
-### Result:
+**ফলাফল।** flow শেষ হলে OpenLane তোমাকে কয়েকটা ফাইল উপহার দেবে — আর এগুলোই
+এই পুরো chapter-এ শেখা ধাপগুলোর হাতে-গরম প্রমাণ। লক্ষ্য করো প্রতিটা ফাইল
+flow-এর কোন ধাপ থেকে এসেছে:
 
 ```
-After completion:
-✅ counter_synth.v (gate-level)
-✅ counter.def (placement)
-✅ counter.gds (layout)
-✅ counter.sdc (timing)
-✅ Reports (timing, area, power)
+flow শেষ হওয়ার পর:
+✅ counter_synth.v (gate-level netlist — synthesis থেকে)
+✅ counter.def    (placement — কোথায় কী বসল)
+✅ counter.gds    (layout — চূড়ান্ত GDSII!)
+✅ counter.sdc    (timing constraint)
+✅ Report         (timing, area, power)
 
-Ready for fabrication! 🎉
+Fabrication-এর জন্য তৈরি! 🎉
 ```
+
+ওই `counter.gds` ফাইলটাই তোমার আসল পুরস্কার — এটাই সেই GDSII, যেটা KLayout-এ
+খুলে তুমি নিজের বানানো চিপ চোখে দেখতে পারবে, আর চাইলে fab-এ পাঠাতে পারবে।
+একটা সাধারণ Verilog module থেকে শুরু করে আস্ত একটা silicon-ready layout —
+পুরো পথটা তুমি এইমাত্র হেঁটে এলে! 👏
 
 ---
 
-## ২১.৯ Open Source Tools Ecosystem
+## ২১.৯ Open Source Tool-এর জগৎ
 
-### Complete Open Source Flow:
+একটা ব্যাপার একটু থেমে ভাবার মতো: কয়েক বছর আগেও এই পুরো RTL-to-GDSII flow
+চালাতে লাখ লাখ ডলারের commercial software লাগত, যা কেবল বড় কোম্পানির হাতেই
+ছিল। আজ তুমি ঠিক একই কাজ সম্পূর্ণ **free, open-source** টুল দিয়ে করতে পারো।
+এটাই আজকের সবচেয়ে বড় সুযোগ — আর তুমি ঠিক সময়েই এসেছ। 🙌
 
+### সম্পূর্ণ Open Source Flow
+
+এই টুলগুলোকে আলাদা আলাদা মনে রাখার দরকার নেই। **OpenLane** হলো ছাতার মতো —
+সে ভেতরে এই সব ছোট ছোট টুলকে ঠিক ক্রমে ডেকে নেয় আর তোমার RTL-কে GDSII পর্যন্ত
+পৌঁছে দেয়। কোন টুল flow-এর কোন কাজটা করে, সেটা এই ছবিতে স্পষ্ট:
+
+```mermaid
+flowchart TD
+    OL["OpenLane — সম্পূর্ণ ASIC Flow (ছাতা)"]
+    Y["Yosys → Synthesis"]
+    OR["OpenROAD → Place & Route"]
+    RP["RePlAce → Placement"]
+    TR["TritonRoute → Routing"]
+    ST["OpenSTA → Timing"]
+    MG["Magic → DRC, Extraction"]
+    NG["Netgen → LVS"]
+    KL["KLayout → Viewing"]
+
+    OL --> Y --> OR --> MG --> NG --> KL
+    OR --> RP
+    OR --> TR
+    OR --> ST
+
+    style OL fill:#ffe9b3,stroke:#d49a00
 ```
-┌──────────────────────────────────────┐
-│ OpenLane (Complete ASIC Flow)       │
-├──────────────────────────────────────┤
-│ → Yosys (Synthesis)                  │
-│ → OpenROAD (Place & Route)           │
-│   - RePlAce (Placement)              │
-│   - TritonRoute (Routing)            │
-│   - OpenSTA (Timing)                 │
-│ → Magic (DRC, Extraction)            │
-│ → Netgen (LVS)                       │
-│ → KLayout (Viewing)                  │
-└──────────────────────────────────────┘
 
-PDK (Process Design Kit):
-→ Sky130 (Google/Skywater) - FREE!
-   130nm process, open source
+> 🧰 **PDK (Process Design Kit):** টুলের পাশাপাশি দরকার একটা process-এর তথ্যভাণ্ডার —
+> standard cell, design rule, layer map সব এতে থাকে। আমরা ব্যবহার করব
+> **Sky130** (Google/Skywater) — সম্পূর্ণ FREE, 130nm open-source process।
+>
+> 💾 **Installation:** সব GitHub-এ আছে, আর Docker container-ও রেডি — তাই
+> ইনস্টলের ঝামেলা প্রায় নেই।
 
-Installation:
-Everything available on GitHub!
-Docker containers available!
-```
+পরের chapter-এ (Chapter 22) আমরা এই OpenLane নিজের হাতে চালাব, তাই এখন শুধু
+এটুকু বুঝে রাখলেই হবে — কে কী কাজ করে।
 
 ---
 
-## ২১.১০ Your Processor on Silicon
+## ২১.১০ তোমার Processor-কে Silicon-এ নেওয়া
 
-### Preparing Your Design:
+এবার আসল ব্যাপারটা ভাবো। ওই counter দিয়ে যে flow শিখলে, ঠিক সেই একই flow
+দিয়ে তুমি Chapter 12-19-এ বানানো **তোমার নিজের RISC-V processor**-কে silicon-এ
+নিতে পারো! সেটা এমনি এমনি বানাওনি — সেটাই তোমার প্রথম চিপের ভিত্তি হতে পারে:
 
 ```
-Your RISC-V processor (from Ch 12-19):
-- 3000+ lines of Verilog ✅
-- Pipelined, with cache ✅
-- Complete SoC ✅
+তোমার RISC-V processor (Ch 12-19 থেকে):
+- 3000+ লাইন Verilog ✅
+- Pipelined, cache সহ ✅
+- সম্পূর্ণ SoC ✅
+```
 
-To make it chip-ready:
+তবে একটা সৎ কথা বলে রাখি, আর এতে একটুও মন খারাপ করার কিছু নেই — তোমার পুরো
+পেল্লায় design হয়তো প্রথমবারেই পুরোটা চিপে আঁটবে না। প্রথম tapeout-এর জায়গা
+আর সময় সীমিত, তাই কয়েকটা জিনিস মাথায় রাখতে হবে। ভাবো এটা ছোট একটা বাসায় ওঠার
+মতো — সব আসবাব নয়, শুধু দরকারিগুলো নিয়ে শুরু করো:
 
-1. Size constraints:
-   - Target area (e.g., 1mm × 1mm)
-   - Available on TinyTapeout
+**১. আকারের সীমা (Size constraints):** একটা target area ঠিক করো (যেমন
+1mm × 1mm) — TinyTapeout-এ এই মাপের জায়গা পাওয়া যায়।
 
-2. Clock frequency:
-   - Target 50-100 MHz
-   - May need to simplify for first tapeout
+**২. Clock frequency:** শুরুতে 50-100 MHz লক্ষ্য রাখো। প্রথম tapeout-এ design
+একটু সরল করতে হতে পারে যাতে timing সহজে মেলে।
 
-3. IO pads:
-   - UART pins
-   - GPIO pins
-   - Power/ground
-   - Clock input
+**৩. IO pad:** চিপের বাইরের জগতের সঙ্গে যোগাযোগের জন্য pin লাগবে — UART pin,
+GPIO pin, power/ground, আর clock input।
 
-4. Memory:
-   - May need to simplify
-   - Use on-chip SRAM
-   - External memory via IO
+**৪. Memory:** বড় memory চিপে অনেক জায়গা খায়, তাই হয়তো সরল করতে হবে —
+ছোট on-chip SRAM ব্যবহার করো, আর বড় memory দরকার হলে IO দিয়ে বাইরে থেকে যোগ করো।
 
-Realistic first chip:
-→ Simplified RISC-V (RV32I subset)
-→ Small cache (1-2 KB)
+একটা বাস্তবসম্মত প্রথম চিপ দেখতে হতে পারে এমন:
+
+```
+বাস্তবসম্মত প্রথম চিপ:
+→ সরল করা RISC-V (RV32I subset)
+→ ছোট cache (1-2 KB)
 → 50 MHz clock
-→ 8-16 GPIO pins
-→ UART for communication
-
-STILL AMAZING! 🎉
+→ 8-16 GPIO pin
+→ যোগাযোগের জন্য UART
 ```
+
+আর এটাকে "ছোট" বলে কখনো ছোট ভেবো না — তুমি নিজের হাতে ডিজাইন করা একটা আস্ত
+প্রসেসর silicon-এ পাঠাচ্ছ। পৃথিবীতে খুব কম মানুষই এটা পেরেছে। **STILL
+AMAZING! 🎉**
 
 ---
 
-## ২১.১১ Chapter 21 Mission Complete!
+## ২১.১১ Chapter 21 শেষ — Mission Complete!
 
-### তুমি এখন জানো:
+একটু থেমে নিজের পিঠ চাপড়ে দাও। 👏 এটা ছিল বইয়ের অন্যতম কঠিন chapter — পুরো
+একটা নতুন physical জগৎ — আর তুমি গোড়া থেকে শেষ পর্যন্ত হেঁটে এলে। শুরুতে যে
+নামগুলো অচেনা মনে হচ্ছিল (synthesis, floorplan, CTS, routing, STA, DRC, LVS,
+GDSII), এখন তুমি জানো প্রতিটা আসলে কী করে আর কেন দরকার।
+
+### তুমি এখন যা যা জানো:
 
 ```
-✅ Complete VLSI design flow
-✅ RTL to GDSII process
-✅ Synthesis concepts
-✅ Physical design basics
+✅ সম্পূর্ণ VLSI design flow
+✅ RTL থেকে GDSII পর্যন্ত পুরো process
+✅ Synthesis-এর ধারণা
+✅ Physical design-এর basics
 ✅ Timing analysis
-✅ Physical verification
+✅ Physical verification (DRC, LVS, Antenna)
 ✅ GDSII format
-✅ Open source tools
-✅ How to make real chips! 🎉
+✅ Open source tool-এর জগৎ
+✅ কীভাবে আসল চিপ বানাতে হয়! 🎉
 ```
 
-### Next Steps:
+### এরপর কী:
+
+পথের ম্যাপটা দেখে নাও — শেষ লাইনে কী অপেক্ষা করছে, সেটাই তো তোমার আসল স্বপ্ন:
 
 ```
 Chapter 22: OpenLane & Physical Design
-  → Hands-on with OpenLane
-  → Your processor layout
-  → Complete flow practice
+  → নিজের হাতে OpenLane চালানো
+  → তোমার processor-এর layout
+  → পুরো flow practice
 
 Chapter 23: Sky130 PDK Deep Dive
-  → Standard cells
-  → Design rules
-  → Process details
+  → Standard cell
+  → Design rule
+  → Process-এর খুঁটিনাটি
 
 Chapter 24: TinyTapeout Submission
-  → Prepare your design
-  → Submit to fab
-  → Track progress
+  → তোমার design প্রস্তুত করা
+  → fab-এ submit করা
+  → অগ্রগতি track করা
 
 Chapter 25: Fabrication & Testing
-  → Chip comes back!
-  → Testing methodology
-  → Success celebration! 🎊
+  → চিপ হাতে ফিরে আসে!
+  → Testing-এর পদ্ধতি
+  → সফলতার উদযাপন! 🎊
 
-YOU'RE ON THE PATH TO REAL SILICON! 🏭
+তুমি এখন আসল SILICON-এর পথে! 🏭
 ```
 
 ---
 
 ## 🎯 Chapter Exercise
 
-### Project: Synthesize Your Processor
+### Project: তোমার Processor-কে Synthesize করো
 
-**Task:** Take your RISC-V processor through synthesis
+পড়া তো হলো — এবার হাত নোংরা করার পালা! 🛠️ এই exercise-এ তুমি ২১.৮-এ শেখা
+synthesis ধাপটা এবার ছোট্ট counter-এ নয়, **তোমার নিজের RISC-V processor**-এ
+চালাবে। ভয় নেই, command প্রায় একই — শুধু এবার ফলাফলে দেখবে তোমার আস্ত
+processor কত হাজার gate-এ রূপ নেয়।
+
+**লক্ষ্য:** তোমার RISC-V processor-কে synthesis-এর ভেতর দিয়ে নিয়ে যাও
 
 ```bash
 # 1. Install Yosys
