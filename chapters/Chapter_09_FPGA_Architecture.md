@@ -136,57 +136,77 @@ FPGA = Hardware prototyping + Production!
 
 ## ৯.২ FPGA Basic Architecture
 
+ভেতরে ঢোকার আগে একটা mental model বানিয়ে নাও। কল্পনা করো একটা বিশাল **পরিকল্পিত শহর**। শহরে আছে অসংখ্য একই রকম বাড়ি (logic block), বাড়িগুলোকে জোড়া দেওয়ার জন্য রাস্তা আর মোড়ের signal (routing/switches), শহরের সাথে বাইরের দুনিয়ার সংযোগের জন্য বিমানবন্দর আর বন্দর (I/O blocks), কিছু বড় গুদাম (Block RAM), আর কয়েকটা বিশেষ কারখানা যেগুলো ভারী হিসাব-নিকাশ করে (DSP blocks)। তোমার design মানে আসলে এই শহরের একটা "নকশা" — কোন বাড়ি কী কাজ করবে আর কোন রাস্তা দিয়ে কাকে যুক্ত করা হবে, সেটাই ঠিক করে দেওয়া।
+
 ### The Big Picture:
 
-```
-FPGA তে থাকে:
+একটা FPGA chip-এর ভেতরে যে বড় বড় উপাদানগুলো থাকে, সেগুলোর hierarchy এমন:
 
-┌────────────────────────────────────┐
-│  FPGA Chip                         │
-│  ┌──────────────────────────────┐ │
-│  │  Logic Blocks (CLBs)         │ │
-│  │  - Programmable logic        │ │
-│  │  - LUTs, FFs, MUXes          │ │
-│  └──────────────────────────────┘ │
-│  ┌──────────────────────────────┐ │
-│  │  Routing/Interconnect        │ │
-│  │  - Programmable wires        │ │
-│  │  - Switches                   │ │
-│  └──────────────────────────────┘ │
-│  ┌──────────────────────────────┐ │
-│  │  I/O Blocks                  │ │
-│  │  - Input/Output pins         │ │
-│  └──────────────────────────────┘ │
-│  ┌──────────────────────────────┐ │
-│  │  Block RAM                   │ │
-│  │  - Embedded memory           │ │
-│  └──────────────────────────────┘ │
-│  ┌──────────────────────────────┐ │
-│  │  DSP Blocks                  │ │
-│  │  - Multiply-accumulate       │ │
-│  └──────────────────────────────┘ │
-└────────────────────────────────────┘
+```mermaid
+graph TD
+    CHIP["🔲 FPGA Chip"]
+    CHIP --> CLB["Logic Blocks (CLBs)<br/>Programmable logic<br/>LUTs · FFs · MUXes"]
+    CHIP --> RT["Routing / Interconnect<br/>Programmable wires<br/>Switches"]
+    CHIP --> IO["I/O Blocks<br/>Input / Output pins"]
+    CHIP --> BR["Block RAM<br/>Embedded memory"]
+    CHIP --> DSP["DSP Blocks<br/>Multiply-accumulate"]
+
+    style CHIP fill:#1e3a5f,stroke:#4a90d9,color:#fff
+    style CLB fill:#2d5016,stroke:#7cb342,color:#fff
+    style RT fill:#5f1e3a,stroke:#d94a90,color:#fff
+    style IO fill:#5f4a1e,stroke:#d9a94a,color:#fff
+    style BR fill:#1e5f5a,stroke:#4ad9c8,color:#fff
+    style DSP fill:#3a1e5f,stroke:#904ad9,color:#fff
+```
+
+বাস্তব silicon-এ এই উপাদানগুলো এলোমেলোভাবে ছড়ানো থাকে না — থাকে একটা পরিকল্পিত **grid**-এর মতো। logic block-গুলো সারি-সারি (rows ও columns) সাজানো, তাদের মাঝে মাঝে বুনে দেওয়া আছে routing-এর রাস্তা, আর মাঝে মাঝে BRAM বা DSP-এর column। chip-এর একদম বাইরের কিনারা ঘিরে থাকে I/O block-গুলো, যাতে চারপাশের pin-এর সাথে সহজে যোগ হতে পারে:
+
+```mermaid
+graph TB
+    subgraph FABRIC["FPGA Fabric (grid layout)"]
+        direction TB
+        IOTOP["I/O Blocks (top edge)"]
+        subgraph CORE[" "]
+            direction LR
+            C1["CLB"] --- C2["CLB"] --- BRAMcol["BRAM<br/>column"] --- C3["CLB"] --- DSPcol["DSP<br/>column"]
+            C4["CLB"] --- C5["CLB"] --- BRAMcol2["BRAM<br/>column"] --- C6["CLB"] --- DSPcol2["DSP<br/>column"]
+        end
+        IOBOT["I/O Blocks (bottom edge)"]
+    end
+    IOTOP -.-> CORE
+    CORE -.-> IOBOT
+
+    style IOTOP fill:#5f4a1e,stroke:#d9a94a,color:#fff
+    style IOBOT fill:#5f4a1e,stroke:#d9a94a,color:#fff
+    style C1 fill:#2d5016,stroke:#7cb342,color:#fff
+    style C2 fill:#2d5016,stroke:#7cb342,color:#fff
+    style C3 fill:#2d5016,stroke:#7cb342,color:#fff
+    style C4 fill:#2d5016,stroke:#7cb342,color:#fff
+    style C5 fill:#2d5016,stroke:#7cb342,color:#fff
+    style C6 fill:#2d5016,stroke:#7cb342,color:#fff
+    style BRAMcol fill:#1e5f5a,stroke:#4ad9c8,color:#fff
+    style BRAMcol2 fill:#1e5f5a,stroke:#4ad9c8,color:#fff
+    style DSPcol fill:#3a1e5f,stroke:#904ad9,color:#fff
+    style DSPcol2 fill:#3a1e5f,stroke:#904ad9,color:#fff
 ```
 
 ### Three Key Components:
 
-```
-1. Logic Blocks (CLBs)
-   - Implement your logic
-   - Contains LUTs and flip-flops
-   
-2. Routing Network
-   - Connects logic blocks
-   - Programmable switches
-   
-3. I/O Blocks
-   - Connect to outside world
-   - Interface pins
-```
+পুরো architecture-টা মনে রাখার সহজতম উপায় হলো — এর **তিনটে মূল স্তম্ভ** আছে। বাকি সবকিছু (BRAM, DSP) এই তিনটের উপরে বসানো extra সুবিধা মাত্র:
+
+| # | Component | কাজ কী | analogy |
+|---|---|---|---|
+| 1 | **Logic Blocks (CLBs)** | তোমার logic বাস্তবায়ন করে; ভেতরে LUT আর flip-flop | শহরের বাড়িঘর |
+| 2 | **Routing Network** | block-গুলোকে programmable switch দিয়ে জোড়া দেয় | রাস্তা ও মোড়ের signal |
+| 3 | **I/O Blocks** | বাইরের দুনিয়ার (LED, button, pin) সাথে সংযোগ | বিমানবন্দর/বন্দর |
+
+মনে রেখো এই pattern-টা — **"compute, connect, communicate"**। CLB compute করে (হিসাব), routing connect করে (জোড়া দেয়), I/O communicate করে (বাইরে কথা বলে)। যেকোনো FPGA, ছোট হোক বা বড়, এই তিনটে কাজেরই সমন্বয়। এখন চলো প্রতিটা স্তম্ভ গভীরভাবে বুঝি — শুরু করি সবচেয়ে মৌলিক একক, LUT দিয়ে।
 
 ---
 
 ## ৯.৩ LUT - Look-Up Table (The Heart of FPGA!)
+
+এসে গেছি সেই জায়গায় যেখানে FPGA-এর আসল জাদু লুকিয়ে — **LUT (Look-Up Table)**। এই chapter-এ আর কিছু ভুলে গেলেও LUT-এর intuition-টা ধরে রেখো, কারণ এটাই সেই উত্তর যে "একটা chip কীভাবে কেনার পরে যেকোনো circuit হয়ে উঠতে পারে।"
 
 ### What is a LUT?
 
@@ -199,6 +219,14 @@ LUT = Look-Up Table
 Think: Truth table in hardware!
 ```
 
+LUT বোঝার চাবিকাঠি একটাই উপলব্ধি: **logic gate বানানোর দরকার নেই, যদি গেটের উত্তরগুলো আগে থেকে মুখস্থ করে রাখা যায়।**
+
+একটু ভাবো। সাধারণভাবে একটা AND gate বানাতে হলে transistor দিয়ে সত্যিকারের গেট তৈরি করতে হয়। কিন্তু একটা gate আসলে কী? এটা শুধু একটা **truth table** — input দিলে একটা নির্দিষ্ট output দেয়। এখন প্রশ্ন: তুমি যদি সেই truth table-এর সব উত্তর একটা ছোট memory-তে লিখে রাখো, আর input-গুলোকে সেই memory-এর **address** হিসেবে ব্যবহার করো — তাহলে কী হবে? input বদলালেই address বদলাবে, address বদলালেই memory থেকে সঠিক উত্তরটা বেরিয়ে আসবে। ফলাফল: memory-টা হুবহু একটা gate-এর মতো আচরণ করবে, অথচ ভেতরে কোনো gate নেই!
+
+ঠিক এটাই LUT। একদম সহজ ভাষায় — **LUT হলো একটা ছোট্ট memory যেখানে একটা truth table লেখা থাকে, আর input-গুলো হলো সেই table পড়ার address।** তুমি যখন design "program" করো, তখন আসলে এই memory cell-গুলোতে 0/1 লিখে দাও। ভেতরের cell-গুলোর মান বদলে দিলেই একই LUT হয়ে যায় সম্পূর্ণ নতুন একটা gate। এই কারণেই একে বলে **programmable logic** — logic নিজেই নরম মাটির মতো, যেমন ছাঁচে ফেলবে তেমন আকার নেবে।
+
+> 💡 **মূল অন্তর্দৃষ্টি:** একটা LUT কোনো gate-কে *গণনা* করে না; এটা শুধু আগে থেকে রাখা উত্তর *মনে রাখে* এবং *খুঁজে বের করে* (look-up)। আর যেহেতু যেকোনো combinational logic-ই একটা truth table, তাই যথেষ্ট বড় LUT দিয়ে যেকোনো logic বানানো সম্ভব।
+
 ### 4-input LUT Example:
 
 ```
@@ -207,22 +235,31 @@ Think: Truth table in hardware!
 Can implement any 4-input function:
 - AND, OR, XOR, NAND, etc.
 - Even complex functions!
-
-Structure:
-         Inputs
-    A B C D
-    │ │ │ │
-    └─┴─┴─┘
-       │
-    ┌──▼───┐
-    │ 16x1 │
-    │  RAM │  ← Programmed with truth table
-    └──┬───┘
-       │
-    Output
 ```
 
+কেন ঠিক **16টা** cell? কারণ 4টা input-এর সম্ভাব্য combination-এর সংখ্যা হলো 2⁴ = 16 (0000 থেকে 1111 পর্যন্ত)। প্রতিটা সম্ভাব্য input-combination-এর জন্য একটা করে উত্তর জমা রাখতে হবে, তাই ঠিক ১৬টা ঘর দরকার — একটাও বেশি না, একটাও কম না। এখানে দারুণ ব্যাপারটা হলো: যেহেতু **প্রতিটা** combination-এর জন্য আলাদা ঘর আছে, তুমি সেই ঘরগুলোতে যা খুশি মান বসাতে পারো। তার মানে একটা 4-input LUT 4-variable-এর **যেকোনো** boolean function বানাতে পারে — হোক সেটা সহজ AND, কিংবা পাগলাটে কোনো জটিল সমীকরণ। কোনো function-ই এর কাছে "কঠিন" না, কারণ সবার জন্যই শুধু একটা lookup table।
+
+ভেতরের গঠনটা এরকম — input-গুলো একসাথে মিলে একটা address বানায়, সেই address দিয়ে memory থেকে সঠিক bit-টা select হয়ে output-এ আসে:
+
+```mermaid
+graph TD
+    A["A"] --> ADDR
+    B["B"] --> ADDR
+    C["C"] --> ADDR
+    D["D"] --> ADDR
+    ADDR["4-bit address<br/>(A,B,C,D → 0..15)"] --> RAM
+    RAM["16 × 1 SRAM<br/>(truth table memory)<br/>← bitstream দিয়ে programmed"] --> OUT["Output"]
+
+    style ADDR fill:#5f4a1e,stroke:#d9a94a,color:#fff
+    style RAM fill:#1e3a5f,stroke:#4a90d9,color:#fff
+    style OUT fill:#2d5016,stroke:#7cb342,color:#fff
+```
+
+ভেতরে আসলে কী ঘটছে সেটাও বুঝে রাখো: ওই "16 × 1 RAM" থেকে এক বিট বেছে নেওয়ার কাজটা করে একটা **16-to-1 multiplexer** (MUX)। input A, B, C, D হলো সেই MUX-এর select line, আর ১৬টা memory cell হলো তার ১৬টা data input। তুমি Chapter 3-এ MUX আর memory দুটোই শিখেছো — দেখো, সেই দুটো মৌলিক ব্লক মিলেই FPGA-এর সবচেয়ে গুরুত্বপূর্ণ অংশটা তৈরি! নতুন কিছু না, শুধু পুরোনো জিনিসের চমৎকার সমন্বয়।
+
 ### LUT Programming Example:
+
+এবার চোখের সামনে দেখো কীভাবে একটা খালি LUT একটা সত্যিকারের gate হয়ে ওঠে। ধরো আমরা একটা **4-input AND gate** বানাতে চাই (output 1 হবে শুধু তখনই, যখন A, B, C, D চারটেই 1):
 
 ```
 Want: 4-input AND gate (A & B & C & D)
@@ -243,21 +280,23 @@ Now LUT implements AND gate!
 Want different function? Reprogram memory!
 ```
 
+খেয়াল করেছো ব্যাপারটা? AND gate-এর truth table-এ শুধু একটা সারিতেই output 1 — যখন সব input 1, অর্থাৎ address 15-এ। তাই আমরা শুধু `memory[15] = 1` লিখি, বাকি ১৫টা ঘরে 0। ব্যস, LUT-টা এখন নিখুঁত AND gate! এখানেই আসল মজা: তুমি যদি এর বদলে **OR gate** চাও, তাহলে শুধু একটা ঘর (address 0, অর্থাৎ সব input 0) 0 রেখে বাকি সব ১৫টাকে 1 করে দাও — একই hardware, এক বিন্দুও তার না নড়িয়ে, সম্পূর্ণ ভিন্ন একটা gate। এটাই সেই মুহূর্ত যেখানে তুমি অনুভব করবে "programmable logic" কথাটার আসল ওজন।
+
 ### LUT Sizes:
 
-```
-Common LUT sizes:
-- 4-input LUT (16 bits memory)
-- 5-input LUT (32 bits memory)
-- 6-input LUT (64 bits memory)
+LUT সব এক মাপের হয় না। input যত বেশি, memory তত বড় (2ⁿ নিয়মে), তাই একটা trade-off আছে:
 
-Larger LUT = More complex function
-But also more power and area
+| LUT type | Memory cells | কী বোঝায় |
+|---|---|---|
+| **4-input LUT** | 2⁴ = 16 bits | পুরোনো/ছোট FPGA |
+| **5-input LUT** | 2⁵ = 32 bits | মাঝারি |
+| **6-input LUT** | 2⁶ = 64 bits | আধুনিক FPGA-এর standard |
 
-Modern FPGAs: Usually 6-input LUTs
-```
+trade-off-টা বোঝা জরুরি: **বড় LUT** একসাথে আরও বেশি input-এর জটিল function এক ধাপেই সামলাতে পারে, ফলে সেই function বানাতে কম LUT লাগে আর signal-কে কম গেটের ভেতর দিয়ে যেতে হয় (দ্রুত)। কিন্তু input এক বাড়লে memory cell দ্বিগুণ হয় — তাই বড় LUT বেশি area আর power খায়, এবং তুমি যদি ছোট function বানাও তাহলে ঘরগুলো খালি পড়ে থাকে (অপচয়)। দশকের পর দশক পরীক্ষার পর industry দেখেছে যে **6-input LUT** এই দড়ি-টানাটানিতে সবচেয়ে ভালো সমঝোতা — তাই আজকের প্রায় সব আধুনিক FPGA (Xilinx, Intel সহ) 6-input LUT ব্যবহার করে।
 
 ### LUT Versatility:
+
+এবার Verilog-এর চোখে দেখো। নিচের প্রতিটা `assign` line দেখতে সম্পূর্ণ আলাদা একেকটা circuit, তাই না? অথচ synthesis tool-এর কাছে এদের সবার মানে একটাই — "এই 4টা input দিলে output কী হবে, তার truth table বের করো এবং একটা LUT-এর ১৬টা ঘরে সেটা লিখে দাও।" তাই এই **সবগুলো** ভিন্ন function একটা **মাত্র** LUT-এ এঁটে যায়, শুধু ভেতরের ১৬টা bit-এর মান পাল্টে:
 
 ```verilog
 // Single 4-input LUT can implement:
@@ -281,9 +320,13 @@ assign out = sel[1] ? (sel[0] ? d : c) :
 All in ONE LUT! Magic! ✨
 ```
 
+এখানে একটা গভীর সত্য লুকিয়ে আছে যা তোমার Verilog শেখাকে নতুন আলোয় দেখাবে: তুমি যখন Verilog লেখো, তখন আসলে gate আঁকছো না — তুমি **LUT-গুলো কীভাবে ভরাট হবে সেই truth table বর্ণনা করছো**। synthesis tool তোমার কোড পড়ে, প্রতিটা চিহ্নিত logic-এর truth table বের করে, আর সেগুলোকে FPGA-এর হাজার হাজার খালি LUT-এ ভাগ করে বসিয়ে দেয়। এই কারণেই Example 4-এর মতো একটা "জটিল" function আর Example 1-এর "সহজ" AND — দুটোরই খরচ ঠিক একটাই LUT। FPGA-এর জগতে জটিলতা মাপা হয় কত input লাগছে তা দিয়ে, gate কতগুলো তা দিয়ে নয়।
+
 ---
 
 ## ৯.৪ CLB - Configurable Logic Block
+
+LUT একা কিন্তু পুরো গল্প নয়। একটা LUT শুধু combinational logic (truth table) দিতে পারে — কিন্তু তোমার circuit-এ তো memory-ও লাগে (Chapter 4-এর flip-flop মনে আছে?), নইলে counter বা register বানাবে কীভাবে? তাই FPGA ডিজাইনাররা LUT-এর সাথে flip-flop আর কিছু helper জুড়ে একটা packaged একক বানিয়েছে — এর নাম **CLB**।
 
 ### What is a CLB?
 
@@ -293,25 +336,33 @@ CLB = Configurable Logic Block
 - Contains multiple LUTs
 - Also has flip-flops, MUXes
 - Building block of all logic
-
-CLB Structure:
-┌─────────────────────────┐
-│        CLB              │
-│  ┌────┐  ┌────┐        │
-│  │LUT │  │LUT │        │
-│  └─┬──┘  └─┬──┘        │
-│    │       │           │
-│  ┌─▼───┐ ┌─▼───┐      │
-│  │ FF  │ │ FF  │      │
-│  └─┬───┘ └─┬───┘      │
-│    │       │           │
-│  ┌─▼───────▼──┐       │
-│  │   MUX      │       │
-│  └─────┬──────┘       │
-└────────┼──────────────┘
-         │
-      Output
 ```
+
+CLB-কে ভাবো LUT-এর "আবাসিক ভবন" হিসেবে। একটা একা LUT একটা একলা ইট — দরকারি, কিন্তু একা কিছু বানানো যায় না। CLB হলো সেই ইট দিয়ে তৈরি একটা সম্পূর্ণ ফ্ল্যাট, যেখানে আছে গণনার জন্য কয়েকটা LUT, মনে রাখার জন্য flip-flop, আর signal-কে কোন পথে পাঠানো হবে সেটা ঠিক করার জন্য MUX। FPGA-কে আসলে এই CLB-এর একটা বিশাল array হিসেবেই বানানো হয় — placement tool যখন তোমার design বসায়, তখন এই CLB-এর হিসেবেই বসায়।
+
+ভেতরের data flow-টা এমন — LUT-এ combinational হিসাব হয়, তারপর একটা MUX ঠিক করে output সরাসরি বেরিয়ে যাবে (combinational) নাকি আগে flip-flop-এ গিয়ে এক clock আটকে থাকবে (registered/sequential):
+
+```mermaid
+graph TD
+    IN["Inputs"] --> L1["LUT"]
+    IN --> L2["LUT"]
+    L1 --> FF1["FF<br/>(flip-flop)"]
+    L2 --> FF2["FF<br/>(flip-flop)"]
+    L1 -. "combinational path" .-> MUX
+    L2 -. "combinational path" .-> MUX
+    FF1 -- "registered path" --> MUX["Output MUX<br/>(comb বা registered বেছে নেয়)"]
+    FF2 -- "registered path" --> MUX
+    MUX --> OUT["Output"]
+
+    style L1 fill:#2d5016,stroke:#7cb342,color:#fff
+    style L2 fill:#2d5016,stroke:#7cb342,color:#fff
+    style FF1 fill:#1e3a5f,stroke:#4a90d9,color:#fff
+    style FF2 fill:#1e3a5f,stroke:#4a90d9,color:#fff
+    style MUX fill:#5f1e3a,stroke:#d94a90,color:#fff
+    style OUT fill:#5f4a1e,stroke:#d9a94a,color:#fff
+```
+
+ওই output MUX-টা কেন এত গুরুত্বপূর্ণ, বুঝে নাও: তুমি Verilog-এ যখন `assign y = a & b;` লেখো (combinational), tool MUX-টাকে LUT-এর সরাসরি output বেছে নিতে বলে। আর তুমি যখন `always @(posedge clk)` ব্লকে কিছু লেখো (sequential), tool একই MUX-কে এবার flip-flop-এর output বেছে নিতে বলে। অর্থাৎ একটা CLB একই hardware দিয়ে combinational বা sequential — দুই-ই হতে পারে, শুধু MUX-এর setting বদলে। এটাই CLB-কে "Configurable" বানায়।
 
 ### Typical CLB Contents:
 
@@ -330,7 +381,11 @@ Example (Xilinx Slice):
 - Wide multiplexers
 ```
 
+এই উপাদানগুলোর মধ্যে একটা আলাদা করে চেনা দরকার — **carry chain**। তুমি Chapter 3-এ দেখেছিলে যে একটা ripple-carry adder-এ carry এক bit থেকে পরের bit-এ গড়িয়ে যায়, আর প্রতিটা ধাপে দেরি জমে। যদি এই carry-গুলো সাধারণ routing-এর রাস্তা দিয়ে এক CLB থেকে আরেক CLB-তে পাঠাতে হতো, তাহলে adder ভয়াবহ ধীর হতো। তাই FPGA-তে carry-এর জন্য আলাদা একটা **dedicated, super-fast তার** বুনে দেওয়া আছে যেটা একটা CLB-এর উপরের ঘর থেকে নিচের ঘরে সরাসরি লাফ দেয় — কোনো programmable switch ছাড়াই। এই কারণেই FPGA-তে addition আর counter এত দ্রুত চলে। (এই কারণেই তোমার RISC-V-এর ALU FPGA-তে চমৎকার পারফর্ম করবে!)
+
 ### CLB Flexibility:
+
+যেহেতু এক CLB-তে একসাথে কয়েকটা LUT আর flip-flop থাকে, তাই একটা মাত্র CLB-ই অবাক করার মতো কাজ করতে পারে — শুধু একটা gate নয়, বরং একটা গোটা ছোট sub-circuit:
 
 ```verilog
 One CLB can implement:
@@ -350,9 +405,13 @@ Sequential:
 One CLB = Lots of functionality!
 ```
 
+এই তালিকাটা মাথায় রাখলে তুমি FPGA-এর "size" বোঝা শুরু করবে। কেউ যখন বলে একটা FPGA-তে "8640টা LUT" আছে, তখন সেটা আসলে একটা পরোক্ষ হিসাব — কয়টা ছোট state machine, counter বা comparator একসাথে FPGA-তে আঁটবে। তোমার design যত বড় হবে (যেমন একটা পুরো RISC-V CPU), তত বেশি CLB খরচ হবে। তাই পরের section-এ যখন routing দেখব, তখন মনে রেখো — শুধু যথেষ্ট CLB থাকলেই হবে না, সেই CLB-গুলোকে একে অপরের সাথে জোড়া দেওয়ার রাস্তাও থাকতে হবে।
+
 ---
 
 ## ৯.৫ Routing and Interconnect
+
+CLB-গুলো হলো শহরের বাড়ি, কিন্তু রাস্তা ছাড়া শহর অচল। FPGA-এর CLB-গুলোও যদি একে অপরের সাথে কথা বলতে না পারে, তাহলে তারা শুধু বিচ্ছিন্ন কিছু দ্বীপ — কোনো কাজে আসে না। তোমার design যখন একটা LUT-এর output আরেকটা LUT-এর input-এ পাঠাতে চায়, সেই সংযোগটা ঘটায় **routing** বা interconnect। আর এটাই FPGA-এর সবচেয়ে বড় চমকপ্রদ ব্যাপারগুলোর একটা: শুধু logic নয়, **তারগুলোও programmable**।
 
 ### The Wiring Problem:
 
@@ -368,42 +427,60 @@ Solution:
 - Multiple routing tracks
 ```
 
+সমস্যাটা একটু গভীরভাবে ধরো। তোমার একটা design-এ CLB #5-এর output হয়তো CLB #900-তে যাওয়া দরকার। কিন্তু পরের design-এ হয়তো সেই একই CLB #5-কে CLB #12-এ পাঠাতে হবে। কারখানা তো আগে থেকে জানে না তুমি কী বানাবে — তাহলে তার পক্ষে আগে থেকে নির্দিষ্ট তার বসানো অসম্ভব। সমাধান হলো একটা বিশাল **জালের মতো সম্ভাব্য তারের network** বুনে রাখা, আর প্রতিটা মোড়ে একটা করে programmable switch বসানো। তুমি (আসলে routing tool) ঠিক করে দাও কোন switch খোলা থাকবে আর কোনটা বন্ধ — তাতেই signal-এর জন্য নির্দিষ্ট পথ তৈরি হয়। এই switch-গুলোও LUT-এর মতোই bitstream দিয়ে set হয়।
+
 ### Routing Architecture:
 
+কল্পনা করো CLB-গুলো একটা grid-এ সাজানো, তাদের মাঝে আনুভূমিক ও উল্লম্ব তার (routing tracks) চলে গেছে, আর প্রতিটা সংযোগস্থলে আছে একটা **switch box** — যেটা ঠিক করে কোন তার কোন তারের সাথে জুড়বে:
+
+```mermaid
+graph LR
+    CLB1["CLB"] --- SW1{{"Switch"}}
+    SW1 --- W1["═ Wire ═"]
+    W1 --- SW2{{"Switch"}}
+    SW2 --- CLB2["CLB"]
+
+    CLB3["CLB"] --- SW3{{"Switch"}}
+    SW3 --- W2["═ Wire ═"]
+    W2 --- SW4{{"Switch"}}
+    SW4 --- CLB4["CLB"]
+
+    SW1 --- SW3
+    SW2 --- SW4
+
+    style CLB1 fill:#2d5016,stroke:#7cb342,color:#fff
+    style CLB2 fill:#2d5016,stroke:#7cb342,color:#fff
+    style CLB3 fill:#2d5016,stroke:#7cb342,color:#fff
+    style CLB4 fill:#2d5016,stroke:#7cb342,color:#fff
+    style SW1 fill:#5f1e3a,stroke:#d94a90,color:#fff
+    style SW2 fill:#5f1e3a,stroke:#d94a90,color:#fff
+    style SW3 fill:#5f1e3a,stroke:#d94a90,color:#fff
+    style SW4 fill:#5f1e3a,stroke:#d94a90,color:#fff
 ```
-Routing Network:
 
-CLB ────┬──── Wire ────┬──── CLB
-        │              │
-      Switch         Switch
-        │              │
-CLB ────┴──── Wire ────┴──── CLB
+প্রতিটা switch-এর কাজ একদম সহজ, ঠিক একটা বাতির সুইচের মতো:
 
+```
 Switches are programmable:
-- Open = No connection
-- Closed = Connected
+- Open  = No connection (তার কাটা)
+- Closed = Connected     (তার জোড়া)
 
 Your design determines switch settings!
 ```
 
+এখানে একটা গুরুত্বপূর্ণ বাস্তবতা মাথায় রাখো: আধুনিক FPGA-তে chip-এর জায়গার একটা **বিরাট অংশ** আসলে logic নয়, বরং এই routing — তার আর switch। কারণ CLB বানানো সহজ, কিন্তু "যেকোনো CLB-কে যেকোনো CLB-এর সাথে জোড়া দেওয়া যাবে" — এই নমনীয়তা দিতে গেলে অগণিত সম্ভাব্য পথ আর switch দরকার। তাই FPGA শেখার সময় মনে রেখো, routing কোনো গৌণ ব্যাপার নয়; এটাই অনেক সময় তোমার design-এর গতি আর আকার ঠিক করে দেয়।
+
 ### Routing Hierarchy:
 
-```
-1. Local Routing:
-   - Connects nearby CLBs
-   - Fast, short wires
-   - Limited reach
+সব সংযোগ সমান দূরত্বের নয় — পাশের CLB-এ যাওয়া আর chip-এর উল্টোদিকে যাওয়া আলাদা ব্যাপার। তাই routing-কে কয়েকটা স্তরে ভাগ করা হয়, ঠিক যেমন শহরে গলি, প্রধান সড়ক আর হাইওয়ে থাকে:
 
-2. Global Routing:
-   - Long-distance connections
-   - Slower, but reaches anywhere
-   - Clock distribution
+| স্তর | কাকে জোড়ে | বৈশিষ্ট্য | analogy |
+|---|---|---|---|
+| **Local Routing** | কাছাকাছি CLB | দ্রুত, ছোট তার, সীমিত নাগাল | পাড়ার গলি |
+| **Global Routing** | দূরের যেকোনো জায়গা | তুলনায় ধীর, কিন্তু সব জায়গায় পৌঁছায় | প্রধান সড়ক |
+| **Dedicated Routing** | বিশেষ signal (clock, reset) | optimized পথ, খুব কম skew | জরুরি সেবার আলাদা লেন |
 
-3. Dedicated Routing:
-   - Special signals (clock, reset)
-   - Optimized paths
-   - Low skew
-```
+এই hierarchy-এর পেছনের যুক্তিটা সুন্দর: কাছের সংযোগগুলো local routing দিয়ে দ্রুত সারা যায়, আর দূরের জন্য global routing — যেটা ধীর কিন্তু সর্বত্রগামী। আর **clock**-এর জন্য কেন আলাদা dedicated lane? কারণ clock signal-কে চিপের লক্ষ লক্ষ flip-flop-এ **একই সময়ে** পৌঁছাতে হবে — কোনো FF-এ আগে আর কোনোটায় পরে পৌঁছালে (এই সময়ের ফারাককে বলে **skew**) তোমার পুরো সময়-হিসাব ভেঙে পড়বে। তাই clock পায় বিশেষ, সুষম, কম-skew মহাসড়ক — যাতে সবাই একসাথে tick শোনে।
 
 ### Routing Challenges:
 
@@ -418,9 +495,13 @@ Good design = Easy routing
 Bad design = Routing nightmare!
 ```
 
+"Routing fail" কথাটা শুনে ভয় পেও না, বরং কেন হয় বুঝে নাও — তাহলে পরে নিজের design-এ এড়াতে পারবে। ভাবো একটা ছোট শহরে অফিস-ছুটির সময় সব রাস্তা জ্যামে আটকে গেছে (**congestion**) — খুব বেশি signal একই এলাকা দিয়ে যেতে চাইছে, কিন্তু রাস্তা কম। কিংবা দুটো ব্লক, যাদের প্রতি clock cycle-এ কথা বলতে হয়, তাদের চিপের দুই কোণে বসিয়ে দেওয়া হয়েছে (**poor placement**) — ফলে signal-কে অনেক দূর দৌড়াতে হয় আর সময়ে পৌঁছায় না (**critical path too long**)। এই কারণেই placement আর routing হাত ধরাধরি করে চলে: কাছের জিনিস কাছে বসালে রাস্তা ছোট হয়, জ্যাম কমে, design দ্রুত চলে। ভালো নকশা মানে শুধু সঠিক logic নয়, বরং সঠিক **জায়গায়** বসানো logic।
+
 ---
 
 ## ৯.৬ Block RAM (BRAM)
+
+এতক্ষণে একটা প্রশ্ন তোমার মাথায় আসা উচিত: যদি LUT দিয়ে memory বানানো যায় (LUT তো নিজেই একটা ছোট memory!), তাহলে আলাদা করে BRAM-এর দরকার কী? চমৎকার প্রশ্ন। উত্তরটা হলো **দক্ষতা (efficiency)**। তোমার RISC-V processor-এর instruction memory বা data memory-তে হয়তো হাজার হাজার byte লাগবে। সেই বিশাল memory যদি তুমি LUT দিয়ে বানাও, তাহলে তোমার মূল্যবান logic LUT-গুলো প্রায় সবই memory-তে খেয়ে ফেলবে, CPU বানানোর জন্য আর কিছু থাকবে না — এটা হবে রাজপ্রাসাদের সব ইট দিয়ে শুধু একটা গুদাম বানানোর মতো অপচয়। তাই FPGA নির্মাতারা আগে থেকেই চিপের ভেতর কিছু **dedicated memory block** বসিয়ে রাখে — এগুলোই **Block RAM (BRAM)**।
 
 ### What is Block RAM?
 
@@ -436,7 +517,11 @@ Typical sizes:
 - Can be combined
 ```
 
+BRAM-কে ভাবো চিপের ভেতরের একটা **built-in গুদাম**। logic দিয়ে memory বানানোর বদলে এখানে আছে ঘনভাবে সাজানো, শুধুমাত্র data রাখার জন্য optimize-করা SRAM cell — তাই একই জায়গায় অনেক বেশি bit ধরে, খরচও কম, গতিও বেশি। বাইরের (external) RAM চিপের থেকেও এটা অনেক দ্রুত, কারণ data-কে চিপের বাইরে pin পেরিয়ে যেতে হয় না — সব হিসাব চিপের ভেতরেই। কিন্তু একটা সতর্কবার্তা: BRAM-এর সংখ্যা **সীমিত** এবং fixed (কারখানায় যতগুলো বসানো, ততগুলোই)। তাই এটা একটা মূল্যবান সম্পদ — পরের chapter-গুলোতে CPU বানানোর সময় তুমি প্রায়ই হিসাব করবে "আমার কত BRAM লাগবে, আছে কতটা?"
+
 ### BRAM Features:
+
+একটা সাধারণ LUT-memory-এর তুলনায় BRAM অনেক বেশি ক্ষমতাসম্পন্ন। এর মূল feature-গুলো:
 
 ```
 ✅ True dual-port (two independent ports)
@@ -445,36 +530,46 @@ Typical sizes:
 ✅ Optional output registers
 ✅ Write modes (read-first, write-first)
 ✅ Byte-enable support
-
-Examples:
-18Kb BRAM can be:
-- 16K × 1 bit
-- 8K  × 2 bits
-- 4K  × 4 bits
-- 2K  × 9 bits (with parity)
-- 1K  × 18 bits
-- 512 × 36 bits (combined)
 ```
+
+এর মধ্যে **dual-port** feature-টা কেন এত শক্তিশালী, সেটা একটু বুঝে রাখো — কারণ এটা পরে তোমার processor design-এ সরাসরি কাজে লাগবে। dual-port মানে একই memory-তে **দুটো আলাদা দরজা (port)**, যেগুলো একই সময়ে স্বাধীনভাবে কাজ করতে পারে। ভাবো তোমার RISC-V-এর register file — একটা instruction-এ একসাথে দুটো source register পড়তে হয় (rs1 আর rs2)। dual-port memory দিয়ে তুমি এক ঘড়ির ধাপেই দুটো register একসাথে পড়তে পারো। এমনকি এক port দিয়ে পড়তে পড়তে অন্য port দিয়ে লেখাও সম্ভব!
+
+আরেকটা মজার দিক হলো BRAM-এর **আকার নমনীয়**। একই 18Kb (≈18,000 bit) BRAM-কে তুমি লম্বা-সরু বা খাটো-চওড়া — নানা আকারে কনফিগার করতে পারো, তোমার দরকার অনুযায়ী:
+
+| Configuration | মানে | কখন কাজে লাগে |
+|---|---|---|
+| 16K × 1 bit | ১৬ হাজার ১-bit ঘর | বড় flag/bitmap |
+| 8K × 2 bits | ৮ হাজার ২-bit ঘর | ছোট value-এর array |
+| 4K × 4 bits | ৪ হাজার ৪-bit ঘর | nibble data |
+| 2K × 9 bits | ২ হাজার ৯-bit (parity সহ) | byte + parity |
+| 1K × 18 bits | ১ হাজার ১৮-bit ঘর | চওড়া data |
+| 512 × 36 bits | ৫১২টি ৩৬-bit ঘর (combined) | খুব চওড়া word |
+
+লক্ষ্য করো — প্রতিটা সারিতে মোট bit সংখ্যা প্রায় একই (width × depth ≈ 18Kb)। তুমি শুধু ঠিক করছো সেই bit-গুলো কীভাবে সাজানো হবে: অনেক ছোট ঘর, নাকি কম কিন্তু চওড়া ঘর। এই নমনীয়তাই BRAM-কে byte-memory থেকে wide-data-buffer — সব কাজেই উপযোগী করে তোলে।
 
 ### BRAM vs Distributed RAM:
 
-```
-┌──────────────┬────────────┬──────────────┐
-│ Feature      │ Block RAM  │ Distrib. RAM │
-├──────────────┼────────────┼──────────────┤
-│ Built from   │ Dedicated  │ LUTs         │
-│ Capacity     │ Large      │ Small        │
-│ Speed        │ Fast       │ Very fast    │
-│ Flexibility  │ Moderate   │ High         │
-│ Use case     │ Big memory │ Small arrays │
-│ Power        │ Efficient  │ More power   │
-└──────────────┴────────────┴──────────────┘
+তাহলে FPGA-তে আসলে দুরকম memory আছে — BRAM (dedicated block), আর LUT দিয়ে বানানো **Distributed RAM**। কোনটা কখন? এই তুলনাটা মনে রাখলেই সিদ্ধান্ত নেওয়া সহজ:
 
+| Feature | Block RAM | Distributed RAM |
+|---|---|---|
+| **Built from** | Dedicated memory blocks | LUTs |
+| **Capacity** | Large (বড়) | Small (ছোট) |
+| **Speed** | Fast | Very fast |
+| **Flexibility** | Moderate | High |
+| **Use case** | Big memory (CPU memory, buffers) | Small arrays (ছোট LUT, queue) |
+| **Power** | Efficient | More power |
+
+স্বজ্ঞাটা এরকম: **বড় memory চাইলে BRAM**, কারণ logic খরচ না করেই হাজার হাজার bit পাওয়া যায়। আর **খুব ছোট, ক্ষিপ্র memory** (যেমন মাত্র কয়েকটা শব্দের একটা lookup বা ছোট FIFO) হলে distributed RAM ভালো — কারণ সেটা ঠিক logic-এর পাশেই থাকে, তাই অতি দ্রুত, আর এত ছোট জিনিসের জন্য একটা গোটা BRAM block খরচ করা অপচয় হতো।
+
+```
 Rule: Use BRAM when possible!
       Use distributed for small/async memory
 ```
 
 ### BRAM in Your Design:
+
+এখানে একটা দারুণ সুখবর আছে যা তোমার কাজ অনেক সহজ করে দেবে: BRAM ব্যবহার করতে তোমাকে কোনো বিশেষ, কঠিন কোড লিখতে হয় না। তুমি শুধু সাধারণ Verilog-এ একটা memory array আর synchronous read/write বর্ণনা করো — synthesis tool নিজে থেকেই বুঝে নেয় "আরে, এটা তো একটা BRAM-এ সুন্দর বসে যাবে!" এবং স্বয়ংক্রিয়ভাবে একটা dedicated BRAM block বরাদ্দ করে। এই স্বয়ংক্রিয় শনাক্তকরণকে বলে **inference**:
 
 ```verilog
 // Verilog infers BRAM automatically!
@@ -491,9 +586,13 @@ end
 // No special code needed!
 ```
 
+খেয়াল করো একটা সূক্ষ্ম কিন্তু গুরুত্বপূর্ণ বিষয় — পড়ার (read) কাজটাও `always @(posedge clk)` ব্লকের ভেতরে, অর্থাৎ **synchronous**। এটা ঘটনাচক্রে নয়, ইচ্ছাকৃত: আসল BRAM hardware-এ read সবসময় clock-এর সাথে তাল মিলিয়ে হয় (output এক clock পরে আসে)। তাই তুমি যদি Verilog-এ এভাবে লেখো, tool নিশ্চিন্তে BRAM ব্যবহার করতে পারে। কিন্তু যদি ভুল করে asynchronous read লেখো (clock ছাড়া, সরাসরি `assign`), tool বাধ্য হয়ে সেটাকে ব্যয়বহুল distributed RAM (LUT) দিয়ে বানাবে — কারণ BRAM async read পারে না। এই ছোট pattern-টা মনে রাখলে তুমি অজান্তেই LUT অপচয় করা থেকে বাঁচবে; পরের chapter-গুলোতে CPU-এর memory বানানোর সময় এটাই কাজে লাগবে।
+
 ---
 
 ## ৯.৭ DSP Blocks
+
+BRAM-এর গল্পটা মনে আছে? বড় memory LUT দিয়ে বানানো অপচয়, তাই dedicated block দেওয়া হলো। ঠিক একই যুক্তি এবার অন্য একটা কাজে — **গুণ (multiplication)**। তুমি Chapter 3-এ যদি LUT দিয়ে একটা multiplier বানানোর চেষ্টা করতে, দেখতে এটা ভয়াবহ পরিমাণ logic খায় (গুণ মানে অনেক addition একসাথে)। অথচ signal processing, AI, video — এসব ক্ষেত্রে গুণ লাগে প্রতি সেকেন্ডে কোটি কোটি বার। তাই FPGA নির্মাতারা গুণের জন্যও আলাদা, optimized hardware বসিয়ে দিয়েছে — এগুলোই **DSP block**।
 
 ### What are DSP Blocks?
 
@@ -509,6 +608,8 @@ Common in:
 - Video processing
 - Math-heavy applications
 ```
+
+DSP block-কে ভাবো FPGA-এর ভেতরের একটা ছোট, বিশেষায়িত **ক্যালকুলেটর** — যার একমাত্র কাজ বিদ্যুৎগতিতে গুণ করা আর সেই গুণফল যোগ করতে থাকা। "DSP" নামটা এসেছে digital signal processing থেকে, কারণ এই কাজটা (গুণ-করে-যোগ) signal processing-এর প্রাণ। কিন্তু আজকাল এর সবচেয়ে বড় ব্যবহার **AI/ML** — একটা neural network আসলে লক্ষ লক্ষ "গুণ করো, তারপর সব যোগ করো" অপারেশন ছাড়া আর কিছুই নয়। তাই আধুনিক AI-FPGA-তে হাজার হাজার DSP block থাকে, যারা একসাথে সমান্তরালে গুণ চালায়।
 
 ### DSP Block Features:
 
@@ -528,30 +629,32 @@ Can implement:
 - Complex multiply
 ```
 
+এই feature-গুলোর মধ্যে দুটো শব্দ আলাদা করে বুঝে নাও। প্রথমত **MAC (Multiply-Accumulate)** — এটাই DSP-এর হৃদয়। MAC একই সাথে দুটো কাজ করে: দুটো সংখ্যা গুণ করে, আর সেই ফলটা একটা চলমান যোগফলের (accumulator) সাথে জুড়ে দেয়। `acc = acc + (a × b)` — এই একটামাত্র অপারেশন বারবার চালালেই dot product, filter, এমনকি neural network-এর পুরো হিসাব হয়ে যায়। দ্বিতীয়ত **pipelined** — DSP block-এর ভেতরে কাজটা কয়েক ধাপে ভাগ করা (pre-adder → multiplier → accumulator), আর প্রতি ধাপের মাঝে register বসানো। এর ফলে একটা গুণ শেষ হওয়ার অপেক্ষা না করেই পরের গুণ ঢুকে যেতে পারে — assembly line-এর মতো, প্রতি clock-এ একটা করে ফল বেরোয়। (এই pipelining ধারণাটাই পরে Chapter 16-এ তোমার processor-কে দ্রুত করতে ব্যবহার করবে!)
+
 ### DSP Block Structure:
 
-```
-       A (25-bit)    B (18-bit)
-           │            │
-         ┌─▼────────────▼─┐
-         │  Pre-adder     │
-         └────────┬───────┘
-                  │
-         ┌────────▼───────┐
-         │  Multiplier    │
-         │    25×18       │
-         └────────┬───────┘
-                  │
-         ┌────────▼───────┐
-         │  Post-adder    │
-         │  Accumulator   │
-         │    (48-bit)    │
-         └────────┬───────┘
-                  │
-              Output (48-bit)
+ভেতরের data flow-টা একটা সরল sequence — input দুটো (চাইলে) আগে যোগ হয়, তারপর গুণ হয়, তারপর সেই ফল accumulator-এ জমতে থাকে:
+
+```mermaid
+graph TD
+    A["A (25-bit)"] --> PRE
+    B["B (18-bit)"] --> PRE
+    PRE["Pre-adder<br/>(input যোগ, optional)"] --> MUL
+    MUL["Multiplier<br/>25 × 18"] --> POST
+    POST["Post-adder / Accumulator<br/>(48-bit)"] --> OUT["Output (48-bit)"]
+    POST -. "feedback (accumulate)" .-> POST
+
+    style PRE fill:#5f4a1e,stroke:#d9a94a,color:#fff
+    style MUL fill:#3a1e5f,stroke:#904ad9,color:#fff
+    style POST fill:#1e5f5a,stroke:#4ad9c8,color:#fff
+    style OUT fill:#2d5016,stroke:#7cb342,color:#fff
 ```
 
+একটা সংখ্যার দিকে নজর দাও — output **48-bit**, অথচ input মাত্র 25 ও 18-bit। কেন এত চওড়া? কারণ accumulate করার সময় তুমি একটার পর একটা গুণফল যোগ করতে থাকো, আর যোগফল ক্রমাগত বড় হয়। যদি accumulator সরু হতো, তাহলে কয়েকটা যোগের পরেই সংখ্যা উপচে পড়ত (overflow)। ৪৮ bit-এর প্রশস্ত accumulator অনেক অনেক বার যোগ করার পরেও নির্ভুল ফল ধরে রাখতে পারে — এই কারণেই DSP block দীর্ঘ MAC sequence-এ এত নির্ভরযোগ্য।
+
 ### Using DSP Blocks:
+
+BRAM-এর মতোই, DSP block ব্যবহার করতেও তোমাকে কোনো গূঢ় কোড লিখতে হয় না — শুধু সাধারণভাবে `*` (গুণ) লিখলেই synthesis tool বুঝে নেয় এবং একটা DSP block বরাদ্দ করে। নিচে দেখো: প্রথম উদাহরণে শুধু একটা গুণ (tool DSP-কে শুধু multiplier হিসেবে ব্যবহার করবে), আর দ্বিতীয় উদাহরণে `acc <= acc + (a * b)` — হুবহু সেই MAC pattern, যেটা DSP-কে তার পূর্ণ accumulate mode-এ চালায়:
 
 ```verilog
 // Multiplication automatically uses DSP
@@ -571,11 +674,17 @@ end
 // Uses DSP in accumulate mode!
 ```
 
+একটা সুন্দর pattern নিশ্চয়ই খেয়াল করছো — LUT, BRAM, DSP, তিনটে ক্ষেত্রেই তুমি একই ভাষায় (সাধারণ Verilog) তোমার **ইচ্ছা** বর্ণনা করো, আর synthesis tool নিজে থেকেই সঠিক hardware-এ সেটাকে অনুবাদ করে। তুমি "DSP block বানাও" বলো না, তুমি বলো "গুণ করো" — বাকিটা tool-এর কাজ। এই abstraction-ই Verilog-কে এত শক্তিশালী করে তোলে: তুমি *কী* চাও সেটা বলো, *কীভাবে* হবে সেটা tool সামলায়। (তবে মনে রেখো DSP-ও একটা সীমিত সম্পদ — Tang Nano 9K-তে যেমন এদের সংখ্যা গোনা, তাই বড় design-এ হিসাব করে খরচ করতে হয়।)
+
 ---
 
 ## ৯.৮ I/O Blocks and Standards
 
+CLB হিসাব করে, BRAM মনে রাখে, DSP গুণ করে — কিন্তু এসব তো চিপের **ভেতরের** কাজ। তোমার design যদি বাইরের দুনিয়ার সাথে কথা বলতে না পারে — LED জ্বালাতে, button পড়তে, sensor থেকে data নিতে — তাহলে সে এক বদ্ধ ঘরে আটকা থাকা প্রতিভা মাত্র। বাইরের জগতের সাথে এই সেতুবন্ধনই করে **I/O block**, যেগুলো চিপের কিনারা ঘিরে বসানো থাকে প্রতিটা physical pin-এর পেছনে।
+
 ### I/O Block Features:
+
+I/O block কিন্তু শুধু একটা সাধারণ তার নয় — প্রতিটা pin-এর পেছনে আছে অনেক configurable সুবিধা:
 
 ```
 I/O Block capabilities:
@@ -589,19 +698,23 @@ I/O Block capabilities:
 ✅ DDR (Double Data Rate) support
 ```
 
+কেন এত feature দরকার? কারণ বাইরের জগতের যন্ত্রগুলো সবাই একই "ভাষায়" কথা বলে না। একটা পুরোনো sensor হয়তো 3.3V-এ চলে, একটা আধুনিক memory chip 1.8V-এ, আর একটা high-speed link দরকার করে বিশেষ differential signal। তাই একই FPGA pin-কে নানা **voltage standard**-এ কনফিগার করা যায়, যাতে যেকোনো প্রতিবেশী যন্ত্রের সাথে মানিয়ে নিতে পারে। বাকি feature-গুলোও বাস্তব সমস্যার সমাধান: **pull-up/pull-down** resistor দিয়ে একটা floating input-কে নির্দিষ্ট 0 বা 1-এ ধরে রাখা যায় (button-এ খুব দরকারি!), **slew rate** আর **drive strength** দিয়ে signal কত জোরে আর কত দ্রুত পাঠানো হবে তা নিয়ন্ত্রণ করা যায়, আর **DDR** দিয়ে এক clock cycle-এ দুবার data পাঠিয়ে গতি দ্বিগুণ করা যায়।
+
 ### Common I/O Standards:
 
-```
-Standard        | Voltage | Use Case
-----------------|---------|------------------
-LVCMOS33        | 3.3V    | General purpose
-LVCMOS25        | 2.5V    | Older chips
-LVCMOS18        | 1.8V    | Modern chips
-LVDS            | Differ. | High-speed serial
-LVTTL           | 3.3V    | TTL compatible
-SSTL            | 1.5V    | DDR memory
-HSTL            | 1.2V    | DDR3 memory
-```
+প্রতিটা voltage standard আসলে একটা চুক্তি — "কত voltage মানে 1, আর কত voltage মানে 0।" সবচেয়ে প্রচলিত standard-গুলো:
+
+| Standard | Voltage | Use Case |
+|---|---|---|
+| **LVCMOS33** | 3.3V | General purpose (সবচেয়ে সাধারণ) |
+| **LVCMOS25** | 2.5V | পুরোনো chip |
+| **LVCMOS18** | 1.8V | আধুনিক chip |
+| **LVDS** | Differential | High-speed serial link |
+| **LVTTL** | 3.3V | TTL compatible |
+| **SSTL** | 1.5V | DDR memory |
+| **HSTL** | 1.2V | DDR3 memory |
+
+শুরুতে এই তালিকা মুখস্থ করার দরকার নেই — শুধু একটা জিনিস মাথায় রাখো: তোমার FPGA pin আর তার সাথে যুক্ত যন্ত্রের voltage standard **মিলতে হবে**। Tang Nano 9K-তে তুমি বেশিরভাগ সময় **LVCMOS33** (3.3V) ব্যবহার করবে, কারণ board-এর LED আর button সবই 3.3V-এ চলে। ভুল voltage দিলে হয় signal পড়া যাবে না, নয়তো — সবচেয়ে খারাপ ক্ষেত্রে — pin পুড়ে যেতে পারে। তাই Chapter 10-এ pin assign করার সময় এই মিলটা মিলিয়ে নেবে।
 
 ### I/O Planning:
 
@@ -612,16 +725,24 @@ Important considerations:
 ⚠️ Signal integrity
 ⚠️ Bank voltage constraints
 ⚠️ Differential pairs placement
+```
 
+এখানে একটা ব্যাপার আলাদা করে বোঝা দরকার — **bank**। FPGA-এর I/O pin-গুলো এলোমেলো নয়, বরং কয়েকটা দলে (bank) ভাগ করা, আর **একটা bank-এর সব pin-কে একই voltage-এ চলতে হয়**:
+
+```
 Banks:
 - I/O pins grouped in banks
 - All pins in bank = same voltage
 - Plan carefully!
 ```
 
+এই নিয়মটা কেন গুরুত্বপূর্ণ, একটা উদাহরণে বুঝে নাও: ধরো তোমার design-এ কিছু signal 3.3V-এ আর কিছু 1.8V-এ লাগবে। তুমি চাইলেই যেকোনো pin-এ যেকোনো voltage দিতে পারবে না — তোমাকে 3.3V signal-গুলোকে এক bank-এ আর 1.8V signal-গুলোকে আরেক bank-এ ভাগ করে রাখতে হবে, কারণ প্রতিটা bank-কে একটাই voltage সরবরাহ করা হয়। তাই অভিজ্ঞ ডিজাইনাররা design শুরুর আগেই pin আর bank-এর পরিকল্পনা করে নেন। সৌভাগ্যবশত শেখার পর্যায়ে, single-voltage একটা board (যেমন Tang Nano 9K) দিয়ে তোমাকে এই জটিলতা নিয়ে মাথা ঘামাতে হবে না — সবই 3.3V।
+
 ---
 
 ## ৯.৯ FPGA Configuration
+
+এতক্ষণ আমরা শিখলাম FPGA-তে কী কী আছে — LUT, CLB, routing, BRAM, DSP, I/O। কিন্তু একটা মস্ত প্রশ্ন বাকি: এই সব programmable জিনিসকে আসলে **কে এবং কীভাবে** তোমার design অনুযায়ী set করে দেয়? কে LUT-এর ১৬টা ঘর ভরে, কে কোন switch খোলা-বন্ধ ঠিক করে? উত্তর হলো — **configuration**, আর এর হাতিয়ার একটা ফাইল যার নাম **bitstream**।
 
 ### How FPGAs Get Programmed:
 
@@ -641,74 +762,70 @@ Loading Methods:
 4. Serial (common)
 ```
 
+সবচেয়ে গুরুত্বপূর্ণ উপলব্ধিটা হলো — **power-on-এর সময় FPGA একদম খালি, একটা সাদা কাগজের মতো (blank slate)।** তার ভেতরের LUT-গুলো খালি, switch-গুলো অনির্দিষ্ট। সে জানেই না তাকে adder হতে হবে নাকি CPU। তোমার design-কে জীবন্ত করতে হলে প্রতিবার চালু হওয়ার পর তাকে একটা configuration শেখাতে হবে।
+
+এই configuration-ই হলো **bitstream** — একটা বিশাল binary ফাইল (megabyte-এর ঘরে), যার প্রতিটা bit আসলে FPGA-এর ভেতরের একেকটা switch বা একেকটা LUT-cell-এর জন্য একটা নির্দেশ: "তুমি 0 হও," "তুমি 1 হও," "এই switch বন্ধ করো।" মনে করো এটা তোমার design-এর একটা সম্পূর্ণ নীলনকশা, যা চিপের লক্ষ লক্ষ configuration bit-কে একে একে set করে দেয়। তুমি Verilog লেখো → synthesis tool সেটাকে LUT/routing-এ রূপ দেয় → আর সেই সব সিদ্ধান্ত শেষে এই একটা bitstream ফাইলে গুটিয়ে রাখা হয়।
+
 ### Configuration Process:
 
-```
-Power On:
-   │
-   ▼
-FPGA loads bitstream
-   │
-   ▼
-Configure LUTs
-   │
-   ▼
-Configure routing
-   │
-   ▼
-Configure I/Os
-   │
-   ▼
-Done! FPGA is your circuit!
-   │
-   ▼
-Start operation
+power-on থেকে তোমার circuit জীবন্ত হওয়া পর্যন্ত পুরো যাত্রাটা ধাপে ধাপে এমন — FPGA bitstream পড়ে, তারপর একে একে LUT, routing আর I/O set করে, অবশেষে তোমার circuit হয়ে চলতে শুরু করে:
 
-Time: milliseconds to seconds
+```mermaid
+flowchart TD
+    P["⚡ Power On"] --> LOAD["FPGA loads bitstream"]
+    LOAD --> CL["Configure LUTs<br/>(truth table ভরাট)"]
+    CL --> CR["Configure routing<br/>(switch set)"]
+    CR --> CIO["Configure I/Os<br/>(pin standard set)"]
+    CIO --> DONE["✅ Done! FPGA এখন তোমার circuit"]
+    DONE --> RUN["▶ Start operation"]
+
+    style P fill:#5f4a1e,stroke:#d9a94a,color:#fff
+    style LOAD fill:#1e3a5f,stroke:#4a90d9,color:#fff
+    style CL fill:#2d5016,stroke:#7cb342,color:#fff
+    style CR fill:#5f1e3a,stroke:#d94a90,color:#fff
+    style CIO fill:#5f4a1e,stroke:#d9a94a,color:#fff
+    style DONE fill:#1e5f5a,stroke:#4ad9c8,color:#fff
+    style RUN fill:#3a1e5f,stroke:#904ad9,color:#fff
 ```
+
+পুরো প্রক্রিয়াটা চমকপ্রদভাবে দ্রুত — **millisecond থেকে সেকেন্ডের** মধ্যে শেষ। অর্থাৎ তুমি board-এ power দেওয়ার চোখের পলকেই খালি FPGA রূপ নেয় তোমার সম্পূর্ণ circuit-এ। Chapter 10-এ যখন প্রথমবার Tang Nano 9K-তে LED জ্বালাবে, তখন এই পুরো process-টাই তোমার চোখের সামনে ঘটবে — Gowin IDE bitstream বানাবে, cable দিয়ে পাঠাবে, আর মুহূর্তেই LED ঝিকমিক করবে।
 
 ### Configuration Storage:
 
-```
-Options:
-1. JTAG (temporary)
-   - Program via cable
-   - Lost at power off
-   - Good for development
+এখানে একটা সূক্ষ্ম কিন্তু গুরুত্বপূর্ণ ব্যাপার বুঝে রাখা দরকার, কারণ এটা তোমার দৈনন্দিন কাজে সরাসরি প্রভাব ফেলবে: **bitstream কোথায় জমা থাকবে?** যেহেতু FPGA power গেলেই সব ভুলে যায় (volatile), তাই প্রতিবার চালু হলে কোথাও-না-কোথাও থেকে bitstream-টা আবার লোড করতেই হবে। মূল তিনটে উপায়:
 
-2. SPI Flash (permanent)
-   - External flash chip
-   - Survives power cycle
-   - Good for production
+| পদ্ধতি | স্থায়িত্ব | কখন কাজে লাগে |
+|---|---|---|
+| **JTAG (cable)** | অস্থায়ী — power গেলে মুছে যায় | Development; দ্রুত বারবার নতুন design test করতে |
+| **SPI Flash** | স্থায়ী — power cycle-এ টিকে থাকে | Production; board একা চালু হয়ে নিজেই load করে |
+| **Embedded Flash** (কিছু FPGA-তে) | স্থায়ী, built-in (বাইরের chip লাগে না) | সুবিধাজনক, কিন্তু সব FPGA-তে থাকে না |
 
-3. Embedded Flash (some FPGAs)
-   - Built-in non-volatile
-   - No external chip needed
-   - Convenient!
-```
+পার্থক্যটা নিজের অভিজ্ঞতায় বুঝবে: শেখার সময় তুমি বারবার design বদলাবে, তাই **JTAG** দিয়ে সরাসরি FPGA-তে লোড করাই সুবিধাজনক — দ্রুত, কিন্তু power বন্ধ করলেই মুছে যায়। আর তোমার design চূড়ান্ত হয়ে গেলে, যখন চাও board প্লাগ-ইন করলেই নিজে থেকে design নিয়ে চালু হোক (computer ছাড়াই), তখন bitstream-টা **SPI Flash**-এ লিখে রাখো — সেটা power cycle-এ টিকে থাকে আর প্রতিবার boot-এ নিজে FPGA-তে লোড হয়। Tang Nano 9K-তে এই দুটো option-ই আছে: "SRAM"-এ লিখলে অস্থায়ী (JTAG-এর মতো), "Flash"-এ লিখলে স্থায়ী।
 
 ---
 
 ## ৯.১০ FPGA vs ASIC
 
+শুরুতে আমরা একনজরে FPGA, ASIC আর software-এর তুলনা দেখেছিলাম। এখন তুমি FPGA-এর ভেতরটা জানো, তাই এই তুলনাটা আরও গভীরভাবে বোঝার সময়। এই সিদ্ধান্তটা — "FPGA নাকি ASIC?" — হার্ডওয়্যার দুনিয়ার সবচেয়ে মৌলিক প্রশ্নগুলোর একটা, আর এই বইয়ের শেষে তুমি নিজেই এই যাত্রা করবে: FPGA-তে design করে, তারপর ASIC-এ (chip fabrication) পাঠিয়ে।
+
 ### The Big Comparison:
 
-```
-┌─────────────────┬──────────────┬─────────────┐
-│ Aspect          │    FPGA      │    ASIC     │
-├─────────────────┼──────────────┼─────────────┤
-│ Design Time     │ Days/Weeks   │ Months/Years│
-│ NRE Cost        │ $0-$1K       │ $1M-$100M   │
-│ Unit Cost       │ $5-$5000     │ $0.10-$100  │
-│ Break-even      │ Low volume   │ High volume │
-│ Performance     │ Good         │ Best        │
-│ Power           │ Higher       │ Lower       │
-│ Flexibility     │ Reprogrammable│ Fixed      │
-│ Time to Market  │ Fast         │ Slow        │
-│ Risk            │ Low          │ High        │
-│ Changes         │ Easy         │ Impossible  │
-└─────────────────┴──────────────┴─────────────┘
-```
+| Aspect | FPGA | ASIC |
+|---|---|---|
+| **Design Time** | Days / Weeks | Months / Years |
+| **NRE Cost** (একবারের শুরুর খরচ) | $0 – $1K | $1M – $100M |
+| **Unit Cost** (প্রতি পিস) | $5 – $5000 | $0.10 – $100 |
+| **Break-even** | Low volume | High volume |
+| **Performance** | Good | Best |
+| **Power** | Higher | Lower |
+| **Flexibility** | Reprogrammable | Fixed |
+| **Time to Market** | Fast | Slow |
+| **Risk** | Low | High |
+| **Changes** | Easy | Impossible |
+
+এই table-টা পড়ার সময় একটা শব্দ আলাদা করে বুঝে নাও — **NRE (Non-Recurring Engineering) cost**, অর্থাৎ design শুরু করার একবারের খরচ (mask বানানো, setup ইত্যাদি)। এখানেই পুরো গল্পের আসল twist লুকিয়ে। ASIC-এর NRE বিশাল (কোটি টাকা), কিন্তু একবার সেই খরচ দিয়ে দিলে প্রতিটা chip বানাতে লাগে মাত্র কয়েক টাকা। উল্টোদিকে FPGA-এর NRE প্রায় শূন্য (শুধু একটা board কিনলেই হলো), কিন্তু প্রতিটা FPGA chip তুলনায় দামি এবং সেই দাম কখনো খুব কমে না।
+
+এর সরাসরি ফল হলো **break-even**-এর ধারণা: তুমি যদি মাত্র কিছু chip বানাও, FPGA সস্তা (বিশাল NRE নেই)। কিন্তু লক্ষ লক্ষ chip বানালে, ASIC-এর কম unit-cost সেই বিশাল NRE-কে পুষিয়ে ফেলে FPGA-র চেয়ে অনেক সস্তা হয়ে যায়। এই কারণেই তোমার ফোনের চিপ (কোটি কোটি বিক্রি হয়) ASIC, কিন্তু একটা স্যাটেলাইটের বিশেষ চিপ (হাতে গোনা কয়েকটা) প্রায়ই FPGA।
 
 ### When to Use FPGA:
 
@@ -730,6 +847,8 @@ Examples:
 - Prototypes
 ```
 
+উপরের প্রতিটা পয়েন্টের পেছনে একটাই সুর — **নমনীয়তা ও কম ঝুঁকি যেখানে সংখ্যার চেয়ে বেশি দরকারি, সেখানেই FPGA**। 5G standard বদলে গেলে network equipment-এর FPGA শুধু reprogram করে দাও; একটা medical device-এ পরে bug ধরা পড়লে field-এ থাকা যন্ত্রেই update পাঠাও। আর সবচেয়ে গুরুত্বপূর্ণ — **শেখা ও prototyping**। ঠিক এই কারণেই আমরা এই বইয়ে FPGA দিয়ে শুরু করছি: তুমি ভুল করতে পারবে, শিখতে পারবে, বারবার চেষ্টা করতে পারবে — কোনো খরচ ছাড়াই।
+
 ### When to Use ASIC:
 
 ```
@@ -747,16 +866,32 @@ Examples:
 - Cryptocurrency mining
 ```
 
+ASIC-এর তালিকাটা ঠিক উল্টো গল্প বলে — **যেখানে সংখ্যা বিশাল, প্রতিটা টাকা ও milliwatt গোনা, আর design চূড়ান্ত, সেখানেই ASIC**। smartphone-এ কেন ASIC? কারণ কোটি কোটি বিক্রি হয় (unit cost ছোট রাখা জরুরি), আর battery-তে চলে বলে power-এ কোনো ছাড় দেওয়া যায় না — আর ASIC-ই সবচেয়ে কম power আর সর্বোচ্চ performance দেয়। মূল্য একটাই: একবার বানালে আর বদলানো যায় না। তাই ASIC-এ যাওয়ার আগে design নিখুঁত হতেই হবে — আর সেই নিখুঁত করার কাজটা হয় FPGA-তে।
+
 ### FPGA → ASIC Flow:
 
-```
-1. Design in Verilog/VHDL
-2. Test on FPGA
-3. Iterate quickly
-4. Perfect the design
-5. Convert to ASIC (optional)
-6. Manufacturing
+এই দুটো জগৎ আসলে প্রতিযোগী নয়, বরং একে অপরের পরিপূরক — একসাথে মিলে একটা সুন্দর পথ তৈরি করে। প্রায় প্রতিটা সফল ASIC-এর জীবন শুরু হয় FPGA-তে: তুমি দ্রুত design করো, FPGA-তে test করো, ভুল ঠিক করো, বারবার iterate করো — যতক্ষণ না design একদম নিখুঁত হয়। তারপর সেই পরীক্ষিত design-কেই ASIC-এ পাঠাও:
 
+```mermaid
+flowchart LR
+    D["1. Design in<br/>Verilog/VHDL"] --> T["2. Test on FPGA"]
+    T --> I["3. Iterate quickly<br/>(ভুল ঠিক করো)"]
+    I --> P["4. Perfect<br/>the design"]
+    P --> C["5. Convert to ASIC<br/>(optional)"]
+    C --> M["6. Manufacturing"]
+    I -. "bug? আবার test" .-> T
+
+    style D fill:#1e3a5f,stroke:#4a90d9,color:#fff
+    style T fill:#2d5016,stroke:#7cb342,color:#fff
+    style I fill:#5f4a1e,stroke:#d9a94a,color:#fff
+    style P fill:#5f1e3a,stroke:#d94a90,color:#fff
+    style C fill:#3a1e5f,stroke:#904ad9,color:#fff
+    style M fill:#1e5f5a,stroke:#4ad9c8,color:#fff
+```
+
+এই চিত্রটা আসলে **এই গোটা বইয়ের roadmap**। Part 3-এ (এখন) তুমি FPGA-তে design ও test করা শিখছো — ধাপ ১ থেকে ৪। Part 4-এ তুমি FPGA-তেই একটা সম্পূর্ণ RISC-V processor বানাবে আর iterate করবে। আর Part 5-এ (Chapter 21-25) তুমি ধাপ ৫-৬ করবে: সেই পরীক্ষিত processor-কে TinyTapeout-এর মাধ্যমে আসল ASIC chip-এ পরিণত করবে! তাই এখন FPGA ভালো করে শেখার মানে শুধু এই chapter পাশ করা নয় — এটা তোমার নিজের silicon chip পাওয়ার যাত্রার প্রথম ধাপ।
+
+```
 FPGA = Perfect prototyping tool!
 ```
 

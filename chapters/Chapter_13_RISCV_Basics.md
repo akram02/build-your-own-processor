@@ -125,6 +125,8 @@ Instruction types:
 
 ## ১৩.১ RISC-V Philosophy
 
+একটা ISA শুধু instruction-এর তালিকা নয় — এর পেছনে কিছু design দর্শন থাকে, যেগুলো প্রতিটা সিদ্ধান্তের কারণ ব্যাখ্যা করে। RISC-V কেন এত সহজ, কেন এমনভাবে বিটগুলো সাজানো — এই পাঁচটা নীতি বুঝলে পরের সব encoding তোমার কাছে "মুখস্থ করার জিনিস" না হয়ে "যুক্তিসঙ্গত জিনিস" মনে হবে।
+
 ### Design Principles:
 
 ```
@@ -154,21 +156,29 @@ Instruction types:
    - Room for innovation
 ```
 
+এই নীতিগুলো একটু খুলে বলি, কারণ এগুলোই RISC-V-কে শেখার জন্য আদর্শ বানিয়েছে:
+
+- **Simplicity (সরলতা):** ISA-টা "orthogonal" — মানে যেকোনো operation যেকোনো register-এর সাথে একইভাবে কাজ করে, কোনো register-এর গোপন বিশেষ নিয়ম নেই (x0 ছাড়া)। কম special case মানে hardware-এ কম তার, কম bug।
+- **Modularity (মডুলারিটি):** base + extension — যেটা আগেই দেখলে। তুমি শুধু যা ব্যবহার করবে তার জন্যই transistor খরচ করবে।
+- **Stability (স্থায়িত্ব):** base ISA একবার ঠিক হলে আর কখনো বদলায় না। আজ RV32I-র জন্য লেখা program ৫০ বছর পরেও চলবে। তাই তুমি যা শিখছ তা কখনো অচল হবে না।
+- **Openness (উন্মুক্ততা):** spec সবার জন্য খোলা, community চালায়। কোনো কোম্পানি একদিন "এখন থেকে টাকা দাও" বলতে পারবে না।
+- **Extensibility (সম্প্রসারণযোগ্যতা):** চাইলে তুমি নিজের custom instruction পর্যন্ত যোগ করতে পারো — opcode-এর কিছু জায়গা ইচ্ছে করেই খালি রাখা আছে। গবেষক ও startup-দের জন্য স্বর্গ।
+
 ### RISC-V vs Others:
 
-```
-┌──────────┬────────┬────────┬─────────┐
-│ Feature  │ RISC-V │  ARM   │   x86   │
-├──────────┼────────┼────────┼─────────┤
-│ License  │ Free   │ $$$    │ $$$     │
-│ ISA      │ Open   │ Closed │ Closed  │
-│ Simplicity│ High  │ Medium │ Low     │
-│ Modular  │ Yes    │ No     │ No      │
-│ Education│ Best   │ Good   │ Complex │
-│ Industry │ Growing│ Mature │ Mature  │
-│ Custom   │ Easy   │ Hard   │ No      │
-└──────────┴────────┴────────┴─────────┘
+তিনটা বড় ISA পাশাপাশি রাখলে RISC-V কেন শেখার জন্য সেরা সেটা পরিষ্কার হয়ে যায়। x86 (তোমার ল্যাপটপের Intel/AMD) দশকের পর দশক ধরে পুরোনো জিনিস বহন করছে বলে ভয়ানক জটিল; ARM (তোমার ফোনের চিপ) অনেক পরিষ্কার কিন্তু licensed ও closed। RISC-V নতুন বলে অতীতের বোঝা নেই, খোলা বলে যে কেউ ব্যবহার করতে পারে:
 
+| Feature | RISC-V | ARM | x86 |
+|---------|--------|-----|-----|
+| License | Free | $$$ | $$$ |
+| ISA | Open | Closed | Closed |
+| Simplicity | High | Medium | Low |
+| Modular | Yes | No | No |
+| Education | Best | Good | Complex |
+| Industry | Growing | Mature | Mature |
+| Custom | Easy | Hard | No |
+
+```
 RISC-V perfect for:
 ✅ Learning
 ✅ Research
@@ -181,6 +191,8 @@ RISC-V perfect for:
 
 ## ১৩.২ Register Set - 32 Registers
 
+প্রসেসর সরাসরি memory নিয়ে কাজ করে না — memory অনেক দূরে আর ধীর। তার বদলে CPU-র ভেতরেই কয়েকটা super-fast ছোট খোপ থাকে, যাদের বলে **register**। যা নিয়ে এই মুহূর্তে হিসাব হচ্ছে, সেটা register-এ থাকে; কাজ শেষ হলে memory-তে ফেরত পাঠানো হয়। RISC-V-এ এমন register আছে ঠিক ৩২টা — এই সংখ্যাটা ইচ্ছাকৃত: register address করতে লাগে মাত্র ৫ বিট (২⁵ = ৩২), আর এই ৫ বিট instruction-এ চমৎকারভাবে এঁটে যায় (পরের section-এ দেখবে)।
+
 ### Register Overview:
 
 ```
@@ -190,7 +202,11 @@ Total: 1024 bits storage
 
 x0: Always zero (hardwired)
 x1-x31: General purpose
+```
 
+Hardware-এর চোখে register-গুলোর নাম শুধু `x0` থেকে `x31` — সবগুলোই সমান, যেকোনো কাজে লাগানো যায়। কিন্তু একটা বড় program-এ সবাই যদি যেমন খুশি register ব্যবহার করে, তাহলে দুটো function একসাথে কাজ করতে গেলে গন্ডগোল লেগে যাবে — একজনের data আরেকজন মুছে ফেলবে। তাই RISC-V community একটা সামাজিক চুক্তি ঠিক করেছে: কোন register কোন কাজে ব্যবহার হবে। এই চুক্তির নাম **ABI (Application Binary Interface)**, আর প্রতিটা register-কে দেওয়া হয়েছে একটা মনে-রাখা-সহজ নাম:
+
+```
 ABI Names:
 x0  = zero  (always 0)
 x1  = ra    (return address)
@@ -206,37 +222,56 @@ x18-x27 = s2-s11 (saved)
 x28-x31 = t3-t6 (temporaries)
 ```
 
+> মনে রেখো: এই ABI নাম শুধু মানুষ আর assembler-এর সুবিধার জন্য। তোমার hardware কখনো `sp` বা `ra` দেখে না — সে শুধু ৫-বিট নম্বর দেখে। `sp` মানে শুধু "register নম্বর ২", `ra` মানে "register নম্বর ১"।
+
 ### Register Table:
 
-```
-┌──────┬───────┬─────────────────────────────┐
-│ Reg  │ ABI   │ Description                 │
-├──────┼───────┼─────────────────────────────┤
-│ x0   │ zero  │ Hardwired zero             │
-│ x1   │ ra    │ Return address             │
-│ x2   │ sp    │ Stack pointer              │
-│ x3   │ gp    │ Global pointer             │
-│ x4   │ tp    │ Thread pointer             │
-│ x5-7 │ t0-2  │ Temporaries                │
-│ x8   │ s0/fp │ Saved register/Frame ptr   │
-│ x9   │ s1    │ Saved register             │
-│ x10-11│ a0-1 │ Function args/return values│
-│ x12-17│ a2-7 │ Function arguments         │
-│ x18-27│ s2-11│ Saved registers            │
-│ x28-31│ t3-6 │ Temporaries                │
-└──────┴───────┴─────────────────────────────┘
+| Reg | ABI | Description |
+|-----|-----|-------------|
+| x0 | zero | Hardwired zero |
+| x1 | ra | Return address |
+| x2 | sp | Stack pointer |
+| x3 | gp | Global pointer |
+| x4 | tp | Thread pointer |
+| x5-7 | t0-2 | Temporaries |
+| x8 | s0/fp | Saved register / Frame pointer |
+| x9 | s1 | Saved register |
+| x10-11 | a0-1 | Function args / return values |
+| x12-17 | a2-7 | Function arguments |
+| x18-27 | s2-11 | Saved registers |
+| x28-31 | t3-6 | Temporaries |
 
+টেবিলটা ভয় পাওয়ার দরকার নেই — এটা মুখস্থ করার নয়, বোঝার। মূলত register-গুলো তিন দলে ভাগ:
+
+- **বিশেষ কাজের register (x0–x4):** `zero` সবসময় ০, `ra` function থেকে ফেরার ঠিকানা রাখে, `sp` stack-এর মাথা দেখায়, `gp`/`tp` global ও thread data-র দিকে আঙুল রাখে।
+- **Argument register (a0–a7):** function-কে কী input দিচ্ছ তা এগুলোতে যায়, আর উত্তর `a0`/`a1`-এ ফেরত আসে। ঠিক যেন function-এর "ইনবক্স আর আউটবক্স"।
+- **কাজ-চালানো register দুই ধরনের — এখানেই আসল চালাকি:**
+
+```
 Caller-saved: t0-t6, a0-a7
 Callee-saved: s0-s11
 ```
 
+এই caller-saved বনাম callee-saved ব্যাপারটা প্রথমে গোলমেলে লাগে, কিন্তু idea-টা খুব সহজ। ভাবো তুমি (caller) একটা function-কে (callee) ডাকছ:
+
+- **`t` (temporary) register caller-saved:** callee এগুলো যখন খুশি নষ্ট করতে পারে। তাই function call-এর আগে যদি কোনো `t` register-এ দরকারি কিছু থাকে, **তোমাকেই** তা stack-এ সরিয়ে রাখতে হবে। "ক্ষণস্থায়ী জিনিস, নিজ দায়িত্বে রাখো।"
+- **`s` (saved) register callee-saved:** callee প্রতিশ্রুতি দেয় — এগুলো ব্যবহার করলেও ফেরার আগে আগের মান ফিরিয়ে দেবে। তাই call-এর পরেও `s` register-এ তোমার data অক্ষত থাকবে। "টেকসই জিনিস, ধার নিলে যেমন ছিল তেমন ফেরত দাও।"
+
+এই দুই দল থাকার কারণ efficiency: ছোট, ক্ষণিকের হিসাবের জন্য `t` register (save করার ঝামেলা নেই), আর loop জুড়ে টিকে থাকা মানের জন্য `s` register। section ১৩.৬-এ calling convention দেখলে এটা পুরোপুরি পরিষ্কার হবে।
+
 ### x0 (zero register):
+
+৩২টা register-এর মধ্যে `x0` একদম অন্যরকম, আর এটাই RISC-V-এর অন্যতম সেরা design-চাল। `x0` সবসময় ০ পড়ে, আর এতে যা-ই লেখো তা নীরবে ফেলে দেওয়া হয় — মানে এটা একটা constant ০, কোনো সাধারণ register নয়।
 
 ```
 Special property:
 - Always reads as 0
 - Writes are discarded
+```
 
+প্রথমে মনে হতে পারে — পুরো একটা register "নষ্ট" করে ০ রাখা কেন? কিন্তু এই একটা register থাকার ফলে ISA থেকে অসংখ্য আলাদা instruction বাদ দেওয়া যায়। যেমন `MV` (এক register থেকে আরেকটায় copy), `NOP` (কিছু না করা), `NEG` (চিহ্ন উল্টানো) — এদের জন্য আলাদা instruction লাগে না, `x0`-কে চালাকি করে ব্যবহার করলেই হয়। কম instruction = সহজ hardware। দেখো কীভাবে:
+
+```
 Uses:
 1. Generate constant 0
    addi x5, x0, 0  # x5 = 0
@@ -249,20 +284,34 @@ Uses:
 
 4. NOP instruction
    addi x0, x0, 0  # Do nothing
+```
 
+এখানে ব্যাখ্যা: `x0 + 0` সবসময় ০, তাই কোনো রেজিস্টারে ০ বসাতে `addi x5, x0, 0`। ফলাফল ফেলে দিতে চাইলে গন্তব্য `x0` করো — হিসাব হয় ঠিকই, কিন্তু কোথাও জমা হয় না। `x0`-র সাথে তুলনা করে সহজে "শূন্য কিনা" পরীক্ষা করা যায়। আর "কিছু না করা" (NOP) মানে শুধু `x0`-তে ০ যোগ করা।
+
+```
 Hardware: Just wire to 0!
 ```
+
+আর সবচেয়ে মজার অংশ — এটা hardware-এ বানাতে কার্যত **কিছুই লাগে না**। অন্য ৩১টা register flip-flop দিয়ে তৈরি, কিন্তু `x0`-র জন্য তোমাকে শুধু output-টা স্থায়ীভাবে ০ (ground)-এর সাথে তার লাগিয়ে দিতে হবে, আর write হলে সেটা উপেক্ষা করতে হবে। একটা feature যা software-কে অনেক সহজ করে অথচ hardware-এ একদম free — এর চেয়ে সুন্দর design আর কী হতে পারে!
 
 ---
 
 ## ১৩.৩ Instruction Formats - 6 Types
+
+এবার আমরা chapter-টার আসল হৃদয়ে ঢুকছি। একটা instruction শেষ পর্যন্ত শুধু ৩২টা ০ আর ১ — তোমার CPU-কে এই ৩২ বিট দেখে বুঝতে হবে: কোন কাজ করতে হবে, কোন register থেকে data নিতে হবে, ফল কোথায় রাখতে হবে। সেই ৩২ বিটকে অর্থপূর্ণ টুকরোয় (field) ভাগ করার নিয়মই হলো **instruction format**।
+
+প্রশ্ন হলো — একটাই format দিয়ে কাজ চলত না? চলত না, কারণ ভিন্ন instruction-এর ভিন্ন জিনিস দরকার। `ADD`-এর তিনটা register লাগে (দুটো input, একটা output), কিন্তু `ADDI`-র দুটো register আর একটা constant লাগে; `LUI`-র শুধু একটা বড় constant লাগে। সবার জন্য জোর করে একই খোপ রাখলে বিট নষ্ট হতো। তাই RISC-V ৬টা format রাখে — R, I, S, B, U, J — প্রতিটা একেক ধরনের কাজের জন্য মাপমতো বানানো।
 
 ### Format Overview:
 
 ```
 All instructions: 32 bits
 6 formats: R, I, S, B, U, J
+```
 
+কিন্তু এখানেই RISC-V-র আসল মাস্টারস্ট্রোক। ৬টা format আলাদা হলেও, যে field-গুলো সব format-এ লাগে সেগুলোকে **সবসময় একই বিট-অবস্থানে** রাখা হয়েছে। register নম্বরগুলো (`rd`, `rs1`, `rs2`) এক জায়গায়, opcode সবসময় শেষের ৭ বিটে। এর ফল ভয়ংকর সুন্দর: তোমার decoder format জানার **আগেই** register নম্বর আর opcode টেনে বের করতে শুরু করতে পারে, কারণ সেগুলো যে কোথায় থাকবে তা নিশ্চিত। মানে কম তার, কম মুখস্থ, দ্রুত decode। নিচের common field-গুলো মনে রাখো — এগুলোই সব format জুড়ে এক জায়গায় বসে থাকে:
+
+```
 Common fields:
 - opcode: [6:0] (7 bits) - Operation type
 - rd: [11:7] (5 bits) - Destination register
@@ -272,23 +321,57 @@ Common fields:
 - funct7: [31:25] (7 bits) - Function modifier
 ```
 
+field-গুলোর ভূমিকা বুঝে নাও — পুরো chapter-টা এদের ওপর দাঁড়িয়ে:
+
+- **opcode (৭ বিট):** সবচেয়ে বড় শ্রেণিবিভাগ — "এটা কি R-type হিসাব, নাকি load, নাকি branch?" decoder সবার আগে এটাই দেখে।
+- **funct3 (৩ বিট) ও funct7 (৭ বিট):** opcode-এর ভেতরে আরও সূক্ষ্ম পার্থক্য। যেমন সব R-type-এর opcode এক (`0110011`), কিন্তু `ADD` আর `SUB` আলাদা হয় funct7 দিয়ে, আর `ADD` থেকে `AND` আলাদা হয় funct3 দিয়ে। ভাবো opcode = পদবি, funct = নাম।
+- **rd:** destination — ফলাফল কোন register-এ লিখব।
+- **rs1, rs2:** source — কোন register থেকে input পড়ব।
+
+> **কেন বিট-অবস্থান উল্টো দিক থেকে লেখা?** নিচের প্রতিটা চিত্রে বিট ৩১ বাঁয়ে, বিট ০ ডানে — কারণ বাইনারিতে সবচেয়ে দামি বিট (MSB) বাঁয়ে থাকে, ঠিক যেমন দশমিকে "১২৩"-এর ১ সবচেয়ে দামি। তাই চিত্রগুলো ডান থেকে বাঁয়ে পড়লে বিট-নম্বর ০, ১, ২... বাড়ে।
+
+তোমার decoder কীভাবে opcode দেখে format বাছে — পুরো ব্যাপারটা এক চিত্রে:
+
+```mermaid
+flowchart TD
+    INSTR["32-bit Instruction"] --> OP{"opcode [6:0]<br/>দেখো"}
+    OP -->|0110011| R["R-type<br/>register ⊕ register"]
+    OP -->|"0010011 / 0000011 / 1100111"| I["I-type<br/>register ⊕ immediate, load, JALR"]
+    OP -->|0100011| S["S-type<br/>store"]
+    OP -->|1100011| B["B-type<br/>conditional branch"]
+    OP -->|"0110111 / 0010111"| U["U-type<br/>LUI / AUIPC"]
+    OP -->|1101111| J["J-type<br/>JAL"]
+    R --> FIELDS["প্রতিটা format থেকে<br/>rd, rs1, rs2, funct3/funct7,<br/>immediate বের করো"]
+    I --> FIELDS
+    S --> FIELDS
+    B --> FIELDS
+    U --> FIELDS
+    J --> FIELDS
+```
+
 ### R-Type (Register):
+
+সবচেয়ে সহজটা দিয়ে শুরু করি। R-type হলো "register only" format — তিনটাই register, কোনো constant নেই। `rs1` আর `rs2` থেকে দুটো মান পড়ে, কিছু হিসাব করে, ফল `rd`-তে রাখে। যেহেতু কোনো immediate লাগে না, পুরো ৩২ বিট ভাগ হয় শুধু register আর function-নির্দেশক field-এর মধ্যে — তাই এখানে দুটো করে function field (`funct3` ও `funct7`) রাখার জায়গা থাকে, যা দিয়ে অনেক operation একই opcode-এ আঁটানো যায়।
 
 ```
 Used for: Register-to-register operations
 
 Format:
-31        25 24    20 19    15 14  12 11     7 6      0
-┌───────────┬────────┬────────┬──────┬────────┬────────┐
-│  funct7   │  rs2   │  rs1   │funct3│   rd   │ opcode │
-└───────────┴────────┴────────┴──────┴────────┴────────┘
-  7 bits     5 bits   5 bits  3 bits  5 bits   7 bits
+   31        25 24    20 19    15 14    12 11     7 6       0
+  ┌────────────┬────────┬────────┬────────┬────────┬─────────┐
+  │   funct7   │  rs2   │  rs1   │ funct3 │   rd   │ opcode  │
+  └────────────┴────────┴────────┴────────┴────────┴─────────┘
+     7 bits      5 bits   5 bits   3 bits   5 bits    7 bits
 
 Examples:
 - ADD, SUB, AND, OR, XOR
 - SLL, SRL, SRA
 - SLT, SLTU
+```
 
+লক্ষ করো — সব R-type instruction-এর opcode একই: `0110011`। তাহলে CPU `ADD` আর `SUB`-এর তফাত বোঝে কীভাবে? ঠিক এখানেই `funct3` আর `funct7`-এর কাজ। `funct3` মূল operation বাছে (যোগ/বিয়োগ একই funct3, কিন্তু AND/OR/XOR আলাদা), আর `funct7`-এর একটা বিট দিয়ে যমজ operation আলাদা করা হয় — যেমন `ADD` (funct7 = `0000000`) বনাম `SUB` (funct7 = `0100000`), একইভাবে `SRL` বনাম `SRA`। চমৎকার ব্যাপার: এতে বিয়োগের জন্য আলাদা opcode খরচ করতে হয় না।
+
+```
 Example: ADD x5, x6, x7
 - funct7 = 0000000
 - rs2 = x7 (00111)
@@ -298,26 +381,36 @@ Example: ADD x5, x6, x7
 - opcode = 0110011
 ```
 
+উপরের `ADD x5, x6, x7`-কে ডান থেকে বাঁয়ে জোড়া দিলে পুরো ৩২ বিট দাঁড়ায়: `0000000 00111 00110 000 00101 0110011`। তোমার বানানো decoder ঠিক এভাবেই উল্টো পথে — ৩২ বিট কেটে কেটে field বের করবে। এটাই Chapter 14-এর প্রথম ধাপ।
+
 ### I-Type (Immediate):
+
+এবার একটু বুদ্ধি লাগে। অনেক সময় আমরা একটা register আর একটা **ধ্রুব সংখ্যার (constant)** মধ্যে কাজ করতে চাই — যেমন `x6 + 10`। এই constant-কে বলে **immediate** ("তাৎক্ষণিক", কারণ এটা instruction-এর ভেতরেই বসানো, কোনো register থেকে আনতে হয় না)। R-type-এ `rs2` আর `funct7` যে ১২ বিট জায়গা নিত, I-type সেই পুরো জায়গাটাকে এক করে একটা ১২-বিট immediate বানায়। load instruction-ও (`LW` ইত্যাদি) এই format ব্যবহার করে — কারণ address মানে `rs1 + offset`, আর offset-ও একটা immediate।
 
 ```
 Used for: Register-immediate operations, loads
 
 Format:
-31                    20 19    15 14  12 11     7 6      0
-┌───────────────────────┬────────┬──────┬────────┬────────┐
-│    imm[11:0]          │  rs1   │funct3│   rd   │ opcode │
-└───────────────────────┴────────┴──────┴────────┴────────┘
-     12 bits             5 bits  3 bits  5 bits   7 bits
+   31                     20 19    15 14    12 11     7 6       0
+  ┌─────────────────────────┬────────┬────────┬────────┬─────────┐
+  │       imm[11:0]         │  rs1   │ funct3 │   rd   │ opcode  │
+  └─────────────────────────┴────────┴────────┴────────┴─────────┘
+          12 bits             5 bits   3 bits   5 bits    7 bits
 
 Examples:
 - ADDI, ANDI, ORI, XORI
 - SLTI, SLTIU
 - LW, LH, LB, LHU, LBU
 - JALR
+```
 
+```
 Immediate: Sign-extended to 32 bits
+```
 
+এখানে একটা জরুরি ধারণা: **sign-extension**। immediate মাত্র ১২ বিট, কিন্তু হিসাব হয় ৩২ বিটে। তাহলে বাকি ২০ বিট কী দিয়ে ভরবে? শুধু ০ দিয়ে ভরলে ঋণাত্মক সংখ্যা নষ্ট হয়ে যাবে। তাই RISC-V immediate-এর সবচেয়ে বাঁ দিকের বিট (চিহ্ন-বিট, bit 11) **নকল করে** বাকি ২০ বিট ভরে। ফলে `-5` (যার চিহ্ন-বিট ১) ৩২ বিটেও `-5` থাকে, আর `+10` (চিহ্ন-বিট ০) `+10`-ই থাকে। এজন্যই `SUBI` নামে কোনো instruction লাগে না — `ADDI x5, x5, -5` দিয়েই বিয়োগ হয়ে যায়, কারণ immediate ঋণাত্মক হতে পারে।
+
+```
 Example: ADDI x5, x6, 10
 - imm = 000000001010
 - rs1 = x6
@@ -328,19 +421,29 @@ Example: ADDI x5, x6, 10
 
 ### S-Type (Store):
 
+এখানে এমন একটা design সিদ্ধান্ত আসছে যা প্রথমে অদ্ভুত লাগে, কিন্তু এর পেছনের যুক্তি বুঝলে তুমি RISC-V-র চিন্তাভাবনা ধরে ফেলবে। store instruction (`SW` ইত্যাদি) memory-তে data লেখে: address = `rs1 + offset`, আর লেখার data আসে `rs2` থেকে। মানে এখানে **দুটো register আর একটা immediate** — তিনটাই লাগে। কিন্তু সমস্যা: I-type-এর মতো একটানা ১২ বিট immediate রাখলে `rs2`-এর জায়গা থাকে না।
+
+সমাধান: immediate-টাকে দু'টুকরো করে দাও। উপরের ৭ বিট (`imm[11:5]`) যায় একদম বাঁ দিকে, নিচের ৫ বিট (`imm[4:0]`) যায় যেখানে I-type-এ `rd` থাকত:
+
 ```
 Used for: Store instructions
 
 Format:
-31        25 24    20 19    15 14  12 11     7 6      0
-┌───────────┬────────┬────────┬──────┬────────┬────────┐
-│ imm[11:5] │  rs2   │  rs1   │funct3│imm[4:0]│ opcode │
-└───────────┴────────┴────────┴──────┴────────┴────────┘
-  7 bits     5 bits   5 bits  3 bits  5 bits   7 bits
+   31        25 24    20 19    15 14    12 11      7 6       0
+  ┌────────────┬────────┬────────┬────────┬─────────┬─────────┐
+  │  imm[11:5] │  rs2   │  rs1   │ funct3 │ imm[4:0]│ opcode  │
+  └────────────┴────────┴────────┴────────┴─────────┴─────────┘
+     7 bits      5 bits   5 bits   3 bits    5 bits    7 bits
+```
 
+```
 Immediate split: [11:5] and [4:0]
 Why? Keep rs1, rs2, funct3 in same position
+```
 
+**কেন এই অদ্ভুত ভাঙাভাঙি?** কারণটা hardware সরলতা। খেয়াল করো — immediate-কে টুকরো করেও `rs1` (বিট 19:15), `rs2` (বিট 24:20), আর `funct3` (বিট 14:12) ঠিক সেই একই জায়গায় রাখা হয়েছে যেখানে এরা R/I-type-এ থাকে! মানুষের কাছে immediate ভাঙা বিরক্তিকর, কিন্তু hardware কখনো অভিযোগ করে না — তার কাছে immediate-এর টুকরো জোড়া লাগানো মানে শুধু কয়েকটা তার এদিক-সেদিক করা, প্রায় free। বিনিময়ে register-পড়ার আর funct3-decode-করার তারগুলো **প্রতিটা format-এ এক** থাকে, যা অনেক বড় সাশ্রয়। মূলমন্ত্র: **register আর funct3-এর অবস্থান পবিত্র, immediate যেদিকে খুশি ভাঙো।**
+
+```
 Examples:
 - SW, SH, SB
 
@@ -353,7 +456,17 @@ Example: SW x7, 8(x6)
 - opcode = 0100011
 ```
 
+উপরের উদাহরণে offset `8` = বাইনারি `000000001000`। এটাকে ভাঙলে: উপরের ৭ বিট `0000000` যায় `imm[11:5]`-এ, নিচের ৫ বিট `01000` যায় `imm[4:0]`-এ। CPU পড়ার সময় এই দুই টুকরো আবার জোড়া দিয়ে আসল `8` ফিরে পায়।
+
 ### B-Type (Branch):
+
+branch হলো শর্তসাপেক্ষ লাফ — "যদি `rs1 == rs2` হয় তবে এখান থেকে এতদূর সরে যাও"। তাই এখানেও দুটো register (`rs1`, `rs2`, যাদের তুলনা করা হবে) আর একটা immediate (কতদূর লাফাব, সেই offset) লাগে — কাঠামোটা S-type-এর মতোই। কিন্তু branch-এর offset-টা একটু বিশেষ, আর সেটাই এই format-কে সবচেয়ে কৌতূহলোদ্দীপক বানিয়েছে।
+
+প্রথমে দুটো সরল কথা বুঝে নাও:
+
+১. **offset হলো PC-relative:** branch কোনো absolute address-এ যায় না, বরং বর্তমান PC থেকে কত বাইট আগে/পরে — সেই relative দূরত্বে যায়। তাই code memory-তে যেখানেই বসুক, branch ঠিক কাজ করে।
+
+২. **imm[0] সবসময় ০:** যেহেতু প্রতিটা instruction অন্তত ২ বাইটে aligned (RV32I-তে ৪ বাইট), branch-এর গন্তব্য কখনো বেজোড় বাইটে হতে পারে না। মানে offset-এর সবচেয়ে নিচের বিট সবসময় ০ — তাহলে সেটা instruction-এ জমা রাখার দরকারই নেই! এই একটা চালাকিতে একটা বিট বেঁচে যায়, আর সেই বাড়তি বিট দিয়ে branch-এর range দ্বিগুণ হয় (±4KB)।
 
 ```
 Used for: Conditional branches
@@ -376,17 +489,25 @@ Note: imm[0] always 0 (halfword aligned)
       Reconstructed: {imm[12], imm[10:5], imm[4:1], 0}
 ```
 
+দেখো immediate-এর বিটগুলো কেমন এলোমেলোভাবে ছড়িয়ে আছে — `imm[12]`, `imm[10:5]`, `imm[4:1]` নানা জায়গায়। **এটা পাগলামি নয়, এটা প্রকৌশল।** RISC-V ইচ্ছে করে immediate-এর প্রতিটা বিটকে ঠিক সেই অবস্থানে রেখেছে যেখানে সেটা I/S-type immediate-এর একই-নামের বিটের সাথে যতটা সম্ভব মেলে। ফলে immediate sign-extend করার জন্য যে hardware লাগে তা সব format-এ প্রায় একই তার দিয়ে চলে — আলাদা আলাদা বানাতে হয় না। মানুষের চোখে বিরক্তিকর, কিন্তু এই "scrambling" তোমার চিপের immediate-generator-কে অনেক ছোট করে দেয়। CPU চালানোর সময় এই ছড়ানো টুকরোগুলো জোড়া দিয়ে আর সবচেয়ে নিচে একটা ০ বসিয়ে আসল offset বানায়।
+
+> ⚠️ **FLAG (সম্ভাব্য encoding ভুল — আমি বদলাইনি):** উপরের bit-field চিত্রে বিট ৭-এর ঘরটা `0` লেখা, আর reconstruction-এ আছে `{imm[12], imm[10:5], imm[4:1], 0}`। কিন্তু RISC-V spec অনুযায়ী B-type-এ **বিট ৭ ধরে রাখে `imm[11]`** (offset-এর ১১তম বিট), আর যে বিটটা সবসময় ০ সেটা হলো `imm[0]` — যেটা মোটেই জমা রাখা হয় না (implicit)। সঠিক reconstruction হওয়া উচিত `{imm[12], imm[11], imm[10:5], imm[4:1], 0}` (১২+১১+৬+৪+১ = ১৩ বিট সমান ±4KB range)। নির্দেশ অনুযায়ী encoding-sensitive অংশ আমি পরিবর্তন করিনি — লেখক/maintainer যেন spec-এর সাথে মিলিয়ে নিশ্চিত করেন।
+
 ### U-Type (Upper immediate):
+
+একটা সমস্যা ভাবো: তোমার register ৩২ বিট, কিন্তু instruction-ও ৩২ বিট। তাহলে একটা পূর্ণ ৩২-বিট constant register-এ বসাবে কীভাবে? পুরো ৩২ বিট তো immediate-এ আঁটবে না — opcode আর rd-র জন্যও তো জায়গা চাই। I-type immediate মাত্র ১২ বিট, যা দিয়ে বড়জোর ছোট সংখ্যা হয়।
+
+RISC-V-র সমাধান দু'ধাপে: একটা বড় constant-কে ভাগ করো **উপরের ২০ বিট + নিচের ১২ বিট**-এ। U-type format এই উপরের ২০ বিট সামলায় — `imm[31:12]` সরাসরি register-এর উপরের অংশে বসিয়ে দেয়, নিচের ১২ বিট ০ করে। এত বড় immediate রাখতে গিয়ে এখানে কোনো register source বা funct field-এর জায়গাই থাকে না — শুধু ২০-বিট immediate, rd, আর opcode:
 
 ```
 Used for: Large immediate values
 
 Format:
-31                                    12 11     7 6      0
-┌──────────────────────────────────────┬────────┬────────┐
-│            imm[31:12]                │   rd   │ opcode │
-└──────────────────────────────────────┴────────┴────────┘
-           20 bits                      5 bits   7 bits
+   31                                     12 11     7 6       0
+  ┌─────────────────────────────────────────┬────────┬─────────┐
+  │              imm[31:12]                  │   rd   │ opcode  │
+  └─────────────────────────────────────────┴────────┴─────────┘
+                  20 bits                      5 bits    7 bits
 
 Immediate placed in upper 20 bits
 Lower 12 bits = 0
@@ -399,17 +520,24 @@ Example: LUI x5, 0x12345
 Result: x5 = 0x12345000
 ```
 
+দুটো U-type instruction আছে, আর এদের জুড়ি দিয়েই বড় constant ও দূরের address তৈরি হয়:
+
+- **LUI (Load Upper Immediate):** ২০-বিট immediate-কে register-এর উপরের ২০ বিটে বসায়, নিচের ১২ বিট ০। উপরের উদাহরণে `LUI x5, 0x12345` → `x5 = 0x12345000` (খেয়াল করো, `0x12345`-এর পরে তিনটা শূন্য — কারণ ১২ বিট = ৩ hex অঙ্ক ফাঁকা)। এবার নিচের ১২ বিট ভরতে একটা `ADDI` চালাও — দুটো মিলে যেকোনো ৩২-বিট constant! এই জোড়াটাই assembler-এর `LI` pseudo-instruction।
+- **AUIPC (Add Upper Immediate to PC):** একই উপরের-২০-বিট immediate, কিন্তু এবার সেটা PC-র সাথে যোগ হয়। এতে "এখান থেকে এতদূর" ধরনের PC-relative address বানানো যায় — position-independent code-এর জন্য অপরিহার্য (`AUIPC + ADDI` = `LA` pseudo-instruction)।
+
 ### J-Type (Jump):
+
+শেষ format — unconditional jump, মানে কোনো শর্ত ছাড়াই লাফ, প্রধানত `JAL` (function call) এর জন্য। যেহেতু এখানে তুলনা করার দরকার নেই, কোনো `rs1`/`rs2` লাগে না — তাই সেই বাঁচানো জায়গা পুরোটা চলে যায় immediate-এ। ফলে J-type-এর offset বিশাল: পুরো ২০ বিট (B-type-এর ১২ বিটের তুলনায়), মানে range ±1MB — অনেক দূরের function-ও ডাকা যায়।
 
 ```
 Used for: Unconditional jumps
 
 Format:
-31   30      21 20  19        12 11     7 6      0
-┌─────┬──────────┬──┬───────────┬────────┬────────┐
-│imm20│imm[10:1] │11│ imm[19:12]│   rd   │ opcode │
-└─────┴──────────┴──┴───────────┴────────┴────────┘
- 1bit   10 bits   1    8 bits     5 bits   7 bits
+31      31 30        21 20      20 19          12 11      7 6        0
+┌─────────┬────────────┬──────────┬──────────────┬─────────┬──────────┐
+│  imm20  │  imm[10:1] │  imm11   │  imm[19:12]  │   rd    │  opcode  │
+└─────────┴────────────┴──────────┴──────────────┴─────────┴──────────┘
+   1 bit      10 bits     1 bit        8 bits       5 bits     7 bits
 
 Immediate: PC-relative byte offset; imm[0] সবসময় 0 (2-byte aligned)
 Range: ±1MB
@@ -421,11 +549,21 @@ Note: Stores PC+4 in rd
       Immediate encoding scrambled (for efficient layout)
 ```
 
+কয়েকটা জিনিস খেয়াল করো। প্রথমত, এখানে field-গুলোর নাম immediate-এর বিট-সূচক দিয়ে দেওয়া: `imm20` মানে offset-এর বিট ২০, `imm11` মানে বিট ১১, `imm[10:1]` মানে বিট ১০ থেকে ১ — মানুষের পড়ার সুবিধার জন্য। B-type-এর মতোই এখানেও offset-এর বিট ০ জমা থাকে না (সবসময় ০, কারণ alignment), তাই reconstruction-এ সবশেষে একটা ০ বসে।
+
+দ্বিতীয়ত, এই বিটগুলোও ইচ্ছাকৃতভাবে এলোমেলো — একই কারণে: যত বেশি immediate-বিট অন্য format-এর সমনামী বিটের সাথে অবস্থান ভাগ করে, immediate-জোড়া-লাগানোর hardware তত ছোট হয়। শেখার সময় এটা মুখস্থ করার দরকার নেই; শুধু বুঝে রাখো — RISC-V সিলিকনে কয়েকটা multiplexer বাঁচানোর জন্য মানুষের একটু চোখের কষ্ট মেনে নিয়েছে।
+
+তৃতীয়ত, "Jump and **Link**"-এর "Link" অংশটা গুরুত্বপূর্ণ: লাফ দেওয়ার আগে `JAL` পরবর্তী instruction-এর ঠিকানা (`PC+4`) `rd`-তে (সাধারণত `ra`) জমা রাখে। এই জমানো ঠিকানা ধরেই function শেষে আবার ফেরা যায় (`ret`)। এটাই function call-এর ভিত্তি, যা তুমি section ১৩.৬-এ হাতে-কলমে দেখবে।
+
 ---
 
 ## ১৩.৪ RV32I Instruction Set - Complete
 
+format-গুলো বোঝা হয়ে গেছে — এবার দেখি ওই খোপগুলো দিয়ে আসলে কী কী কাজ করা যায়। পুরো RV32I মাত্র ৪৭টা instruction, আর এদেরকে কয়েকটা পরিবারে ভাগ করলে মনে রাখা সহজ। মনে রেখো, এই কয়েকটা সরল instruction দিয়েই গেম, OS, AI — পৃথিবীর সব software চলে। জটিল কাজ মানে বহু সরল instruction-এর সাজানো ক্রম, ঠিক যেমন বড় দালান অসংখ্য সাধারণ ইটের।
+
 ### Arithmetic Instructions:
+
+সবচেয়ে চেনা পরিবার — যোগ আর বিয়োগ। `ADD` দুটো register যোগ করে (R-type), `ADDI` একটা register-এর সাথে constant যোগ করে (I-type), `SUB` বিয়োগ করে।
 
 ```
 ADD   rd, rs1, rs2    # rd = rs1 + rs2
@@ -441,7 +579,11 @@ SUB  x5, x6, x7       # x5 = x6 - x7
 ADDI x5, x5, -5       # x5 = x5 - 5
 ```
 
+খেয়াল করেছ — `SUBI` বলে কিছু নেই? দরকারই নেই। `ADDI`-র immediate তো ঋণাত্মক হতে পারে (sign-extended), তাই "৫ বিয়োগ" মানে শুধু "−৫ যোগ": `ADDI x5, x5, -5`। একটা পুরো instruction বাঁচানো গেল — এটাই RISC-V-র সেই minimalism, যেটা hardware-কে ছোট রাখে।
+
 ### Logical Instructions:
+
+bitwise যুক্তি — প্রতিটা বিটের ওপর আলাদাভাবে AND/OR/XOR। প্রতিটার register-register (R-type) আর register-immediate (I-type) দুই রূপ আছে। এগুলো দিয়ে নির্দিষ্ট বিট set/clear/toggle করা হয় — যাকে বলে bit masking, embedded programming-এ যার দরকার পদে পদে।
 
 ```
 AND   rd, rs1, rs2    # rd = rs1 & rs2
@@ -457,7 +599,11 @@ ORI  x5, x6, 0xFF     # Set lower 8 bits
 XOR  x5, x5, x5       # Clear register (x5 = 0)
 ```
 
+ছোট কৌশল লক্ষ করো: `XOR x5, x5, x5` — যেকোনো সংখ্যাকে নিজের সাথে XOR করলে ০, তাই এটা register পরিষ্কার করার একটা চটপটে উপায়। আর `ORI ..., 0xFF` দিয়ে নিচের ৮ বিট জোর করে ১ বানানো যায়। এই ধরনের mask-চাল bit নিয়ে কাজ করার রুটি-রুজি।
+
 ### Shift Instructions:
+
+shift মানে register-এর বিটগুলো বাঁয়ে বা ডানে সরানো। বাঁয়ে এক ঘর সরানো = ২ দিয়ে গুণ, ডানে এক ঘর = ২ দিয়ে ভাগ — তাই multiply/divide instruction ছাড়াও shift দিয়ে দ্রুত গুণ-ভাগ করা যায় (যখন গুণক ২-এর ঘাত)।
 
 ```
 SLL   rd, rs1, rs2    # rd = rs1 << rs2[4:0]
@@ -475,7 +621,11 @@ SRLI x5, x6, 3        # x5 = x6 >> 3 (divide by 8)
 SRAI x5, x6, 4        # Arithmetic right shift (sign extend)
 ```
 
+দুটো জিনিস বুঝে রাখো। প্রথমত, **logical (SRL) বনাম arithmetic (SRA) ডান-shift**: SRL উপরে ০ ভরে, কিন্তু SRA চিহ্ন-বিট নকল করে উপরে ভরে — যাতে ঋণাত্মক সংখ্যা ডানে সরালেও ঋণাত্মকই থাকে (অর্থাৎ চিহ্নসহ ভাগ ঠিক থাকে)। বাঁ-shift-এ এই ঝামেলা নেই, তাই SLL একটাই। দ্বিতীয়ত, shift amount কেন মাত্র **৫ বিট (0–31)**? কারণ ৩২-বিট register-কে ৩২ বা তার বেশি ঘর সরানোর কোনো মানে নেই (সব বিট বেরিয়ে যাবে), আর ০–৩১ ঠিক ৫ বিটেই ধরে।
+
 ### Compare Instructions:
+
+তুলনা — "rs1 কি rs2-এর চেয়ে ছোট?" উত্তর হ্যাঁ হলে rd-তে ১, না হলে ০ বসে (Set if Less Than)। `signed` রূপ ঋণাত্মক সংখ্যা বোঝে, `unsigned` রূপ সব সংখ্যাকে ধনাত্মক ধরে — address তুলনায় এই unsigned রূপ লাগে। এই ১/০ ফল পরে branch বা শর্তের ভিত্তি হয়।
 
 ```
 SLT   rd, rs1, rs2    # rd = (rs1 < rs2) ? 1 : 0 (signed)
@@ -491,6 +641,8 @@ SLTI x5, x6, 10       # x5 = 1 if x6 < 10
 ```
 
 ### Branch Instructions:
+
+এতক্ষণ instruction-গুলো সরলরেখায় একটার পর একটা চলছিল। branch হলো সেই জিনিস যা program-কে সিদ্ধান্ত নিতে শেখায় — "if এই শর্ত সত্যি, তবে অন্য জায়গায় লাফাও, নইলে পরের instruction-এ যাও"। এটাই loop আর if-else-এর হৃদয়। ছয়টা branch ছয় রকম তুলনা ঢাকে: সমান/অসমান (BEQ/BNE), ছোট/বড়-সমান signed (BLT/BGE) আর unsigned (BLTU/BGEU)।
 
 ```
 BEQ  rs1, rs2, offset # Branch if rs1 == rs2
@@ -509,7 +661,11 @@ BNE  x5, x0, skip     # if (x5 != 0) goto skip
 BLT  x5, x6, less     # if (x5 < x6) goto less
 ```
 
+খেয়াল করেছ "বড়" (BGT) বা "ছোট-সমান" (BLE) নেই? দরকার নেই — operand দুটো উল্টে দিলেই হয়। `a > b` মানে তো `b < a`, তাই `BGT a, b` লেখার বদলে assembler নীরবে `BLT b, a` বানিয়ে দেয়। আবারও সেই minimalism: কম instruction, একই ক্ষমতা।
+
 ### Jump Instructions:
+
+branch যায় কাছাকাছি (±4KB), আর শর্তসাপেক্ষ। jump যায় শর্ত ছাড়াই, অনেক দূরে, এবং প্রধানত function call/return-এর জন্য। দুটো jump: `JAL` (PC-relative, J-type) আর `JALR` (register-এর ঠিকানায় লাফ, I-type)।
 
 ```
 JAL  rd, offset       # rd = PC+4; PC = PC + offset
@@ -524,7 +680,11 @@ JALR x0, x1, 0        # Return (jump to address in x1)
 JAL  x0, label        # Unconditional jump (discard return)
 ```
 
+লক্ষ করো `x0`-র চালাকি আবার ফিরে এসেছে: `JAL x1, function` function ডাকে আর ফেরার ঠিকানা `ra`-তে রাখে; কিন্তু `JAL x0, label`-এ ফেরার ঠিকানা `x0`-তে গিয়ে হারিয়ে যায় — মানে শুধুই লাফ, ফেরার ইচ্ছা নেই (এটাই `j` pseudo-instruction)। আর `JALR x0, x1, 0` মানে "`ra`-তে রাখা ঠিকানায় ফিরে যাও" — অর্থাৎ function থেকে return (`ret`)।
+
 ### Load Instructions:
+
+register সব data ধরে রাখতে পারে না — বড় data থাকে memory-তে। load মানে memory থেকে register-এ data আনা। ঠিকানা হিসাব হয় `rs1 + offset` (base + displacement)। কত বাইট আনছ তার ওপর নাম বদলায়: Word (৪ বাইট), Halfword (২ বাইট), Byte (১ বাইট)।
 
 ```
 LW   rd, offset(rs1)  # Load Word (32-bit)
@@ -543,7 +703,11 @@ LH   x5, 4(x6)        # Load 16-bit, sign extend
 LBU  x5, 0(x6)        # Load byte, zero extend
 ```
 
+ছোট data (byte/halfword) ৩২-বিট register-এ বসানোর সময় উপরের খালি বিট কী দিয়ে ভরবে? এখানেই signed বনাম unsigned রূপ: `LB`/`LH` চিহ্ন-বিট নকল করে (sign-extend, ঋণাত্মক সংখ্যার জন্য ঠিক), আর `LBU`/`LHU` ০ দিয়ে ভরে (zero-extend, byte/অক্ষর/রঙের মতো ধনাত্মক data-র জন্য)। ভুল রূপ বাছলে data নষ্ট — তাই signed না unsigned, সেটা ভেবে নিতে হয়।
+
 ### Store Instructions:
+
+store হলো load-এর উল্টো — register থেকে data নিয়ে memory-তে লেখা। ঠিকানা সেই একই `rs1 + offset`, আর যে data লিখবে তা আসে `rs2` থেকে। এখানে sign/zero-extend-এর প্রশ্ন নেই, কারণ তুমি শুধু নিচের কয়েকটা বাইট memory-তে লিখছ — উপরের বিট নিয়ে ভাবার দরকার নেই।
 
 ```
 SW  rs2, offset(rs1)  # Store Word
@@ -561,6 +725,8 @@ SB  x7, 0(x6)         # Store byte
 ```
 
 ### Upper Immediate:
+
+মনে আছে section ১৩.৩-এ U-type দেখার সময় বলেছিলাম — ৩২-বিট constant একটা ১২-বিট immediate-এ আঁটে না? এই দুটো instruction সেই সমস্যার সমাধান। `LUI` একটা বড় সংখ্যার উপরের ২০ বিট register-এ বসায়, আর `AUIPC` সেই ২০ বিট PC-র সাথে যোগ করে দূরের ঠিকানা বানায়।
 
 ```
 LUI   rd, imm         # rd = imm << 12
@@ -580,6 +746,8 @@ Used for:
 
 ### System Instructions:
 
+শেষ দুটো instruction হিসাব-নিকাশের নয়, বরং বাইরের জগতের সাথে কথা বলার। তোমার program নিজে থেকে screen-এ লিখতে বা file খুলতে পারে না — এসব OS-এর কাজ। `ECALL` দিয়ে program OS-কে "এই কাজটা করে দাও" বলে অনুরোধ পাঠায় (system call), আর `EBREAK` debugger-কে থামতে বলে — breakpoint বসানোর সময় এটাই কাজে লাগে।
+
 ```
 ECALL                 # Environment call (syscall)
 EBREAK                # Environment break (debugger)
@@ -593,6 +761,8 @@ EBREAK                # Breakpoint
 ```
 
 ### Pseudo-Instructions:
+
+এবার একটা স্বস্তির খবর। assembly লিখতে গিয়ে তোমাকে সবসময় `x0`-চালাকি মনে রাখতে হবে না। **Pseudo-instruction** হলো assembler-এর দেওয়া পড়তে-সহজ ছদ্মনাম — তুমি `ret` লেখো, assembler নীরবে সেটাকে আসল `JALR x0, x1, 0`-তে বদলে দেয়। মানে এগুলো hardware-এ নতুন কোনো instruction নয় (তোমার CPU-কে এদের জন্য আলাদা কিছু বানাতে হবে না), শুধু লেখার সুবিধা। নিচের প্রতিটার ডান পাশে দেখো কোন সত্যিকারের instruction(গুলো)-তে এটা অনুবাদ হয়:
 
 ```
 Not real instructions, but assembler shortcuts:
@@ -613,7 +783,11 @@ CALL offset      → JAL x1, offset
 
 ## ১৩.৫ Addressing Modes
 
+"Addressing mode" মানে — একটা instruction তার operand (data বা ঠিকানা) কোথা থেকে পায়, সেই নিয়ম। কিছু ISA-তে অসংখ্য জটিল mode থাকে, কিন্তু RISC-V minimalism মেনে মাত্র কয়েকটা সরল mode রাখে। মজার ব্যাপার — তুমি উপরের instruction-গুলোতে এদের ইতিমধ্যে ব্যবহার করেই ফেলেছ; এখানে শুধু নাম দিয়ে গুছিয়ে নিচ্ছি।
+
 ### 1. Register Direct:
+
+operand সরাসরি register-এর ভেতরের মান। সবচেয়ে দ্রুত — memory ছোঁয়াই লাগে না।
 
 ```
 Operation uses register contents directly
@@ -623,6 +797,8 @@ ADD x5, x6, x7    # x5 = x6 + x7
 
 ### 2. Immediate:
 
+operand একটা ধ্রুব সংখ্যা, instruction-এর ভেতরেই বসানো। ছোট ছোট constant-এর জন্য আদর্শ।
+
 ```
 Operation uses constant value
 
@@ -630,6 +806,8 @@ ADDI x5, x6, 10   # x5 = x6 + 10
 ```
 
 ### 3. Base + Displacement:
+
+memory ঠিকানা = একটা register (base) + একটা constant (offset)। array বা struct-এর ভেতর নির্দিষ্ট ঘরে পৌঁছাতে এটাই ব্যবহার হয় — base-এ array-র শুরু, offset-এ কততম ঘর। সব load/store এই mode-এ চলে।
 
 ```
 Memory address = register + offset
@@ -640,6 +818,8 @@ SW x7, 12(x6)     # memory[x6 + 12] = x7
 
 ### 4. PC-Relative:
 
+গন্তব্য = বর্তমান PC + offset। code memory-তে যেখানেই বসুক, branch/jump ঠিক কাজ করে — কারণ ঠিকানা "এখান থেকে কতদূর" হিসেবে গোনা হয়, কোনো fixed ঠিকানা নয়। এটাই relocatable code-এর ভিত্তি।
+
 ```
 Target address = PC + offset
 
@@ -648,6 +828,8 @@ JAL x1, function  # call PC + offset
 ```
 
 ### 5. Register Indirect:
+
+গন্তব্য = একটা register-এ রাখা ঠিকানা (+ offset)। ঠিকানা compile-time-এ জানা না থাকলে — যেমন function থেকে return, বা runtime-এ ঠিক হওয়া function pointer — এই mode লাগে।
 
 ```
 Target address = register + offset
