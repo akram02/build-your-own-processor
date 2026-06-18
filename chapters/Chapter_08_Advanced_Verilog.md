@@ -784,7 +784,7 @@ endmodule
 `undef WIDTH            // Undefine macro
 ```
 
-এর মধ্যে `` `default_nettype none `` কে আলাদা করে ভালোবাসো — এটা তোমার অনেক রাত বাঁচাবে। সাধারণত Verilog এ তুমি ভুল করে একটা নাম টাইপ করলে (যেমন `dataa` এর বদলে `data`) compiler চুপচাপ একটা নতুন 1-bit wire ধরে নেয়, কোনো অভিযোগ করে না — তারপর তোমার design রহস্যজনকভাবে ভুল করে। `` `default_nettype none `` লিখলে এই স্বয়ংক্রিয় wire বানানো বন্ধ হয়, ফলে যেকোনো অঘোষিত নাম সঙ্গে সঙ্গে error দেখায়। এই একটা লাইন professional রা প্রায় সব file এর শুরুতে রাখে।
+এর মধ্যে `` `default_nettype none `` কে আলাদা করে ভালোবাসো — এটা তোমার অনেক রাত বাঁচাবে। সাধারণত Verilog এ তুমি ভুল করে একটা নাম টাইপ করলে (যেমন `dataa` এর বদলে `data`) compiler চুপচাপ একটা নতুন ১-bit wire ধরে নেয়, কোনো অভিযোগ করে না — তারপর তোমার design রহস্যজনকভাবে ভুল করে। `` `default_nettype none `` লিখলে এই স্বয়ংক্রিয় wire বানানো বন্ধ হয়, ফলে যেকোনো অঘোষিত নাম সঙ্গে সঙ্গে error দেখায়। এই একটা লাইন professional রা প্রায় সব file এর শুরুতে রাখে।
 
 ---
 
@@ -1223,7 +1223,7 @@ task good_task;
 endtask
 ```
 
-এই ভুলটার লক্ষণ পরিষ্কার: compiler বলবে function এ timing control allowed না। সমাধানও সোজা — যা করতে চাইছিলে সেটা task এ সরিয়ে নাও, আর সেখানে `output` দিয়ে ফল ফেরাও (কারণ task এর return value নেই)।
+এই ভুলটার লক্ষণ পরিষ্কার: compiler বলবে function এ timing control অনুমোদিত নয়। সমাধানও সোজা — যা করতে চাইছিলে সেটা task এ সরিয়ে নাও, আর সেখানে `output` দিয়ে ফল ফেরাও (কারণ task এর return value নেই)।
 
 ### Mistake 2: Generate Without genvar ❌
 

@@ -303,7 +303,7 @@ When you first open Gowin IDE:
    - Ready to add code
 ```
 
-> ⚠️ ওই লম্বা device নামটা—`GW1NR-LV9QN88PC6/I5`—দেখে ঘাবড়ে যেয়ো না। এটা আসলে chip এর "পুরো নাম-ঠিকানা": কোন family, কোন package, কত গতির grade, সব encode করা আছে। তোমাকে মুখস্থ করতে হবে না, শুধু list থেকে হুবহু এটা বেছে নিলেই হলো। এটাই Tang Nano 9K এর chip।
+> ⚠️ ওই লম্বা device নামটা—`GW1NR-LV9QN88PC6/I5`—দেখে ঘাবড়ে যেয়ো না। এটা আসলে chip এর "পুরো নাম-ঠিকানা": কোন family, কোন package, কত গতির grade, সব এনকোড করা আছে। তোমাকে মুখস্থ করতে হবে না, শুধু list থেকে হুবহু এটা বেছে নিলেই হলো। এটাই Tang Nano 9K এর chip।
 
 ---
 
@@ -1221,7 +1221,7 @@ Solution:
 ✅ Deploy Verilog to REAL hardware! 🎉
 ```
 
-### তুমি বানিয়েছো:
+### তুমি বানিয়েছ:
 ```
 ✅ LED blink project
 ✅ Multi-LED patterns
