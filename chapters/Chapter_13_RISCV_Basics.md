@@ -29,6 +29,10 @@
 
 ### What is RISC-V?
 
+আগের chapter-এ তুমি একটা ছোট toy CPU বানিয়েছিলে — নিজের মন মতো instruction বানিয়ে। সেটা শেখার জন্য দারুণ ছিল, কিন্তু তোমার বানানো instruction set শুধু তোমার CPU-তেই চলত। RISC-V হলো এমন একটা **ISA (Instruction Set Architecture)** — মানে CPU আর software-এর মধ্যেকার "চুক্তি" — যেটা সারা পৃথিবী মেনে চলে। তুমি যদি RISC-V বানাও, তাহলে পৃথিবীর তৈরি লক্ষ লক্ষ RISC-V program তোমার চিপে চলবে। এটাই হলো একটা standard ISA শেখার আসল মজা।
+
+নামটা এসেছে UC Berkeley-র গবেষণা থেকে। ওদের পঞ্চম (5th) RISC ISA প্রজেক্ট বলে নাম **RISC-V** (আগের চারটা: RISC-I, RISC-II, SOAR, SPUR)। রোমান সংখ্যা V মানে পাঁচ, তাই উচ্চারণ **"Risk Five"** — "রিস্ক ভি" নয়।
+
 ```
 RISC-V = UC Berkeley-র পঞ্চম (5th) RISC ISA (RISC-I, RISC-II, SOAR, SPUR, তারপর RISC-V)
 
@@ -40,7 +44,11 @@ Key facts:
 ✅ Industry adoption (Google, NVIDIA, etc.)
 
 Pronunciation: "Risk Five"
+```
 
+**কেন RISC-V বেছে নিলাম?** ARM বা x86 দিয়েও তো CPU বানানো যায় — কিন্তু সেগুলো বানাতে হলে কোম্পানিকে মোটা অঙ্কের licensing fee দিতে হয়, আর ISA-র full spec বাইরের কেউ পায় না। RISC-V-এর spec সম্পূর্ণ খোলা ও বিনামূল্যে — তুমি, আমি, যে কেউ এটা পড়তে, বানাতে, এমনকি বিক্রিও করতে পারি। শেখার জন্য আরও বড় সুবিধা: ISA-টা ছোট আর পরিষ্কার, তাই গোটা base set একজন মানুষ এক সপ্তাহেই মাথায় ঢুকিয়ে ফেলতে পারে। শিল্প-জগতেও (Google, NVIDIA, Western Digital) দ্রুত জায়গা করে নিচ্ছে — তাই এটা শুধু "পড়ার জিনিস" নয়, ভবিষ্যতের চাকরির জিনিসও।
+
+```
 Why RISC-V?
 - No licensing fees (unlike ARM, x86)
 - Educational friendly
