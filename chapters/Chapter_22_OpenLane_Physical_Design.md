@@ -186,11 +186,11 @@ endmodule
 
 এই `config.tcl` ফাইলটাই হলো তোমার **রেসিপি কার্ড** — OpenLane-এর কাছে design
 নিয়ে তোমার সব নির্দেশ এখানে লেখা থাকে। প্রতিটা line আসলে একটা environment variable
-সেট করছে (`set ::env(...)`), আর OpenLane flow চালানোর সময় সেগুলো পড়ে নেয়। নিচে
+সেট করছে (`set ::env(...)`), আর OpenLane flow চালানোর সময় সেগুলো পড়ে নেয়।
 নিচের ফাইলটাই দিলাম:
 
 ```tcl
-// config.tcl
+# config.tcl
 set ::env(DESIGN_NAME) inverter
 
 set ::env(VERILOG_FILES) [glob $::env(DESIGN_DIR)/src/*.v]
@@ -462,7 +462,7 @@ design-এ সত্যিকারের clock আছে, নির্দিষ
 নাম-ধরা net লাগবে। পুরো ফাইলটা:
 
 ```tcl
-// config.tcl
+# config.tcl
 set ::env(DESIGN_NAME) riscv_simple
 
 set ::env(VERILOG_FILES) [glob $::env(DESIGN_DIR)/src/*.v]
@@ -506,7 +506,7 @@ set ::env(GND_NETS) [list {vssd1}]
 | `VDD_NETS` / `GND_NETS` | power ও ground net-এর নাম | Sky130-তে `vccd1`/`vssd1` — বিদ্যুৎ এদের দিয়েই বিলি হয় |
 
 > 💡 **নোট:** খেয়াল করো — comment-এ লেখা "TinyTapeout: 160um x 100um", অথচ `DIE_AREA`
-> দেওয়া `0 0 200 200` (২০০×২০০ µm) — সংখ্যা দুটো মেলে না। এটা একটা illustrative উদাহরণ;
+> দেওয়া `0 0 200 200` (২০০×২০০ µm) — সংখ্যা দুটো মেলে না। এটা বোঝানোর জন্য একটি উদাহরণ;
 > আসল TinyTapeout submission-এ die size টেমপ্লেট থেকে নির্ধারিত হয় (Chapter 24-এ বিস্তারিত)।
 
 ### Run Processor Flow:
@@ -874,7 +874,7 @@ LVS দুটো জিনিস পাশাপাশি রেখে মিল
 এই দুটোর প্রতিটা connection, প্রতিটা device, আর প্রতিটা device-এর আকার এক এক করে
 মেলায়:
 
-- ✅ সব **connection** মিলছে কিনা (কোন তার ভুল জায়গায় যায়নি তো?)
+- ✅ সব **connection** মিলছে কিনা (কোনো তার ভুল জায়গায় যায়নি তো?)
 - ✅ সব **device** উপস্থিত কিনা (কোনো transistor হারিয়ে যায়নি তো?)
 - ✅ device-এর **আকার** ঠিক আছে কিনা।
 
@@ -1077,7 +1077,7 @@ exercise-এর আসল শিক্ষা: বাস্তব chip design ম
 
 ```
 Level 22: ✅ COMPLETE - Physical Designer!
-Progress: [███████████████████████████████████] 88%
+Progress: [██████████████████████░░░] 88%
 
 XP Gained: +2500
 Skills: OpenLane, Physical Design, Layout

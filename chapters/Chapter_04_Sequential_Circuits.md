@@ -538,7 +538,7 @@ CLK ──→ (to SR FF clock)
 
 ### Applications:
 
-চারটে মোডের প্রত্যেকটার বাস্তব ব্যবহার আছে — এই tableটা তোমাকে মনে করিয়ে দেবে কোন মোড কোথায় কাজে লাগে:
+চারটে মোডের প্রত্যেকটার বাস্তব ব্যবহার আছে — এই table-টা তোমাকে মনে করিয়ে দেবে কোন মোড কোথায় কাজে লাগে:
 
 ```
 J=0, K=0: Hold → Memory storage
@@ -626,7 +626,7 @@ Simply connect J=K=T!
 D flip-flop দিয়েও T বানানো যায়, আর এই কৌশলটা একটু চালাক। আমরা চাই প্রতি edge-এ Q উল্টে যাক — অর্থাৎ পরের মান হোক বর্তমান মানের উল্টো। একটা XOR gate দিয়ে এটা করা যায়: **D = T ⊕ Q**।
 
 ```
-       Q' ──┬──[XOR]── D  ┐
+       Q ───┬──[XOR]── D  ┐
             │             │
        T ───┘             ├─[D FF]── Q
                           │
@@ -1637,7 +1637,7 @@ Bonus:
 
 ```
 Level 4: ✅ COMPLETE - Sequential Logic Expert!
-Progress: [████████████████████] 20%
+Progress: [████░░░░░░░░░░░░░░░░░░░░░] 16%
 
 XP Gained: +1500
 Skills: Memory, Registers, FSM, Control Logic

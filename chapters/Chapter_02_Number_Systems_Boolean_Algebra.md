@@ -416,8 +416,9 @@ F = C′
 100₁₀ = 1100100₂
 255₁₀ = 11111111₂
 
-1111₂  = 15₁₀
-10101₂ = 21₁₀
+1111₂     = 15₁₀
+10101₂    = 21₁₀
+11111111₂ = 255₁₀
 ```
 
 ### Boolean Simplification (২.৫):
@@ -437,7 +438,7 @@ F = C′
 
 ```
 Level 2: ✅ Number System Master!
-Progress: [██████████░░░░░] 10%
+Progress: [██░░░░░░░░░░░░░░░░░░░░░░░] 8%
 
 Skills Unlocked:
 ✅ Binary/Hex conversions

@@ -484,7 +484,7 @@ module branch_controller(
 endmodule
 ```
 
-এখানে সবচেয়ে গুরুত্বপূর্ণ সিদ্ধান্ত — **ঠিক কোন কোন register flush হবে**। branch resolve হয় EX-এ, তাই ভুল পথে শুধু তার চেয়ে **ছোট** (younger) দুটো instruction: একটা IF/ID-তে, একটা ID/EX-তে। তাই ওই দুটোই flush। কিন্তু EX/MEM-এ যেটা আছে সেটা branch-এর চেয়ে **পুরোনো** — সে ভুল পথের নয়, তাকে শেষ হতে দিতেই হবে। **EX/MEM কখনো flush করো না** — করলে একটা সঠিক instruction হারিয়ে যাবে।
+এখানে সবচেয়ে গুরুত্বপূর্ণ সিদ্ধান্ত — **ঠিক কোন কোন register flush হবে**। branch resolve হয় EX-এ, তাই ভুল পথে শুধু তার চেয়ে **ছোট** (younger) দুটো instruction: একটা IF/ID-তে, একটা ID/EX-এ। তাই ওই দুটোই flush। কিন্তু EX/MEM-এ যেটা আছে সেটা branch-এর চেয়ে **পুরোনো** — সে ভুল পথের নয়, তাকে শেষ হতে দিতেই হবে। **EX/MEM কখনো flush করো না** — করলে একটা সঠিক instruction হারিয়ে যাবে।
 
 ### পুরো নিয়ন্ত্রণ এক ছবিতে: কখন stall, কখন flush
 
@@ -1147,7 +1147,7 @@ Report:
 
 ```
 Level 17: ✅ COMPLETE - Pipeline Master!
-Progress: [████████████████████████████████████] 85%
+Progress: [█████████████████░░░░░░░░] 68%
 
 XP Gained: +4000
 Skills: Hazard Handling, Forwarding, Real Pipeline

@@ -234,7 +234,7 @@ endtask
 
 ### Example 1 - UART Transmit Task:
 
-ধরো তুমি একটা byte serial line দিয়ে পাঠাবে। UART protocol অনুযায়ী আগে একটা start bit (0), তারপর ৮টা data bit, তারপর একটা stop bit (1) — আর প্রতিটা bit লাইনে কিছুক্ষণ ধরে রাখতে হবে (baud rate অনুযায়ী)। লক্ষ্য করো, এখানে **সময়** জড়িত — "bit রাখো, অপেক্ষা করো, পরের bit"। এটা function দিয়ে কখনো লেখা যাবে না, কারণ function এ `@(posedge clk)` নিষিদ্ধ। এখানেই task উজ্জ্বল হয়। নিচে দেখো কিভাবে একটা ছোট task (`send_bit`) আরেকটা বড় task (`send_byte`) এর ভেতরে বারবার ব্যবহার হচ্ছে — ঠিক যেমন কাজকে ছোট ছোট ধাপে ভাগ করো।
+ধরো তুমি একটা byte serial line দিয়ে পাঠাবে। UART protocol অনুযায়ী আগে একটা start bit (0), তারপর ৮টা data bit, তারপর একটা stop bit (1) — আর প্রতিটা bit লাইনে কিছুক্ষণ ধরে রাখতে হবে (baud rate অনুযায়ী)। লক্ষ্য করো, এখানে **সময়** জড়িত — "bit রাখো, অপেক্ষা করো, পরের bit"। এটা function দিয়ে কখনো লেখা যাবে না, কারণ function এ `@(posedge clk)` নিষিদ্ধ। এখানেই task উজ্জ্বল হয়। নিচে দেখো কীভাবে একটা ছোট task (`send_bit`) আরেকটা বড় task (`send_byte`) এর ভেতরে বারবার ব্যবহার হচ্ছে — ঠিক যেমন কাজকে ছোট ছোট ধাপে ভাগ করো।
 
 ```verilog
 module uart_tx(
@@ -784,7 +784,7 @@ endmodule
 `undef WIDTH            // Undefine macro
 ```
 
-এর মধ্যে `` `default_nettype none `` কে আলাদা করে ভালোবাসো — এটা তোমার অনেক রাত বাঁচাবে। সাধারণত Verilog এ তুমি ভুল করে একটা নাম টাইপ করলে (যেমন `dataa` এর বদলে `data`) compiler চুপচাপ একটা নতুন 1-bit wire ধরে নেয়, কোনো অভিযোগ করে না — তারপর তোমার design রহস্যজনকভাবে ভুল করে। `` `default_nettype none `` লিখলে এই স্বয়ংক্রিয় wire বানানো বন্ধ হয়, ফলে যেকোনো অঘোষিত নাম সঙ্গে সঙ্গে error দেখায়। এই একটা লাইন professional রা প্রায় সব file এর শুরুতে রাখে।
+এর মধ্যে `` `default_nettype none `` কে আলাদা করে ভালোবাসো — এটা তোমার অনেক রাত বাঁচাবে। সাধারণত Verilog এ তুমি ভুল করে একটা নাম টাইপ করলে (যেমন `dataa` এর বদলে `data`) compiler চুপচাপ একটা নতুন ১-bit wire ধরে নেয়, কোনো অভিযোগ করে না — তারপর তোমার design রহস্যজনকভাবে ভুল করে। `` `default_nettype none `` লিখলে এই স্বয়ংক্রিয় wire বানানো বন্ধ হয়, ফলে যেকোনো অঘোষিত নাম সঙ্গে সঙ্গে error দেখায়। এই একটা লাইন professional রা প্রায় সব file এর শুরুতে রাখে।
 
 ---
 
@@ -1223,7 +1223,7 @@ task good_task;
 endtask
 ```
 
-এই ভুলটার লক্ষণ পরিষ্কার: compiler বলবে function এ timing control allowed না। সমাধানও সোজা — যা করতে চাইছিলে সেটা task এ সরিয়ে নাও, আর সেখানে `output` দিয়ে ফল ফেরাও (কারণ task এর return value নেই)।
+এই ভুলটার লক্ষণ পরিষ্কার: compiler বলবে function এ timing control অনুমোদিত নয়। সমাধানও সোজা — যা করতে চাইছিলে সেটা task এ সরিয়ে নাও, আর সেখানে `output` দিয়ে ফল ফেরাও (কারণ task এর return value নেই)।
 
 ### Mistake 2: Generate Without genvar ❌
 
@@ -1345,7 +1345,7 @@ This project uses:
 
 ```
 Level 8: ✅ COMPLETE - Advanced Verilog Expert!
-Progress: [████████████████████████████████] 40%
+Progress: [████████░░░░░░░░░░░░░░░░░] 32%
 
 XP Gained: +3000
 Skills: Functions, Tasks, Generate, Professional HDL

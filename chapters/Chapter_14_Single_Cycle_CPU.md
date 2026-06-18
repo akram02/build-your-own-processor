@@ -426,7 +426,7 @@ endmodule
 Branch instruction (`beq`, `bne`, `blt`...) হলো program-কে "যদি... তাহলে..." বলার
 উপায় — loop, `if`, সব শর্তের ভিত্তি। কিন্তু একটা প্রশ্ন: branch নেওয়া হবে কি হবে না,
 সেই সিদ্ধান্ত কে নেয়? এখানে আমরা ALU-র উপর সব ভার না দিয়ে একটা ছোট ডেডিকেটেড
-**branch comparator** বানিয়েছি, যে শুধু দুটো register-এর মান তুলনা করে এক bit answer
+**branch comparator** বানিয়েছি, যে শুধু দুটো register-এর মান তুলনা করে এক bit উত্তর
 দেয়: `branch_taken` (১ মানে শর্ত সত্য, লাফ দাও)।
 
 কোন তুলনা করবে সেটা ঠিক করে `funct3` — instruction-এর ভেতরের ৩-bit ক্ষেত্র, যা
@@ -1484,7 +1484,7 @@ pipeline) এগিয়ে রাখবে।
 ✅ Memory interface design
 ✅ Test with real programs
 ✅ Deploy to FPGA
-✅ তোমার নিজের CPU বানিয়েছো! 🎉
+✅ তোমার নিজের CPU বানিয়েছ! 🎉
 ```
 
 ### তুমি বানিয়েছো:
@@ -1546,7 +1546,7 @@ Requirements:
 
 ```
 Level 14: ✅ COMPLETE - CPU Designer!
-Progress: [████████████████████████████████] 70%
+Progress: [██████████████░░░░░░░░░░░] 56%
 
 XP Gained: +10000 🎉🎉🎉
 Skills: CPU Design, RISC-V Implementation
@@ -1576,7 +1576,7 @@ Next: Chapter 15 - Multi-Cycle Processor!
 
 **"You built a complete RISC-V processor! This is AMAZING!"**
 
-**"তুমি complete RISC-V processor বানিয়েছো! এটা AMAZING!"**
+**"তুমি complete RISC-V processor বানিয়েছ! এটা AMAZING!"**
 
 Made with ❤️ for builders | বানানোর জন্য ভালোবাসা দিয়ে তৈরি
 

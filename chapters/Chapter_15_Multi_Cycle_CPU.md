@@ -1037,7 +1037,7 @@ single-cycle-এর CPI কম (1.0) কিন্তু clock period বড়; 
 
 ### Execution Time Comparison
 
-ধরা যাক একটা ছোট প্রোগ্রাম, **10টি instruction**:
+ধরা যাক একটা ছোট প্রোগ্রাম, **১০টি instruction**:
 
 | ধরন | সংখ্যা | cycle/instr (multi) | মোট cycle |
 |---|---|---|---|
@@ -1220,7 +1220,7 @@ Requirements:
 
 ```
 Level 15: ✅ COMPLETE - CPU Optimizer!
-Progress: [██████████████████████████████████] 75%
+Progress: [███████████████░░░░░░░░░░] 60%
 
 XP Gained: +3000
 Skills: FSM Design, Resource Sharing, Optimization

@@ -9,7 +9,7 @@
 
 গত chapter গুলোতে তুমি Verilog লিখতে শিখেছো — gate, adder, flip-flop, counter, সব। কিন্তু একটা জিনিস খেয়াল করেছো? প্রতিবার code লেখার পর তুমি testbench দিয়েই সেটা চালিয়ে দেখেছো। সেই testbench টাকেই আমরা এতদিন একটু hand-wave করে পাশ কাটিয়ে গেছি — "এটা দিয়ে test হয়" বলে। এই chapter এ আমরা সেই পর্দাটা সরাবো।
 
-ভাবো তো, তুমি একটা ALU লিখলে। সেটা ঠিকঠাক কাজ করছে কিনা তুমি কিভাবে জানবে? FPGA তে upload করে LED জ্বালিয়ে? প্রতিটা input combination এর জন্য? RV32I তে 47টা instruction, আর প্রতিটার অসংখ্য input — হাতে হাতে test করলে তোমার সারা জীবন লেগে যাবে, আর তবুও তুমি confident হতে পারবে না। এখানেই **testbench** তোমার সবচেয়ে বড় বন্ধু।
+ভাবো তো, তুমি একটা ALU লিখলে। সেটা ঠিকঠাক কাজ করছে কিনা তুমি কীভাবে জানবে? FPGA তে upload করে LED জ্বালিয়ে? প্রতিটা input combination এর জন্য? RV32I তে 47টা instruction, আর প্রতিটার অসংখ্য input — হাতে হাতে test করলে তোমার সারা জীবন লেগে যাবে, আর তবুও তুমি confident হতে পারবে না। এখানেই **testbench** তোমার সবচেয়ে বড় বন্ধু।
 
 একটা জিনিস মাথায় গেঁথে নাও: **professional hardware engineer রা design লেখার চেয়ে বেশি সময় test লেখায় ব্যয় করেন।** Intel, AMD, Apple — সবার কাছে verification team গুলো design team এর চেয়ে বড়। কারণ একবার silicon চলে গেলে আর bug fix করা যায় না; একটা ভুল মানে কোটি টাকার চিপ নষ্ট। তাই এই chapter টা শুধু "আরেকটা topic" না — এটা তোমাকে একজন amateur থেকে একজন real engineer বানানোর ধাপ।
 
@@ -98,7 +98,7 @@ vvp sim
 
 সবচেয়ে সহজ ভাষায়: testbench হলো এমন একটা Verilog module যেটার নিজের কোনো input বা output port নেই। অদ্ভুত শোনাচ্ছে? ভাবো একটা ল্যাবরেটরির কথা। তোমার বানানো circuit টা হলো টেবিলের ওপর রাখা যন্ত্র, আর testbench হলো পুরো ল্যাব — power supply, signal generator, oscilloscope, সব। ল্যাবটা নিজে কোথাও plug হয় না; বরং ভেতরে যন্ত্রটা বসিয়ে তাকে নাড়াচাড়া করে দেখে।
 
-তোমার যে module টা test করছো তাকে বলে **DUT — Device Under Test** (কখনো কখনো UUT, Unit Under Test ও বলে)। Testbench তিনটা কাজ করে:
+তোমার যে module টা test করছো তাকে বলে **DUT — Device Under Test** (কখনো কখনো UUT, Unit Under Test ও বলে)। Testbench তিনটে কাজ করে:
 
 1. **Stimulus দেয়** — DUT এর input port গুলোতে নানা value পাঠায় ("এই নাও a=5, b=3, এবার দেখি কী করিস")।
 2. **Response পড়ে** — DUT এর output port থেকে result নেয়।
@@ -177,7 +177,7 @@ endmodule
 - **Stimulus generation** — `initial begin ... end` ব্লকে time এর সাথে সাথে input বদলানো। এটাই সেই "signal generator"।
 - **Response checking** — output ঠিক আছে কিনা দেখা। `(optional)` লেখা আছে কারণ technically testbench output না দেখেও চলে, কিন্তু একজন ভালো engineer কখনো এই অংশ বাদ দেয় না।
 
-আর প্রথম লাইনের `` `timescale 1ns/1ps `` — এটা simulator কে বলে "এই file এ আমি যখন `#10` লিখব, সেই 10 মানে 10 ন্যানোসেকেন্ড; আর সময় মাপব 1 picosecond সূক্ষ্মতায়"। প্রথম সংখ্যা হলো **time unit** (তোমার delay গুলো এই এককে), দ্বিতীয়টা **time precision** (এর চেয়ে সূক্ষ্ম সময় simulator গোল করে ফেলবে)। এটা না দিলে simulator default ধরে নেয়, আর তখন একেক file একেক রকম time scale এ চললে হিসাব গুলিয়ে যেতে পারে — তাই অভ্যাস করে প্রতিটা testbench এর শুরুতে এটা লিখবে।
+আর প্রথম লাইনের `` `timescale 1ns/1ps `` — এটা simulator কে বলে "এই file এ আমি যখন `#10` লিখব, সেই 10 মানে 10 ন্যানোসেকেন্ড; আর সময় মাপব 1 পিকোসেকেন্ড সূক্ষ্মতায়"। প্রথম সংখ্যা হলো **time unit** (তোমার delay গুলো এই এককে), দ্বিতীয়টা **time precision** (এর চেয়ে সূক্ষ্ম সময় simulator গোল করে ফেলবে)। এটা না দিলে simulator default ধরে নেয়, আর তখন একেক file একেক রকম time scale এ চললে হিসাব গুলিয়ে যেতে পারে — তাই অভ্যাস করে প্রতিটা testbench এর শুরুতে এটা লিখবে।
 
 ### Input vs Output in Testbench:
 
@@ -208,7 +208,7 @@ module testbench;
 
 আগের chapter এ তুমি sequential circuit বানিয়েছো — flip-flop, counter — যেগুলো clock এর প্রতিটা edge এ "টিক" করে এগোয়। কিন্তু সেই clock টা আসে কোথা থেকে? FPGA তে board এর crystal oscillator দেয়। কিন্তু simulation এ তো কোনো crystal নেই! তাই testbench এই clock টা **নিজে বানিয়ে দিতে হয়**। এটাই sequential circuit test করার প্রথম শর্ত — clock ছাড়া তোমার flip-flop নড়বেই না।
 
-Clock মানে আসলে কী? একটা signal যেটা 0 আর 1 এর মধ্যে নিয়ম করে ওঠানামা করে — 0, 1, 0, 1, ... অসীমকাল ধরে। সিমুলেশনে এটা বানানোর কৌশল খুব সহজ: একটা signal কে নির্দিষ্ট সময় পর পর উল্টে দাও (`~` দিয়ে invert)।
+Clock মানে আসলে কী? একটা signal যেটা 0 আর 1 এর মধ্যে নিয়ম করে ওঠানামা করে — 0, 1, 0, 1, ... অসীমকাল ধরে। simulation এ এটা বানানোর কৌশল খুব সহজ: একটা signal কে নির্দিষ্ট সময় পর পর উল্টে দাও (`~` দিয়ে invert)।
 
 ### Simple Clock:
 
@@ -302,7 +302,7 @@ end
 
 `#` হলো সবচেয়ে সরল হাতিয়ার — "এত time unit এগিয়ে যাও"। এই ব্লকটা পড়ো ঘটনার ধারাবাহিকতা হিসেবে: time 0 তে a হলো 0; তারপর ঘড়ি 10 এ পৌঁছালে a হলো 1; তারপর ঘড়ি 15 এ পৌঁছালে a আবার 0। প্রতিটা `#` এর পর simulator ঘড়িটাকে ততটুকু সামনে ঠেলে দেয়, আর সেই সময়ের মধ্যে তোমার এই ব্লক চুপ করে অপেক্ষা করে।
 
-`#` মূলত combinational circuit test করার জন্য আদর্শ — যেমন adder বা AND gate, যাদের clock লাগে না। তুমি input বদলাও, একটু `#` দিয়ে output থিতু হতে দাও, তারপর যাচাই করো। কিন্তু একটা ফাঁদ আছে: clock-চালিত circuit এ শুধু `#` দিয়ে কাজ করতে গেলে তোমাকে hand দিয়ে clock এর period এর সাথে delay মেলাতে হয়, যা ভঙ্গুর। তাই sequential circuit এ পরের হাতিয়ারটা — `@` — অনেক ভালো।
+`#` মূলত combinational circuit test করার জন্য আদর্শ — যেমন adder বা AND gate, যাদের clock লাগে না। তুমি input বদলাও, একটু `#` দিয়ে output থিতু হতে দাও, তারপর যাচাই করো। কিন্তু একটা ফাঁদ আছে: clock-চালিত circuit এ শুধু `#` দিয়ে কাজ করতে গেলে তোমাকে হাতে হাতে clock এর period এর সাথে delay মেলাতে হয়, যা ভঙ্গুর। তাই sequential circuit এ পরের হাতিয়ারটা — `@` — অনেক ভালো।
 
 ### Wait (@):
 
@@ -365,7 +365,7 @@ end
 | `$strobe(...)` | চলতি time step এর একদম শেষে print | edge এর পরের চূড়ান্ত (settled) value ধরতে |
 | `$dumpfile("f.vcd")` | কোন file এ waveform লেখা হবে তা ঠিক করে | GTKWave এ দেখার জন্য VCD বানাতে |
 | `$dumpvars(...)` | কোন signal গুলো VCD তে রাখা হবে তা বলে | waveform এ কী কী দেখতে চাও বাছতে |
-| `$finish` | পুরো simulation শেষ করে দেয় | test শেষ হলে সিমুলেশন থামাতে |
+| `$finish` | পুরো simulation শেষ করে দেয় | test শেষ হলে simulation থামাতে |
 | `$stop` | simulation থামায় (চালু রেখে) | মাঝপথে থেমে interactive debug করতে |
 | `$time` / `$realtime` | বর্তমান simulation সময় ফেরত দেয় | message এ "কখন ঘটল" দেখাতে |
 | `$random(seed)` | random সংখ্যা দেয় | random/stress testing এ |
@@ -695,7 +695,7 @@ endmodule
 
 এই counter testbench এ `repeat` এর সৌন্দর্যটা দেখো। `repeat(2) @(posedge clk)` দিয়ে reset কে দুই cycle ধরে রাখা হলো। তারপর `en = 1` করে `repeat(20)` দিয়ে কুড়ি cycle ধরে counter চালানো হলো — প্রতি cycle এ `$display` দিয়ে count ছাপা হচ্ছে, যাতে তুমি দেখতে পাও সংখ্যাটা 0, 1, 2, 3... করে বাড়ছে। সবশেষে `en = 0` করে প্রমাণ করা হলো যে enable নামালে counter থেমে যায়, এক জায়গায় আটকে থাকে।
 
-লক্ষ্য করো এটা পুরোপুরি self-checking না — এটা শুধু ছাপছে, ভুল ধরছে না। শেখার জন্য এটা ঠিক আছে (চোখে দেখে বোঝা যায় count ঠিকঠাক বাড়ছে কিনা), কিন্তু একটা সত্যিকারের test এ তুমি এখানে `if (count !== expected)` যোগ করে এটাকে self-checking বানাতে — একটা চমৎকার অনুশীলন তোমার জন্য।
+লক্ষ্য করো এটা পুরোপুরি self-checking না — এটা শুধু ছাপছে, ভুল ধরছে না। শেখার জন্য এটা ঠিক আছে (চোখে দেখে বোঝা যায় count ঠিকঠাক বাড়ছে কিনা), কিন্তু একটা সত্যিকারের test এ তুমি এখানে `if (count !== expected)` যোগ করে এটাকে self-checking বানাতে পারো — একটা চমৎকার অনুশীলন তোমার জন্য।
 
 ---
 
@@ -930,7 +930,7 @@ end
 
 Random testing সেই সীমা ভাঙে: হাজার হাজার এলোমেলো input ছুঁড়ে দিয়ে দেখা — কোথাও কি ভাঙছে? এটা একটা "stress test" এর মতো, যা corner case গুলো ধরে ফেলে যেগুলো তুমি কখনো হাতে লিখতে না।
 
-কিন্তু একটা মজার প্রশ্ন: computer তো সত্যিকারের random কিছু বানাতে পারে না (সে যন্ত্র, predictable)। তাই Verilog এর `$random` আসলে *pseudo-random* — একটা গাণিতিক সূত্রে এলোমেলো-দেখতে সংখ্যা বানায়। এর সাথে যুক্ত থাকে একটা **seed** (বীজ)। এখানেই সবচেয়ে দরকারি জিনিসটা: **একই seed দিলে প্রতিবার হুবহু একই "random" ধারা পাবে।** এটা vital — কারণ random test যদি একটা bug ধরে, তুমি চাও সেই একই sequence আবার চালিয়ে bug টা পুনরায় তৈরি (reproduce) করতে, যাতে debug করতে পারো। seed না রাখলে bug একবার দেখা দিয়ে চিরকালের জন্য হারিয়ে যেতে পারত।
+কিন্তু একটা মজার প্রশ্ন: computer তো সত্যিকারের random কিছু বানাতে পারে না (সে যন্ত্র, predictable)। তাই Verilog এর `$random` আসলে *pseudo-random* — একটা গাণিতিক সূত্রে এলোমেলো-দেখতে সংখ্যা বানায়। এর সাথে যুক্ত থাকে একটা **seed** (বীজ)। এখানেই সবচেয়ে দরকারি জিনিসটা: **একই seed দিলে প্রতিবার হুবহু একই "random" ধারা পাবে।** এটা অত্যন্ত গুরুত্বপূর্ণ — কারণ random test যদি একটা bug ধরে, তুমি চাও সেই একই sequence আবার চালিয়ে bug টা পুনরায় তৈরি (reproduce) করতে, যাতে debug করতে পারো। seed না রাখলে bug একবার দেখা দিয়ে চিরকালের জন্য হারিয়ে যেতে পারত।
 
 ### Random Number Generation:
 
@@ -1440,7 +1440,7 @@ Requirements:
 
 ```
 Level 7: ✅ COMPLETE - Verification Master!
-Progress: [███████████████████████████████] 35%
+Progress: [███████░░░░░░░░░░░░░░░░░░] 28%
 
 XP Gained: +2500
 Skills: Testing, Debugging, Professional Verification

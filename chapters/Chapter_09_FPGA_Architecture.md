@@ -17,13 +17,13 @@
 ✅ DSP blocks - fast arithmetic
 ✅ FPGA vs ASIC - when to use what
 ✅ Major FPGA vendors - Xilinx, Intel, Lattice, Gowin
-✅ তোমার processor FPGA তে deploy করার foundation! 🎉
+✅ তোমার processor FPGA-তে deploy করার foundation! 🎉
 ```
 
 **Time Required:** 1 week (3-4 hours/day)  
 **No Hardware Needed Yet:** Pure theory chapter
 
-এতদিন তুমি Verilog লিখেছো, testbench বানিয়েছো, GTKWave-এ waveform দেখেছো। কিন্তু একটা কথা ভেবে দেখো — তোমার সব circuit এতক্ষণ চলছিল **software simulator** এর ভেতরে, একটা pretend জগতে। কোনো electron নড়াচড়া করেনি, কোনো voltage ওঠানামা করেনি। এই chapter-এ আমরা সেই দেয়ালটা ভাঙবো। তুমি বুঝবে কীভাবে একটা আসল chip — FPGA — তোমার Verilog কোডকে **সত্যিকারের hardware**-এ রূপ দেয়, যেখানে আলো জ্বলে, signal চলে, এবং তোমার design বাস্তবে শ্বাস নেয়।
+এতদিন তুমি Verilog লিখেছো, testbench বানিয়েছো, GTKWave-এ waveform দেখেছো। কিন্তু একটা কথা ভেবে দেখো — তোমার সব circuit এতক্ষণ চলছিল **software simulator**-এর ভেতরে, একটা pretend জগতে। কোনো electron নড়াচড়া করেনি, কোনো voltage ওঠানামা করেনি। এই chapter-এ আমরা সেই দেয়ালটা ভাঙবো। তুমি বুঝবে কীভাবে একটা আসল chip — FPGA — তোমার Verilog কোডকে **সত্যিকারের hardware**-এ রূপ দেয়, যেখানে আলো জ্বলে, signal চলে, এবং তোমার design বাস্তবে শ্বাস নেয়।
 
 কিন্তু তার আগে একটা গভীর প্রশ্নের উত্তর দরকার: একটা chip তো কারখানায় তৈরি হওয়ার সময়েই তার কাজ fixed হয়ে যায় (Intel-এর CPU চিরকাল CPU-ই থাকে) — তাহলে একটা chip কীভাবে **কেনার পরে** তোমার ইচ্ছেমতো যেকোনো circuit হয়ে উঠতে পারে? এই magic-এর নামই FPGA। চলো বুঝি কীভাবে এটা সম্ভব।
 
@@ -69,7 +69,7 @@ Gate Array:  Array of logic gates
 FPGA = Hardware যা তুমি reprogram করতে পারো!
 ```
 
-🎉 **এখন তুমি FPGA এর basic idea বুঝেছো!**
+🎉 **এখন তুমি FPGA-এর basic idea বুঝেছো!**
 
 ---
 
@@ -387,7 +387,7 @@ Example (Xilinx Slice):
 
 যেহেতু এক CLB-তে একসাথে কয়েকটা LUT আর flip-flop থাকে, তাই একটা মাত্র CLB-ই অবাক করার মতো কাজ করতে পারে — শুধু একটা gate নয়, বরং একটা গোটা ছোট sub-circuit:
 
-```verilog
+```
 One CLB can implement:
 
 Combinational:
@@ -405,7 +405,7 @@ Sequential:
 One CLB = Lots of functionality!
 ```
 
-এই তালিকাটা মাথায় রাখলে তুমি FPGA-এর "size" বোঝা শুরু করবে। কেউ যখন বলে একটা FPGA-তে "8640টা LUT" আছে, তখন সেটা আসলে একটা পরোক্ষ হিসাব — কয়টা ছোট state machine, counter বা comparator একসাথে FPGA-তে আঁটবে। তোমার design যত বড় হবে (যেমন একটা পুরো RISC-V CPU), তত বেশি CLB খরচ হবে। তাই পরের section-এ যখন routing দেখব, তখন মনে রেখো — শুধু যথেষ্ট CLB থাকলেই হবে না, সেই CLB-গুলোকে একে অপরের সাথে জোড়া দেওয়ার রাস্তাও থাকতে হবে।
+এই তালিকাটা মাথায় রাখলে তুমি FPGA-এর "size" বোঝা শুরু করবে। কেউ যখন বলে একটা FPGA-তে "৮,৬৪০টি LUT" আছে, তখন সেটা আসলে একটা পরোক্ষ হিসাব — কয়টা ছোট state machine, counter বা comparator একসাথে FPGA-তে আঁটবে। তোমার design যত বড় হবে (যেমন একটা পুরো RISC-V CPU), তত বেশি CLB খরচ হবে। তাই পরের section-এ যখন routing দেখব, তখন মনে রেখো — শুধু যথেষ্ট CLB থাকলেই হবে না, সেই CLB-গুলোকে একে অপরের সাথে জোড়া দেওয়ার রাস্তাও থাকতে হবে।
 
 ---
 
@@ -825,7 +825,7 @@ flowchart TD
 
 এই table-টা পড়ার সময় একটা শব্দ আলাদা করে বুঝে নাও — **NRE (Non-Recurring Engineering) cost**, অর্থাৎ design শুরু করার একবারের খরচ (mask বানানো, setup ইত্যাদি)। এখানেই পুরো গল্পের আসল twist লুকিয়ে। ASIC-এর NRE বিশাল (কোটি টাকা), কিন্তু একবার সেই খরচ দিয়ে দিলে প্রতিটা chip বানাতে লাগে মাত্র কয়েক টাকা। উল্টোদিকে FPGA-এর NRE প্রায় শূন্য (শুধু একটা board কিনলেই হলো), কিন্তু প্রতিটা FPGA chip তুলনায় দামি এবং সেই দাম কখনো খুব কমে না।
 
-এর সরাসরি ফল হলো **break-even**-এর ধারণা: তুমি যদি মাত্র কিছু chip বানাও, FPGA সস্তা (বিশাল NRE নেই)। কিন্তু লক্ষ লক্ষ chip বানালে, ASIC-এর কম unit-cost সেই বিশাল NRE-কে পুষিয়ে ফেলে FPGA-র চেয়ে অনেক সস্তা হয়ে যায়। এই কারণেই তোমার ফোনের চিপ (কোটি কোটি বিক্রি হয়) ASIC, কিন্তু একটা স্যাটেলাইটের বিশেষ চিপ (হাতে গোনা কয়েকটা) প্রায়ই FPGA।
+এর সরাসরি ফল হলো **break-even**-এর ধারণা: তুমি যদি মাত্র কিছু chip বানাও, FPGA সস্তা (বিশাল NRE নেই)। কিন্তু লক্ষ লক্ষ chip বানালে, ASIC-এর কম unit-cost সেই বিশাল NRE-কে পুষিয়ে ফেলে FPGA-এর চেয়ে অনেক সস্তা হয়ে যায়। এই কারণেই তোমার ফোনের চিপ (কোটি কোটি বিক্রি হয়) ASIC, কিন্তু একটা স্যাটেলাইটের বিশেষ চিপ (হাতে গোনা কয়েকটা) প্রায়ই FPGA।
 
 ### When to Use FPGA:
 
@@ -987,7 +987,7 @@ Cons: Newer, smaller ecosystem
 
 আর এই হলো আমাদের নায়ক — **Gowin**। চীনের তুলনামূলক নতুন একটা কোম্পানি (২০১৪), কিন্তু দ্রুত বেড়ে উঠছে। কেন আমরা এদেরই বেছেছি? কারণ এরা **অসম্ভব সস্তা, নতুনদের-বান্ধব, আর tool (Gowin EDA) সম্পূর্ণ ফ্রি ও সহজ।** আমাদের পুরো বইয়ের সঙ্গী **Tang Nano 9K** board-এ এদেরই একটা চিপ বসানো — সেটাই তুমি Chapter 10 থেকে হাতে নিয়ে কাজ করবে। দুর্বলতা একটাই: নতুন কোম্পানি বলে ecosystem (tutorial, community) এখনো Xilinx-এর মতো বিশাল নয়। কিন্তু শেখার জন্য এর দাম-আর-সরলতার সমন্বয় অপ্রতিদ্বন্দ্বী।
 
-> 💡 **নোট:** চিপটাকে সংক্ষেপে **GW1N-9** family বলা হয়; Tang Nano 9K-তে আসলে বসানো এই family-রই **GW1NR-9** variant (in-package PSRAM থাকায় নামে বাড়তি 'R')। শেখার জন্য দুটোকে একই চিপ ধরে নিতে পারো।
+> 💡 **নোট:** চিপটাকে সংক্ষেপে **GW1N-9** family বলা হয়; Tang Nano 9K-তে আসলে বসানো আছে এই family-রই **GW1NR-9** variant (in-package PSRAM থাকায় নামে বাড়তি 'R')। শেখার জন্য দুটোকে একই চিপ ধরে নিতে পারো।
 
 ### Comparison for Beginners:
 
@@ -1007,7 +1007,7 @@ For this book: Gowin (Tang Nano 9K)
 Why? Cheap, easy tools, perfect for learning!
 ```
 
-> 💡 **নোট:** Tang Nano 9K board-এর দাম আনুমানিক **~২,০০০ টাকা ($25)** — বাজার ও সময়ভেদে একটু কমবেশি হতে পারে।
+> 💡 **নোট:** Tang Nano 9K board-এর দাম আনুমানিক **২,০০০ টাকা ($25)** — বাজার ও সময়ভেদে একটু কমবেশি হতে পারে।
 
 ---
 
@@ -1187,7 +1187,7 @@ FPGA is special because:
 
 ```
 Level 9: ✅ COMPLETE - FPGA Architecture Expert!
-Progress: [█████████████████████████████████] 45%
+Progress: [█████████░░░░░░░░░░░░░░░░] 36%
 
 XP Gained: +2000
 Skills: FPGA Knowledge, Hardware Architecture

@@ -547,7 +547,7 @@ Timer হলো তোমার computer-এর **ঘড়ি আর অ্য�
 
 ভেতরের কৌশলটা চমৎকার সরল — একটা **counter** যেটা প্রতি clock-এ এক করে বাড়ে।
 clock-এর গতি জানা আছে (যেমন 27 MHz), তাই গুনে গুনে সময় বের করা যায়: যদি প্রতি
-সেকেন্ডে ২৭ লক্ষ tick হয়, তাহলে ২৭ লক্ষ গুনলেই ১ সেকেন্ড পার!
+সেকেন্ডে ২ কোটি ৭০ লক্ষ tick হয়, তাহলে ২ কোটি ৭০ লক্ষ গুনলেই ১ সেকেন্ড পার!
 
 দুটো বাড়তি অংশ এটাকে আরো কাজের করে তোলে — কোডে দুটোই পাবে:
 
@@ -787,9 +787,9 @@ endmodule
 
 | Bit | উৎস | কখন ওঠে |
 |---|---|---|
-| **bit 0** | `rx_ready` (UART) | নতuন byte এসেছে |
+| **bit 0** | `rx_ready` (UART) | নতুন byte এসেছে |
 | **bit 1** | `tx_done` (UART) | byte পাঠানো শেষ |
-| **bit 2** | `timer_int` (Timer) | counter, COMPARE-এ পৌঁছেছে |
+| **bit 2** | `timer_int` (Timer) | counter COMPARE-এ পৌঁছেছে |
 | bit 3–7 | — | অব্যবহৃত |
 
 > ⚠️ **একটা গুরুত্বপূর্ণ note (technical flag, কোড ঠিক আছে):** এই chapter-এর CPU
@@ -923,7 +923,7 @@ endmodule
 
 এই মুহূর্তটার জন্যই এতক্ষণের সব পরিশ্রম! আমাদের কাছে এখন আছে CPU (আগের
 chapter-গুলোর), চারটা peripheral, একটা bus, আর memory। এবার সবগুলোকে এক জায়গায়
-জুড়ে একটা পূর্ণ **SoC** বানাব — section-এর শুরুর সেই block diagram-টা এবার
+জুড়ে একটা পূর্ণ **SoC** বানাব — chapter-এর শুরুর সেই block diagram-টা এবার
 জীবন্ত Verilog হয়ে উঠবে।
 
 ভাবো এটা একটা **wiring diagram** — অনেকটা electrician যেভাবে বাড়ির সব যন্ত্র এক
@@ -1256,7 +1256,7 @@ register ক্রম এখানে হুবহু দেখা যায়:
 চালু করা। `timer_isr()` হলো সেই ISR যেটা প্রতি interrupt-এ `tick_count` বাড়ানোর
 কথা।
 
-> ⚠️ **মনে রাখো (section ১৯.৪-এর flag):** এই chapter-এর CPU core এখনো interrupt
+> ⚠️ **মনে রাখো (১৯.৪-এ যে কথাটা বলেছিলাম):** এই chapter-এর CPU core এখনো interrupt
 > সার্ভিস করে না (`interrupt_ack` হার্ডওয়্যারে `1'b0`)। তাই নিচের `timer_isr()`
 > আপনাআপনি **চলবে না**, আর `csrsi mstatus, 0x8` লাইনটাও এই core-এ কার্যকর হবে না।
 > এই উদাহরণটা interrupt-driven programming-এর **নকশা** দেখায় — পরে CPU-তে
@@ -1543,7 +1543,7 @@ Example: Simon Says game
 
 ```
 Level 19: ✅ COMPLETE - System Builder!
-Progress: [███████████████████████████████████████████] 95%
+Progress: [███████████████████░░░░░░] 76%
 
 XP Gained: +5000 🎉
 Skills: SoC Design, Peripherals, System Integration

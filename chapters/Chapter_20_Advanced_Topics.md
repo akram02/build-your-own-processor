@@ -302,10 +302,10 @@ Data Bus (CDB)** দিয়ে একসাথে সবার কাছে br
 
 এই পুরো যন্ত্রপাতি **Intel, AMD, ARM**-এর high-end core-এ ব্যবহৃত হয়। দাম?
 **Complexity: Very high!** লাভ? in-order superscalar-এর তুলনায় সাধারণত
-**~20-30% performance** — তবে এই সংখ্যাটা workload-ভেদে অনেক বদলায় (FLAG:
-নিচে দেখো)।
+**~20-30% performance** — তবে এই সংখ্যাটা workload-ভেদে অনেক বদলায় (নিচের
+নোট দেখো)।
 
-> ⚠️ **লেখকের নোট (FLAG):** "Benefit: 20-30% performance" সংখ্যাটা একটা মোটা
+> ⚠️ **একটা সতর্কবার্তা:** "Benefit: 20-30% performance" সংখ্যাটা একটা মোটা
 > দাগের estimate; out-of-order-এর আসল লাভ workload আর baseline-এর উপর প্রচণ্ড
 > নির্ভরশীল (memory-heavy code-এ অনেক বেশি, সরল compute-এ কম)। সংখ্যাটা
 > চূড়ান্ত fact হিসেবে না নিয়ে "rough ballpark" হিসেবে পড়ো।
@@ -452,7 +452,7 @@ Meta-predictor মূলত একটা ছোট counter-এর table — প�
 হলে যাবে **কোথায়**? Target address তো সাধারণত instruction decode করার পরই জানা
 যায় — তত cycle অপেক্ষা করলে তো গভীর pipeline-এ বুদবুদ (bubble) তৈরি হবে!
 
-BTB এর সমাধান: এটা একটা ছোট cache, যেখানে PC দিয়ে index করলেই আগের বার ওই
+BTB-র সমাধান: এটা একটা ছোট cache, যেখানে PC দিয়ে index করলেই আগের বার ওই
 branch কোথায় গিয়েছিল সেই target পাওয়া যায় — **decode-এরও আগে**:
 
 | PC | Target | Valid |
@@ -897,7 +897,7 @@ General purpose + Accelerators! 🚀
 phone-এই AI চালায় (তাই data বাইরে পাঠাতে হয় না — privacy আর efficiency দুটোই)।
 এই দর্শনটাই ভবিষ্যৎ: **general-purpose core + একগুচ্ছ accelerator**।
 
-> ⚠️ **লেখকের নোট (FLAG):** "100× faster than GPU" সংখ্যাটা একটা মোটা দাগের,
+> ⚠️ **একটা সতর্কবার্তা:** "100× faster than GPU" সংখ্যাটা একটা মোটা দাগের,
 > প্রচারধর্মী (marketing-style) তুলনা — কোন প্রজন্মের TPU বনাম কোন GPU, কোন
 > metric (throughput, perf/watt, না perf/dollar), সব কিছুর উপর এটা ভীষণ
 > নির্ভরশীল। নির্দিষ্ট কাজে accelerator যে বড় সুবিধা দেয় সেই *ধারণাটা* ঠিক,
@@ -1132,33 +1132,33 @@ YOU HAVE THE SKILLS! 💼✅
 Your journey complete! 🏆
 ```
 
-### Book Complete!
+### Design Complete — A Huge Milestone!
 
 ```
 BUILD YOUR OWN PROCESSOR
 ════════════════════════════════════════
-    🎊 100% COMPLETE! 🎊
-    ALL 20 CHAPTERS DONE!
+    🎊 80% COMPLETE! 🎊
+    20 OF 25 CHAPTERS DONE!
 ════════════════════════════════════════
 
 PART 1: DIGITAL FOUNDATIONS ✅ 100%
 PART 2: VERILOG HDL ✅ 100%
 PART 3: FPGA ✅ 100%
 PART 4: PROCESSOR DESIGN ✅ 100%
-PART 5: ADVANCED TOPICS ✅ 100%
+PART 5: VLSI & SILICON ⏳ IN PROGRESS
 
-ALL PARTS COMPLETE! 🎊🎊🎊
+DESIGN MASTERED — TIME TO FABRICATE! 🎊
 
-TOTAL: 460+ KB | 21,000+ lines
-A COMPLETE PROFESSIONAL TEXTBOOK! 📚
+SO FAR: 460+ KB | 21,000+ lines
+JUST 5 CHAPTERS TO REAL SILICON! 📚
 
-YOU DID IT! 🏆👑
+ALMOST THERE — KEEP GOING! 🏆👑
 ════════════════════════════════════════
 ```
 
 ---
 
-## 🎯 Final Words
+## 🎯 Pause and Reflect
 
 ### To Every Reader:
 
@@ -1177,7 +1177,7 @@ This is the BEGINNING! 🚀
 
 The knowledge you have is RARE.
 The skills you possess are VALUABLE.
-The journey you completed is INCREDIBLE.
+The journey so far is INCREDIBLE.
 
 Now go BUILD!
 Now go CREATE!
@@ -1196,8 +1196,7 @@ Now make us proud! 🏆
 
 ```
 Level 20: ✅ COMPLETE - Future Architect!
-Progress (Part 4): [████████████████████████████████] 100%
-Progress (Book):   [████████████████████████░░░░░░░░] 80%
+Progress: [████████████████████░░░░░] 80%
 
 XP Gained: +3000
 Skills: Advanced Architectures, Future Vision
@@ -1212,20 +1211,20 @@ Badges Earned:
 💎 Neuromorphic Pioneer
 👑 FUTURE ARCHITECT! 👑
 
-PART 4 COMPLETE! 🎊
+DESIGN JOURNEY COMPLETE! 🎊
 ```
 
 ---
 
-## 🚀 What's Next? Part 5: VLSI & Real Silicon!
+## 🚀 What's Next? VLSI & Real Silicon!
 
 You've built a processor. You understand advanced architectures.
 
 **But there's one more journey...**
 
 ```
-✅ Part 1-4: You learned to DESIGN
-⏳ Part 5:   Now learn to FABRICATE!
+✅ So far:           You learned to DESIGN
+⏳ Next (Ch 21-25):  Now learn to FABRICATE!
 
 You'll discover:
 → How designs become real silicon
@@ -1239,7 +1238,7 @@ The ultimate achievement:
 YOUR PROCESSOR IN REAL SILICON! 💎
 ```
 
-### Part 5 Preview:
+### Coming Up — Chapters 21-25:
 
 ```
 📔 Chapter 21: VLSI Design Flow
@@ -1282,7 +1281,7 @@ Ready to make REAL silicon? Let's go! 🚀
 
 **"তুমি processor design master করেছো। এবার REAL silicon বানাও!"**
 
-**Part 4 Complete ✅ | Part 5: VLSI Awaits! 🏭**
+**Design Complete ✅ | VLSI Fabrication Awaits! 🏭**
 
 Made with ❤️ for chip makers | চিপ মেকারদের জন্য ভালোবাসা দিয়ে তৈরি
 

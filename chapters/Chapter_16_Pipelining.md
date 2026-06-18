@@ -193,7 +193,7 @@ After 5 cycles:
   একসঙ্গে চলন্ত (in flight)।**
 
 একই চার্ট table আকারে — খালি ঘরগুলো হলো pipeline এখনও "ভরছে" (fill) বা
-"খালি হচ্ছে" (drain), আর হলুদ-চিহ্নিত cycle 5 থেকে cycle 5 পর্যন্ত হলো
+"খালি হচ্ছে" (drain), আর হলুদ-চিহ্নিত cycle 5 থেকে cycle 9 পর্যন্ত হলো
 **steady state**, যেখানে প্রতি cycle-এ ঠিক একটা instruction শেষ হয়:
 
 | Instruction | C1 | C2 | C3 | C4 | C5 | C6 | C7 | C8 | C9 |
@@ -1543,7 +1543,7 @@ Create comprehensive report!
 
 ```
 Level 16: ✅ COMPLETE - Performance Engineer!
-Progress: [███████████████████████████████████] 80%
+Progress: [████████████████░░░░░░░░░] 64%
 
 XP Gained: +5000 🎉
 Skills: Pipelining, Parallel Execution, Performance

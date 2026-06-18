@@ -281,7 +281,7 @@ gw_ide
 
 ### IDE First Launch:
 
-প্রথমবার IDE খুলে একটু খালি-খালি লাগবে—কোনো project নেই, কোড নেই। চিন্তা নেই, একটা নতুন project বানিয়ে নেওয়াই প্রথম কাজ। এখানে একটাই ধাপ ভুল করলে সব ভেস্তে যায়—**Device Selection**। তুমি IDE-কে বলে দিচ্ছ ঠিক কোন chip এর জন্য compile করতে হবে; ভুল chip বললে toolchain ভুল LUT/pin ধরে নেবে, আর তোমার design board এ চলবে না। তাই device টা মন দিয়ে বেছো:
+প্রথমবার IDE খুলে একটু খালি-খালি লাগবে—কোনো project নেই, code নেই। চিন্তা নেই, একটা নতুন project বানিয়ে নেওয়াই প্রথম কাজ। এখানে একটাই ধাপ ভুল করলে সব ভেস্তে যায়—**Device Selection**। তুমি IDE-কে বলে দিচ্ছ ঠিক কোন chip এর জন্য compile করতে হবে; ভুল chip বললে toolchain ভুল LUT/pin ধরে নেবে, আর তোমার design board এ চলবে না। তাই device টা মন দিয়ে বেছো:
 
 ```
 When you first open Gowin IDE:
@@ -352,7 +352,7 @@ module led_blink(
 );
     // Counter for timing
     // 27,000,000 counts = 1 second
-    // Use bit [24] for ~1.24 Hz blink
+    // Use bit [24]: ~0.8 Hz blink (1.24 s period)
     reg [24:0] counter;
     
     always @(posedge clk) begin
@@ -662,7 +662,7 @@ Click "Cable Settings"
 Should detect: "USB Cable"
 ```
 
-> 💡 Tar লাগানোর পর board এর power LED জ্বলছে কিনা দেখো—এটাই প্রথম "জীবনের লক্ষণ"। আর যে JTAG/USB cable এর কথা বলা হচ্ছে, সেটা হলো তোমার কম্পিউটার আর chip এর মধ্যে কথা বলার চ্যানেল। কম্পিউটার যদি cable টা না চেনে (Windows এ driver, Linux এ সেই [udev rules](#installation-steps-linux))—programming এর সময় "no cable found" বলবে। তখন প্রথমেই এই সংযোগটা যাচাই করো।
+> 💡 তার লাগানোর পর board এর power LED জ্বলছে কিনা দেখো—এটাই প্রথম "জীবনের লক্ষণ"। আর যে JTAG/USB cable এর কথা বলা হচ্ছে, সেটা হলো তোমার কম্পিউটার আর chip এর মধ্যে কথা বলার চ্যানেল। কম্পিউটার যদি cable টা না চেনে (Windows এ driver, Linux এ সেই [udev rules](#installation-steps-linux))—programming এর সময় "no cable found" বলবে। তখন প্রথমেই এই সংযোগটা যাচাই করো।
 
 ### Programming Process:
 
@@ -780,7 +780,7 @@ LED ছিল তোমার প্রথম output—এবার button, ত�
 
 **Bounce ব্যাপারটা কী?** তুমি ভাবো button টিপলে পরিষ্কারভাবে 1→0 হয়ে যায়। বাস্তবে না! Button এর ভেতরে দুটো ধাতব পাত আছে; টেপার সময় সেগুলো একবারে লেগে না গিয়ে কয়েক মিলিসেকেন্ড ধরে কাঁপতে কাঁপতে লাগে—যেন একটা বল মেঝেতে কয়েকবার লাফিয়ে তারপর থামে। chip এর 27 MHz চোখে এই কাঁপুনি দেখায় 0-1-0-1-0... অনেকগুলো দ্রুত চাপ হিসেবে! তাই একবার টিপলেও LED হয়তো ৫-৬ বার toggle করে ফেলবে—এলোমেলো, অনির্দেশ্য।
 
-**সমাধান: debounce।** কৌশলটা সরল—button এর মান বদলালে সাথে সাথে বিশ্বাস না করে একটু *অপেক্ষা* করো। যদি signal টা একটানা কিছুক্ষণ (এখানে ~20ms, একটা কাউন্টার দিয়ে গোনা) স্থির থাকে, তবেই সেটাকে আসল চাপ হিসেবে মানো। কাঁপুনি ততক্ষণে থেমে গেছে। নিচের code এ `debounce` counter আর `btn_stable` ঠিক এই কাজটাই করছে—কাঁপুনি উপেক্ষা করে শুধু স্থির অবস্থাটা ধরে:
+**সমাধান: debounce।** কৌশলটা সরল—button এর মান বদলালে সাথে সাথে বিশ্বাস না করে একটু *অপেক্ষা* করো। যদি signal টা একটানা কিছুক্ষণ (এখানে ~20ms, একটা counter দিয়ে গোনা) স্থির থাকে, তবেই সেটাকে আসল চাপ হিসেবে মানো। কাঁপুনি ততক্ষণে থেমে গেছে। নিচের code এ `debounce` counter আর `btn_stable` ঠিক এই কাজটাই করছে—কাঁপুনি উপেক্ষা করে শুধু স্থির অবস্থাটা ধরে:
 
 ```verilog
 // Button-controlled LED
@@ -1206,7 +1206,7 @@ Solution:
 
 থামো একটু, আর পেছনে তাকাও। এই chapter শুরুর আগে তোমার code বাস করত কম্পিউটারের ভেতরে—কাল্পনিক waveform এ। আর এখন? তোমার লেখা যুক্তি সত্যিকারের সিলিকনের ভেতরে চলছে, সত্যিকারের আলো জ্বালাচ্ছে, তোমার আঙুলের চাপে সাড়া দিচ্ছে। সেই অদৃশ্য দেয়ালটা তুমি ভেঙে ফেলেছ। 🎉
 
-আর শুধু একটা LED জ্বালানো শেখোনি—শিখেছ পুরো toolchain flow (synthesis → place & route → bitstream → program), constraint file দিয়ে design-কে আসল pin এ বাঁধা, আর হার্ডওয়্যারে debug করার সেই কঠিন কিন্তু দামি শিল্পটা। এই workflow টাই তুমি বাকি পুরো বইজুড়ে বারবার ব্যবহার করবে—এমনকি যখন আস্ত একটা processor program করবে, তখনও ঠিক এই একই চারটা ধাপ।
+আর শুধু একটা LED জ্বালানো শেখোনি—শিখেছ পুরো toolchain flow (synthesis → place & route → bitstream → program), constraint file দিয়ে design-কে আসল pin এ বাঁধা, আর hardware এ debug করার সেই কঠিন কিন্তু দামি শিল্পটা। এই workflow টাই তুমি বাকি পুরো বইজুড়ে বারবার ব্যবহার করবে—এমনকি যখন আস্ত একটা processor program করবে, তখনও ঠিক এই একই চারটা ধাপ।
 
 ### তুমি এখন পারো:
 
@@ -1280,7 +1280,7 @@ Bonus:
 
 ```
 Level 10: ✅ COMPLETE - Hardware Engineer!
-Progress: [██████████████████████████████████] 50%
+Progress: [██████████░░░░░░░░░░░░░░░] 40%
 
 XP Gained: +5000 🎉
 Skills: FPGA Programming, Hardware Deployment

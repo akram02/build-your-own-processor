@@ -144,7 +144,7 @@ endmodule
 
 - **shift register এর চাল** — `SEND` state এ প্রতিবার এক bit সময় শেষ হলে `tx_data <= {1'b1, tx_data[9:1]}` চলে। এটা পুরো register টাকে একঘর ডানে ঠেলে দেয়, আর উপর থেকে 1 (idle/stop মান) ঢুকিয়ে দেয়। ফলে `tx_data[0]` সবসময় পরের পাঠানো bit ধরে রাখে। shift register হলো serial সব protocol-এর সবচেয়ে কাজের যন্ত্র — parallel data কে এক-এক করে তারে বের করে দেয়, ঠিক যেন একটা PEZ ক্যান্ডির বাক্স থেকে একটা একটা lozenge বেরোয়।
 
-> 💡 **ছোট লক্ষ্যণীয় ব্যাপার:** এই Quick-Win version টা সহজ রাখার জন্য `START` state এ counter দিয়ে অপেক্ষা করে না (তাই START bit টা পরের গুনতির সাথে মিশে যায়) — তুমি কেবল ধারণাটা ধরবে বলে এটা ইচ্ছাকৃত সরল। নিচের "Complete Implementation" version এ প্রতিটা state ঠিকঠাক `CLKS_PER_BIT` গোনে, যেটা আসল hardware এ চালানোর উপযোগী। তাই concept বুঝতে এটা, আর board এ চালাতে নিচেরটা ব্যবহার করো।
+> 💡 **ছোট লক্ষণীয় ব্যাপার:** এই Quick-Win version টা সহজ রাখার জন্য `START` state এ counter দিয়ে অপেক্ষা করে না (তাই START bit টা পরের গুনতির সাথে মিশে যায়) — তুমি কেবল ধারণাটা ধরবে বলে এটা ইচ্ছাকৃত সরল। নিচের "Complete Implementation" version এ প্রতিটা state ঠিকঠাক `CLKS_PER_BIT` গোনে, যেটা আসল hardware এ চালানোর উপযোগী। তাই concept বুঝতে এটা, আর board এ চালাতে নিচেরটা ব্যবহার করো।
 
 ---
 
@@ -768,7 +768,7 @@ module led_breathe(
         end else begin
             slow_counter <= slow_counter + 1;
             
-            // Update brightness every ~100ms
+            // Update brightness every ~1.24 s (when slow_counter wraps)
             if (slow_counter == 0) begin
                 if (direction == 0) begin
                     if (brightness == 255)
@@ -1048,7 +1048,7 @@ module seven_seg_display(
     reg [15:0] counter;
     reg [3:0] current_bcd;
     
-    // Multiplex timer (~1kHz per digit = ~250Hz refresh)
+    // Multiplex timer (~410 Hz per digit = ~100 Hz refresh)
     always @(posedge clk) begin
         counter <= counter + 1;
         if (counter == 0) begin
@@ -1113,7 +1113,7 @@ Mode 2: CPOL=1, CPHA=0
 Mode 3: CPOL=1, CPHA=1
 ```
 
-চারটে তার এর ভূমিকা ছবিতে দেখলে মাথায় বসে যায়। master হলো বস — সে clock দেয় আর কথা শুরু করে; slave শুধু সাড়া দেয়:
+চারটে তারের ভূমিকা ছবিতে দেখলে মাথায় বসে যায়। master হলো বস — সে clock দেয় আর কথা শুরু করে; slave শুধু সাড়া দেয়:
 
 ```mermaid
 flowchart LR
@@ -1564,7 +1564,7 @@ Features:
 
 ```
 Level 11: ✅ COMPLETE - Systems Engineer!
-Progress: [█████████████████████████████████] 55%
+Progress: [███████████░░░░░░░░░░░░░░] 44%
 
 XP Gained: +4000
 Skills: Peripherals, Protocols, System Integration
