@@ -177,7 +177,7 @@ endmodule
 - **Stimulus generation** — `initial begin ... end` ব্লকে time এর সাথে সাথে input বদলানো। এটাই সেই "signal generator"।
 - **Response checking** — output ঠিক আছে কিনা দেখা। `(optional)` লেখা আছে কারণ technically testbench output না দেখেও চলে, কিন্তু একজন ভালো engineer কখনো এই অংশ বাদ দেয় না।
 
-আর প্রথম লাইনের `` `timescale 1ns/1ps `` — এটা simulator কে বলে "এই file এ আমি যখন `#10` লিখব, সেই 10 মানে 10 ন্যানোসেকেন্ড; আর সময় মাপব 1 picosecond সূক্ষ্মতায়"। প্রথম সংখ্যা হলো **time unit** (তোমার delay গুলো এই এককে), দ্বিতীয়টা **time precision** (এর চেয়ে সূক্ষ্ম সময় simulator গোল করে ফেলবে)। এটা না দিলে simulator default ধরে নেয়, আর তখন একেক file একেক রকম time scale এ চললে হিসাব গুলিয়ে যেতে পারে — তাই অভ্যাস করে প্রতিটা testbench এর শুরুতে এটা লিখবে।
+আর প্রথম লাইনের `` `timescale 1ns/1ps `` — এটা simulator কে বলে "এই file এ আমি যখন `#10` লিখব, সেই 10 মানে 10 ন্যানোসেকেন্ড; আর সময় মাপব 1 পিকোসেকেন্ড সূক্ষ্মতায়"। প্রথম সংখ্যা হলো **time unit** (তোমার delay গুলো এই এককে), দ্বিতীয়টা **time precision** (এর চেয়ে সূক্ষ্ম সময় simulator গোল করে ফেলবে)। এটা না দিলে simulator default ধরে নেয়, আর তখন একেক file একেক রকম time scale এ চললে হিসাব গুলিয়ে যেতে পারে — তাই অভ্যাস করে প্রতিটা testbench এর শুরুতে এটা লিখবে।
 
 ### Input vs Output in Testbench:
 
