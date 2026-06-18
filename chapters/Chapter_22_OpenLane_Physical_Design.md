@@ -184,6 +184,11 @@ endmodule
 
 ### Create Config File:
 
+এই `config.tcl` ফাইলটাই হলো তোমার **রেসিপি কার্ড** — OpenLane-এর কাছে design
+নিয়ে তোমার সব নির্দেশ এখানে লেখা থাকে। প্রতিটা line আসলে একটা environment variable
+সেট করছে (`set ::env(...)`), আর OpenLane flow চালানোর সময় সেগুলো পড়ে নেয়। নিচে
+নিচের ফাইলটাই দিলাম:
+
 ```tcl
 // config.tcl
 set ::env(DESIGN_NAME) inverter
@@ -200,6 +205,24 @@ set ::env(FP_PDN_HPITCH) 25
 
 set ::env(PL_TARGET_DENSITY) 0.5
 ```
+
+প্রতিটা setting আসলে কী বলছে, এক নজরে:
+
+| Setting | এটা কী ঠিক করে | সহজ ভাষায় |
+|---------|----------------|-----------|
+| `DESIGN_NAME` | top-level module-এর নাম | তোমার Verilog-এর top module ঠিক এই নামেই হতে হবে |
+| `VERILOG_FILES` | কোন কোন `.v` ফাইল নেবে | `src/` folder-এর সব `.v` নিজে নিজে খুঁজে নেয় |
+| `CLOCK_PERIOD` | এক clock cycle কত ন্যানোসেকেন্ড | এটাই timing-এর budget; ছোট মান = দ্রুত chip, কঠিন target |
+| `CLOCK_PORT` | কোন port-টা clock | inverter-এ clock নেই, তাই খালি (`""`) |
+| `FP_CORE_UTIL` | core area-র কত % cell-এ ভরবে | কম রাখলে cell-গুলো বসানোর জায়গা বেশি, রুটিং সহজ |
+| `FP_ASPECT_RATIO` | die-র উচ্চতা ÷ প্রস্থ | `1` মানে বর্গাকার chip |
+| `FP_PDN_VPITCH` / `FP_PDN_HPITCH` | power grid-এর তারগুলোর ব্যবধান | বিদ্যুৎ বিলির জাল কত ঘন হবে |
+| `PL_TARGET_DENSITY` | placement-এ cell কত ঘন বসবে | ০.৫ মানে অর্ধেক জায়গা ভরা, বাকিটা শ্বাস নেওয়ার ফাঁক |
+
+> 💡 খেয়াল করো `CLOCK_PORT` খালি রাখা হয়েছে — কারণ inverter একটা purely
+> combinational circuit, এর কোনো clock নেই। তোমার processor-এ গেলে এখানে আসল
+> clock port-এর নাম বসবে। শুরুতে এই মানগুলো নিয়ে চিন্তা কোরো না; flow চালিয়ে
+> ফল দেখে দেখে পরে এগুলো tune করতে শিখবে।
 
 ### Run OpenLane:
 
