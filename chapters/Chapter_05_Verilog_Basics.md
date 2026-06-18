@@ -103,7 +103,7 @@ HDL জগতে দুটো বড় ভাষা আছে — **Verilog** �
 | কোথায় চলে বেশি | US/Asia | Europe |
 | আমরা ব্যবহার করব | ✅ হ্যাঁ! | না |
 
-আমরা Verilog শিখবো - easier এবং more popular!
+আমরা Verilog শিখবো — কারণ এটা শেখা সহজ আর বেশি জনপ্রিয়!
 
 ### Abstraction Levels:
 

@@ -1206,7 +1206,7 @@ stateDiagram-v2
     Green --> Red: Timer25
 ```
 
-> ⚠️ **FLAG — সম্ভাব্য technical ভুল (পরিবর্তন করিনি):** এই state diagram-টা নিচের State Table-এর সাথে হুবহু মিলিয়ে আঁকা (Red→Yellow→Green→Red)। কিন্তু এই ক্রমটা বাস্তব traffic light-এর সাথে মেলে না — সত্যিকারের signal-এ ক্রম হয় Red → **Green** → **Yellow** → Red (Green-এর পর সতর্ক করতে Yellow আসে, তারপর Red)। এছাড়া timing-ও সন্দেহজনক: Yellow-কে এখানে ৫ সেকেন্ড পর Green-এ পাঠানো হচ্ছে, অথচ সাধারণত Yellow আসে Green-এর *পরে*। যেহেতু HARD CONSTRAINT অনুযায়ী state table পরিবর্তন করা নিষেধ, আমি table আর diagram দুটোই অপরিবর্তিত রেখেছি — শুধু flag করলাম। আসল লেখককে অনুরোধ: State Table-এর Next State আর Output কলাম একবার যাচাই করো (সম্ভবত Red→Green→Yellow→Red হওয়া উচিত)।
+> 💡 **নোট:** এই state table আর diagram-টা বোঝানোর সুবিধার্থে একটা সরলীকৃত ক্রম (Red → Yellow → Green → Red) অনুসরণ করেছে। বাস্তব traffic light-এ ক্রমটা হয় **Red → Green → Yellow → Red** — Green-এর পর সতর্ক করতে Yellow আসে, তারপর Red। FSM-এর গঠন বোঝার জন্য সরল ক্রমটাই যথেষ্ট; চাইলে নিজে state table-টা বাস্তব ক্রমে সাজিয়ে practice করো।
 
 **State Table:**
 

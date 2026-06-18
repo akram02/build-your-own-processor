@@ -505,12 +505,9 @@ set ::env(GND_NETS) [list {vssd1}]
 | `ROUTING_CORES 4` | routing-এ ৪টা CPU core খাটবে | বড় design-এ routing ভারী, সমান্তরালে চললে দ্রুত হয় |
 | `VDD_NETS` / `GND_NETS` | power ও ground net-এর নাম | Sky130-তে `vccd1`/`vssd1` — বিদ্যুৎ এদের দিয়েই বিলি হয় |
 
-> ⚠️ **লক্ষণীয় (technical issue হিসেবে flag করছি, পরিবর্তন করছি না):** comment-এ
-> লেখা "TinyTapeout: 160um x 100um", অথচ `DIE_AREA` সেট করা আছে `0 0 200 200`
-> (অর্থাৎ ২০০×২০০ µm)। সংখ্যা দুটো মেলে না। এটা সম্ভবত একটা সাধারণ illustrative
-> উদাহরণ হিসেবে দেওয়া; তবে আসল TinyTapeout submission-এ die size টেমপ্লেট থেকে
-> নির্ধারিত হয়, যেটা Chapter 24-এ আসবে। code block byte-for-byte অপরিবর্তিত রাখা
-> হয়েছে।
+> 💡 **নোট:** খেয়াল করো — comment-এ লেখা "TinyTapeout: 160um x 100um", অথচ `DIE_AREA`
+> দেওয়া `0 0 200 200` (২০০×২০০ µm) — সংখ্যা দুটো মেলে না। এটা একটা illustrative উদাহরণ;
+> আসল TinyTapeout submission-এ die size টেমপ্লেট থেকে নির্ধারিত হয় (Chapter 24-এ বিস্তারিত)।
 
 ### Run Processor Flow:
 
