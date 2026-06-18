@@ -29,7 +29,15 @@
 
 এই অধ্যায়ে অনেক সংখ্যা আর নিয়ম আসবে (metal width, design rule, cell নাম…)।
 **এগুলো মুখস্থ করতে হবে না** — এটা একটা reference। ঠিক যেমন অভিধান মুখস্থ করো
-না, দরকারে দেখো।
+না, দরকারে দেখো। কেউ অভিধানের প্রতিটা শব্দ মাথায় নিয়ে ঘোরে না; কিন্তু একটা
+শব্দ লাগলে কোথায় খুঁজবে, সেটা জানে। এই chapter-ও ঠিক তেমন — তোমার কাজ হলো
+**কোন তথ্য কোথায় থাকে আর কেন থাকে** সেটা বোঝা, সংখ্যাগুলো গিলে ফেলা নয়।
+
+আর সত্যি বলতে, এই নিয়মগুলোর বেশিরভাগই tool নিজে নিজে দেখে নেয়। তুমি যখন
+OpenLane চালাও বা Magic দিয়ে DRC করো, তখন এই PDK থেকেই নিয়ম পড়ে নিয়ে তোমার
+design যাচাই করে। তোমাকে শুধু জানতে হবে — **এই নিয়মগুলো আসলে কী জিনিস, আর
+কেন এগুলো আছে।** সেটাই হলো একজন junior designer আর একজন engineer-এর তফাত:
+junior tool-এর error দেখে ভয় পায়, engineer বুঝে ফেলে error-টা আসলে কী বলছে।
 
 এখন একবার চোখ বুলিয়ে নাও যাতে জানো কী কী আছে; পরে নিজের chip বানানোর সময়
 নির্দিষ্ট নিয়মটা খুঁজে নেবে। চলো, তোমার fabrication technology-র সাথে পরিচিত
@@ -39,27 +47,59 @@
 
 ## 🚀 What is Sky130?
 
+আগের দুই chapter-এ তুমি RTL থেকে GDSII পর্যন্ত পুরো flow দেখেছো, OpenLane
+দিয়ে নিজের processor-এর layout বানিয়েছো। কিন্তু একটা প্রশ্ন হয়তো মাথায়
+ঘুরছিল: OpenLane জানল **কীভাবে** যে একটা AND gate দেখতে কেমন, একটা তার কত
+সরু হতে পারে, একটা transistor কত জোরে চলে? এসব তথ্য OpenLane-এর ভেতরে লেখা
+নেই। ও এগুলো পায় **PDK** থেকে। PDK হলো foundry আর designer-এর মাঝখানের
+চুক্তিপত্র।
+
 ### PDK = Process Design Kit
 
-```
-Contains everything to design chips:
-✅ Design rules (DRC)
-✅ Device models (SPICE)
-✅ Standard cell library
-✅ IO pad library
-✅ Memory compilers
-✅ Verification rules (LVS)
-✅ Documentation
+একটা উপমা দিয়ে শুরু করি। ধরো তুমি একটা বাড়ি বানাবে, কিন্তু নিজে ইট পোড়াও
+না, সিমেন্ট বানাও না — একটা নির্দিষ্ট construction company-র সাথে কাজ করবে।
+সেই company তোমাকে একটা মোটা manual ধরিয়ে দেয়: "আমাদের ইট এই মাপের, আমাদের
+দেয়াল এত পাতলা করা যাবে না, দুটো জানালার মাঝে এত ফাঁকা রাখতেই হবে, আর এই
+হলো আমাদের রেডিমেড দরজা-জানালার catalogue।" সেই manual অনুযায়ী নকশা করলে
+তবেই তারা বাড়িটা বানিয়ে দিতে পারবে।
 
-Sky130 PDK:
-- Developed by: Skywater Technology
-- Open sourced by: Google (2020)
-- Process node: 130nm
-- Status: Production-ready!
-- Cost: FREE to use!
+**PDK ঠিক সেই manual + catalogue।** Foundry (যেখানে chip বানানো হয়) তাদের
+process-এর সব নিয়ম, সব model, আর সব রেডিমেড block একসাথে গুছিয়ে designer-কে
+দেয়। এটা ছাড়া তুমি যত সুন্দর Verilog-ই লেখো, foundry সেটা silicon-এ আনতে
+পারবে না — কারণ তুমি তাদের "ভাষায়" কথা বলোনি।
 
-Revolutionary: First open source PDK! 🎉
-```
+PDK-র ভেতরে কী কী থাকে, সেটা এক নজরে দেখে নাও:
+
+| উপাদান | কী জিনিস | কেন দরকার |
+|---|---|---|
+| **Design rules (DRC)** | তার কত সরু, কত কাছাকাছি হতে পারে — geometry-র নিয়ম | নিয়ম ভাঙলে chip ফেইল করবে |
+| **Device models (SPICE)** | transistor কীভাবে আচরণ করে তার গাণিতিক বর্ণনা | circuit simulate করে আগেই দেখার জন্য |
+| **Standard cell library** | রেডিমেড gate, flip-flop ইত্যাদির catalogue | শূন্য থেকে gate না বানিয়ে কাজ এগোনো |
+| **IO pad library** | chip-এর বাইরে সংযোগের জন্য pad | core logic-কে বাইরের জগতের সাথে জোড়া |
+| **Memory compilers** | চাহিদামতো SRAM তৈরির tool | chip-এ memory যোগ করা |
+| **Verification rules (LVS)** | layout আর schematic একই কিনা মেলানোর নিয়ম | "যা আঁকলে তা-ই কি বানালে" — যাচাই |
+| **Documentation** | সবকিছুর ব্যাখ্যা | প্রয়োজনে খুঁজে নেওয়া |
+
+আর Sky130 PDK নিজে কী, সেটা সংক্ষেপে:
+
+| বৈশিষ্ট্য | মান |
+|---|---|
+| তৈরি করেছে | SkyWater Technology |
+| Open source করেছে | Google (২০২০) |
+| Process node | 130nm |
+| অবস্থা | Production-ready! |
+| খরচ | একদম FREE |
+
+এখানে একটা ব্যাপার থামিয়ে ভাবার মতো। এত দিন chip বানানোর প্রতিটা নিয়ম,
+প্রতিটা model ছিল foundry-র **গোপন সম্পদ** — NDA সই না করে কেউ ছুঁতেও পারত
+না, খরচও আকাশছোঁয়া। ২০২০ সালে Google আর SkyWater মিলে প্রথমবারের মতো একটা
+পুরো, production-ready PDK পুরো দুনিয়ার জন্য **খুলে দিল**। এর মানে — তুমি,
+বাংলাদেশের একটা ছোট্ট ঘরে বসে, ঠিক সেই same নিয়ম-model দিয়ে chip design করতে
+পারো যা দিয়ে professional-রা করে। এটাই Sky130-কে এত বিশেষ করে তোলে। 🎉
+
+> 💡 **চটজলদি মনে রাখার সূত্র:** **PDK = "foundry-র সাথে designer-এর
+> চুক্তি।"** এই চুক্তি মানলে তোমার design silicon হবে; না মানলে হবে না।
+> তুমি নিয়ম বানাও না, নিয়ম *মেনে* design করো।
 
 ---
 
