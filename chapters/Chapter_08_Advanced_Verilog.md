@@ -1223,7 +1223,11 @@ task good_task;
 endtask
 ```
 
+এই ভুলটার লক্ষণ পরিষ্কার: compiler বলবে function এ timing control allowed না। সমাধানও সোজা — যা করতে চাইছিলে সেটা task এ সরিয়ে নাও, আর সেখানে `output` দিয়ে ফল ফেরাও (কারণ task এর return value নেই)।
+
 ### Mistake 2: Generate Without genvar ❌
+
+দ্বিতীয় ক্লাসিক ভুল — `generate for` লেখার সময় loop variable কে `genvar` ঘোষণা করতে ভুলে যাওয়া। মনে রাখো, generate এর loop variable সাধারণ runtime variable না; এটা hardware copy এর নম্বর গোনে, তাই এর জন্য বিশেষ `genvar` লাগে।
 
 ```verilog
 // ❌ WRONG
@@ -1242,7 +1246,11 @@ generate
 endgenerate
 ```
 
+পার্থক্যটা মাত্র এক লাইন — `genvar i;` — কিন্তু এটা না থাকলে synthesis fail করবে। ভালো অভ্যাস: generate block এর ঠিক আগে genvar ঘোষণা করো, যাতে চোখের সামনেই থাকে।
+
 ### Mistake 3: Parameter Override Confusion ❌
+
+তৃতীয়টা সূক্ষ্ম, আর এটা সবচেয়ে বিপজ্জনক — কারণ ভুল করলেও কখনো কখনো কাজ করে যায়, পরে অন্য কেউ module বদলালে চুপচাপ ভেঙে পড়ে। ব্যাপারটা হলো parameter override করার দুটো উপায়: positional (শুধু মান লেখা) আর named (নাম ধরে লেখা)।
 
 ```verilog
 // ❌ Wrong parameter override
@@ -1255,6 +1263,8 @@ module top;
     my_module #(.WIDTH(16)) inst1(...);
 endmodule
 ```
+
+`#(16)` লিখলে এটা module এর **প্রথম** parameter কে ১৬ ধরে — কিন্তু কোন parameter প্রথম, সেটা তোমাকে মনে রাখতে হবে, আর পরে কেউ যদি parameter এর order বদলায়, তোমার ১৬ ভুল জায়গায় চলে যাবে। `#(.WIDTH(16))` লিখলে তুমি স্পষ্ট বলছো "WIDTH = 16", order যাই হোক ঠিক জায়গায় যাবে। তাই সবসময় **named override** ব্যবহার করো — ঠিক যেমন Chapter 7 এ port connection এও named style শিখেছিলে। নিয়মটা এক: বড় design এ কখনো position-এর উপর ভরসা কোরো না, সবসময় নাম দাও।
 
 ---
 
