@@ -38,23 +38,42 @@ engineer-রাও এগুলো পড়ে পড়েই এগোয়�
 
 ## 🚀 OpenLane - Complete ASIC Flow
 
-### What is OpenLane?
+### OpenLane আসলে কী?
 
-```
-OpenLane = Complete automated RTL-to-GDSII flow
-Developed by: Efabless (Google partnership)
-Used in: TinyTapeout, ChipIgnite, etc.
+Chapter 21-এ তুমি শিখেছ RTL থেকে GDSII পর্যন্ত যাত্রায় কতগুলো আলাদা আলাদা
+ধাপ আছে — synthesis, floorplanning, placement, CTS, routing, signoff। প্রতিটা
+ধাপের জন্য আলাদা একটা specialized tool লাগে, আর প্রতিটা tool-এর নিজস্ব command,
+নিজস্ব file format, নিজস্ব মেজাজ আছে। হাতে হাতে এই tool-গুলো এক এক করে চালানো,
+একটার output পরেরটার input হিসেবে সাজিয়ে দেওয়া — পেশাদার engineer-দের জন্যও এটা
+মাথা ঘোরানো কাজ।
 
-Features:
-✅ Fully automated
-✅ Open source
-✅ Production-tested
-✅ Sky130 PDK integrated
-✅ Docker container available
-✅ Active community
+**OpenLane হলো সেই পুরো শৃঙ্খলটা এক সুতোয় বেঁধে দেওয়া conductor।** তুমি শুধু
+তোমার Verilog আর একটা ছোট্ট config ফাইল দাও, একটা command চালাও — OpenLane ভিতরে
+ভিতরে সব tool-কে সঠিক ক্রমে ডাকে, একটার ফল আরেকটাকে পাস করে, আর শেষে তোমার হাতে
+fabrication-ready GDSII তুলে দেয়।
 
-Perfect for learning and real chips!
-```
+একটা analogy ভাবো: তুমি যদি একটা restaurant-এ গিয়ে আলাদা করে চাল কাটো, সবজি
+কাটো, মসলা বাটো, ভাজো, রান্না করো — সেটা হলো হাতে হাতে tool চালানো। আর OpenLane
+হলো একটা পূর্ণাঙ্গ **recipe + automated kitchen**: তুমি শুধু উপকরণ (RTL) আর রেসিপি
+কার্ড (config) দিলে, পুরো রান্নাটা নিজে নিজে হয়ে গরম প্লেটে (GDSII) চলে আসে।
+
+| বিষয় | OpenLane সম্পর্কে |
+|------|-------------------|
+| এটা কী | পুরোপুরি automated RTL-to-GDSII flow |
+| বানিয়েছে | Efabless (Google-এর সহযোগিতায়) |
+| কোথায় ব্যবহৃত হয় | TinyTapeout, ChipIgnite — আসল chip fabrication-এ |
+| PDK | Sky130 আগে থেকেই integrated (Chapter 23-এ বিস্তারিত) |
+| চালানোর সহজ উপায় | Docker container — এক command-এ পুরো environment |
+
+কেন এটা শেখার জন্য আদর্শ:
+
+- **Fully automated** — একটা command, পুরো flow। শুরুতে detail না বুঝলেও chip পাবে।
+- **Open source** — কোনো license fee নেই, source code পড়তে পারো, পুরোটাই ফ্রি।
+- **Production-tested** — খেলনা tool নয়; এই একই flow দিয়ে আসল silicon তৈরি হচ্ছে।
+- **Active community** — আটকে গেলে GitHub Issues আর Slack-এ মানুষ সাহায্য করে।
+
+মানে — একই tool দিয়ে তুমি **শিখবেও**, আবার পরে **আসল chip-ও** বানাবে। শেখার জন্য
+একটা খেলনা আর কাজের জন্য আরেকটা — এই দুটো আলাদা করে শেখার ঝামেলা নেই।
 
 ---
 
