@@ -25,6 +25,35 @@
 
 ---
 
+## 🌟 একটু থামো — তুমি অনেক দূর এসেছ!
+
+এটাই সেই অধ্যায় যার জন্য এত পরিশ্রম: **তোমার নিজের CPU**। 🏅 আর গোপন কথা —
+যন্ত্রাংশগুলো তুমি আগেই বানিয়ে ফেলেছ:
+
+- **ALU** → Chapter 3 ও 5
+- **Register File** → Chapter 4 ও 8
+- **Program Counter ও Control logic** → Chapter 6
+
+আজ আমরা শুধু এই টুকরোগুলো **তার দিয়ে জুড়ব**। নতুন কঠিন কিছু না — শুধু সংযোগ।
+
+### 🚀 QUICK WIN (২ মিনিট): CPU-কে চোখে দেখো
+
+পুরো datapath বানানোর আগে একটা instruction-এর যাত্রা মনে মনে অনুসরণ করো —
+`add x3, x1, x2`:
+
+```
+1. Fetch     → PC দিয়ে memory থেকে instruction আনো
+2. Decode    → বুঝলে: ADD, rs1=x1, rs2=x2, rd=x3
+3. Read      → register file থেকে x1, x2 পড়ো
+4. Execute   → ALU-তে x1 + x2 করো
+5. Writeback → ফল x3-তে লেখো
+```
+
+ব্যস! একটা CPU আসলে এই ৫টা ধাপ বারবার করে। বুঝে ফেলেছ মানে অর্ধেক কাজ শেষ।
+চলো এবার Verilog-এ বানাই! 💪
+
+---
+
 ## 🚀 Quick Overview - Single-Cycle Processor
 
 ### What is Single-Cycle?
