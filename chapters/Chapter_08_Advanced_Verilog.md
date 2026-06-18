@@ -78,18 +78,20 @@ vvp sim
 
 ## ৮.১ Functions - Reusable Computations
 
-### What are Functions?
+### Function আসলে কী?
 
-```verilog
-Function:
-✅ Returns single value
-✅ Combinational logic only
-✅ No timing control (#, @)
-✅ Can have local variables
-✅ Reusable code
+C তে তুমি function লেখো যাতে একই হিসাব বারবার লিখতে না হয় — `max(a, b)` একবার লিখলে যতবার খুশি ডাকা যায়। Verilog এর function ঠিক সেই উদ্দেশ্যে, কিন্তু একটা মৌলিক পার্থক্য আছে যেটা সারাজীবন মনে রাখতে হবে: **Verilog function সফটওয়্যার রুটিন না, এটা হার্ডওয়্যার বানায়।** তুমি function ডাকলে কোনো instruction চলে না; বরং function এর ভেতরের যুক্তিটা copy হয়ে গিয়ে যেখানে ডেকেছো সেখানে একগুচ্ছ gate বসে যায়। ১০ জায়গায় ডাকলে ১০ কপি gate তৈরি হয় (যদি না synthesizer optimize করে)।
 
-Like C functions, but creates hardware!
-```
+এই হার্ডওয়্যার-প্রকৃতির কারণেই function এর কিছু কঠোর নিয়ম আছে। সবচেয়ে গুরুত্বপূর্ণ চারটা মাথায় গেঁথে নাও:
+
+| বৈশিষ্ট্য | Function এ কী হয়? | কেন এই নিয়ম? |
+|---|---|---|
+| Return value | ঠিক **একটা** মান ফেরত দেয় (function-এর নামেই) | একটা মান বের করার মতো একগুচ্ছ combinational gate বানায় |
+| Timing control | `#delay` বা `@(posedge clk)` **নিষিদ্ধ** | combinational gate এ কোনো "সময়" নেই — সব তাৎক্ষণিক |
+| Port | শুধু `input`, কোনো `output`/`inout` নেই | একটাই ফল, তাই আলাদা output port লাগে না |
+| Local variable | নিজস্ব `integer`, `reg` রাখতে পারে | হিসাবের মাঝপথের মান ধরে রাখতে |
+
+এক কথায় মনে রাখার সূত্র: **function = এক ইনপুট-গুচ্ছ থেকে এক আউটপুট বের করা একটুকরো combinational circuit, যাকে তুমি নাম দিয়ে রেখেছো।** কোনো ঘড়ি নেই, কোনো অপেক্ষা নেই, কোনো state নেই — শুধু input ঢোকাও, তাৎক্ষণিক output পাও। (যেখানে সময় বা একাধিক output দরকার, সেখানে লাগবে **task** — পরের section এ আসছে।)
 
 ### Basic Function Syntax:
 
@@ -105,6 +107,8 @@ function [return_width-1:0] function_name;
     end
 endfunction
 ```
+
+কঙ্কালটা পড়ার নিয়ম: প্রথম লাইনে `[return_width-1:0]` বলে দিচ্ছে ফলটা কত bit চওড়া — এটাই function এর "type"। তারপর `input` দিয়ে যত খুশি ইনপুট নাও। `begin ... end` এর ভেতরে হিসাব করো, আর শেষে **function এর নামের সাথে** ফলটা assign করো (`function_name = result;`) — এই নামটাই বাইরে ফেরত যায়। লক্ষ্য করো, কোথাও `output` শব্দটা নেই; function এ সেটা থাকতেই পারে না।
 
 ### Example 1 - Maximum of Two Numbers:
 

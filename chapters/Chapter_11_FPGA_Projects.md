@@ -256,7 +256,38 @@ module uart_tx_complete #(
 endmodule
 ```
 
+**TX এর state machine টা ছবিতে দেখলে গল্পটা পরিষ্কার হয়।** module টা পাঁচটা অবস্থার মধ্যে ঘুরপাক খায়, আর প্রতিটা অবস্থায় `clk_count` দিয়ে এক bit সময় (`CLKS_PER_BIT` cycle) পুরো গুনে তবে পরের ধাপে যায়:
+
+```mermaid
+stateDiagram-v2
+    [*] --> IDLE
+    IDLE --> START: tx_start (data ধরে রাখো)
+    note right of IDLE
+        tx = 1 (line idle)
+        busy = 0
+    end note
+    START --> DATA: এক bit সময় শেষ
+    note right of START
+        tx = 0 (START bit)
+    end note
+    DATA --> DATA: bit_index < 7
+    DATA --> STOP: 8টা bit পাঠানো শেষ
+    note right of DATA
+        tx = data[bit_index]
+        LSB আগে
+    end note
+    STOP --> DONE: এক bit সময় শেষ
+    note right of STOP
+        tx = 1 (STOP bit)
+    end note
+    DONE --> IDLE: tx_done এক cycle HIGH
+```
+
+লক্ষ্য করো `DATA` state এর self-loop টা — ওখানে module টা আটটা bit পাঠানো পর্যন্ত নিজের কাছেই ফিরে আসে, প্রতিবার `bit_index` এক বাড়িয়ে আর প্রতিটা bit এর জন্য পুরো `CLKS_PER_BIT` cycle গুনে। আর `DONE` state টা মাত্র এক cycle এর জন্য `tx_done` কে HIGH করে দেয়, যাতে বাইরের system একটা পরিষ্কার "পাঠানো শেষ" pulse পায় — এটাকে বলে handshake। `115200` baud বেছে নেওয়ায় এবার এক byte পাঠাতে লাগে মাত্র ~87 মাইক্রোসেকেন্ড, 9600 এর চেয়ে ১২ গুণ দ্রুত।
+
 ### UART RX (Receiver):
+
+TX বানানো সহজ ছিল — আমরাই সব নিয়ন্ত্রণ করছি। কিন্তু RX এর কাজটা আসল চ্যালেঞ্জ: একটা তার দেখে বুঝতে হবে কখন data আসছে, আর কোনো shared clock ছাড়াই প্রতিটা bit ঠিক জায়গায় পড়তে হবে। এর চাবিকাঠি একটাই কৌশল — **bit এর ঠিক মাঝখানে গিয়ে value পড়া**।
 
 ```verilog
 module uart_rx #(

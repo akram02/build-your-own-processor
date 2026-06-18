@@ -93,13 +93,21 @@ We'll implement: RV32I
 
 ### RV32I at a Glance:
 
+এবার RV32I-র মূল মাপগুলো এক নজরে দেখে নাও। এই কয়েকটা সংখ্যাই তোমার পুরো প্রসেসরের কাঠামো ঠিক করে দেবে — register কত চওড়া হবে, memory address bus কত বিট হবে, instruction fetch করার সময় কত বিট পড়তে হবে।
+
 ```
 Data width: 32-bit
 Address width: 32-bit (4GB memory)
 Registers: 32 × 32-bit
 Instructions: 47 base instructions
 Instruction size: 32-bit (fixed)
+```
 
+এখানে একটা ছোট অথচ বিশাল গুরুত্বপূর্ণ কথা: instruction size **fixed 32-bit**। x86-এ একটা instruction ১ বাইট থেকে ১৫ বাইট পর্যন্ত হতে পারে, তাই decoder-কে আগে বুঝতে হয় "এই instruction-টা কত লম্বা" তারপর পড়তে হয় — ভয়ানক জটিল। RISC-V-এ প্রতিটা instruction ঠিক ৪ বাইট, তাই পরের instruction সবসময় `PC + 4`-এ। এই একটা সিদ্ধান্তই তোমার hardware-কে অসম্ভব সহজ করে দেয়, আর Chapter 14-এ যখন CPU বানাবে তখন এর সুফল হাতেনাতে পাবে।
+
+instruction-গুলোকে কাজের ধরন অনুযায়ী ভাগ করা যায় — পুরো RV32I আসলে এই কয়েকটা পরিবারেই আঁটে:
+
+```
 Instruction types:
 - Arithmetic (ADD, SUB, etc.)
 - Logical (AND, OR, XOR)
