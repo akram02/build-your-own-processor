@@ -1115,11 +1115,8 @@ endmodule
 এখানেই memory-mapped I/O-র পুরো সৌন্দর্য চোখে পড়বে।
 
 মূল কৌশলটা C-তে একটাই লাইন: আমরা peripheral-এর ঠিকানাকে একটা **pointer** বানাই,
-আর সেই pointer-এ লেখা/পড়া করি। মনে রাখো এই pointer গুলো `volatile` —
-
-```c
-volatile unsigned int *uart_data = (unsigned int*)0x10001000;
-```
+আর সেই pointer-এ লেখা/পড়া করি। মনে রাখো এই pointer গুলো `volatile` — যেমন
+`volatile unsigned int *uart_data = (unsigned int*)0x10001000;`।
 
 `volatile` শব্দটা কেন এত জরুরি? এটা compiler-কে বলে: "এই ঠিকানার মান যেকোনো
 মুহূর্তে নিজে থেকে বদলে যেতে পারে (কারণ ওপাশে hardware আছে), তাই তুমি একে
@@ -1516,7 +1513,12 @@ Level: System Architect! 🏆
 
 ## 🎯 Final Project
 
-### Project: Interactive System
+এবার সব শেখা এক জায়গায় এনে একটা সত্যিকারের **interactive application** বানাও —
+যেখানে চারটা peripheral একসাথে কাজ করবে। নিচের "Simon Says" গেমটা চমৎকার একটা
+challenge: LED একটা pattern দেখাবে (GPIO output), তুমি বোতাম চেপে সেটা মেলাবে
+(GPIO input), Timer ঠিক করবে কতক্ষণ pattern দেখাবে আর কতটুকু সময় পাবে, আর UART-এ
+score ছাপা হবে। এই একটা প্রজেক্টেই তোমার পুরো SoC-র সব অংশের পরীক্ষা হয়ে যাবে —
+আর তুমি বুঝবে hardware + software মিলে কীভাবে একটা পূর্ণ সিস্টেম হয়ে ওঠে।
 
 **Build Complete Application:**
 ```

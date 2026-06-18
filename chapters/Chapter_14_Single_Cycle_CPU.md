@@ -1345,42 +1345,66 @@ endmodule
 
 ## ১৪.১৩ Performance Analysis
 
-### Clock Cycle Time:
+CPU চলছে — কিন্তু কত জোরে? আর কেন সেটাই তার সীমা? এই দুই প্রশ্নের উত্তরই
+performance-এর গল্প, আর এখান থেকেই বোঝা যায় কেন পরের অধ্যায়গুলো দরকার।
 
-```
-Critical path (longest delay):
-PC → Instruction Memory → Register File → 
-ALU → Data Memory → Register File
+### Clock Cycle Time — সবচেয়ে লম্বা পথই রাজা
 
-Estimated delays (in ns, typical FPGA):
-- Memory access: 5ns
-- Register file: 2ns
-- ALU: 3ns
-- Muxes/routing: 2ns
+মনে রেখো single-cycle-এ একটা cycle-কে এত লম্বা হতে হয় যেন **সবচেয়ে ধীর**
+instruction-ও পুরোটা শেষ করতে পারে। আর সেই সবচেয়ে লম্বা পথটাকে বলে **critical path** —
+সাধারণত `load`, কারণ সে datapath-এর প্রায় পুরোটা ছুঁয়ে যায়:
 
-Total: ~12ns
-Max frequency: 1 / 12ns = 83 MHz
-
-But all instructions take same time!
-Waste for simple instructions!
+```mermaid
+flowchart LR
+    PC["PC"] --> IMEM["Instruction Memory ~5ns"] --> RF["Register File ~2ns"] --> ALU["ALU ~3ns"] --> DMEM["Data Memory ~5ns"] --> WB["Register File (writeback)"]
 ```
 
-### CPI (Cycles Per Instruction):
+প্রতিটা বাক্সের দেরি যোগ করলেই cycle-এর ন্যূনতম দৈর্ঘ্য পাওয়া যায় (FPGA-তে আনুমানিক):
+
+| পর্যায় | আনুমানিক দেরি |
+|:---|:---:|
+| Memory access (IMEM/DMEM) | ~5 ns |
+| Register file | ~2 ns |
+| ALU | ~3 ns |
+| MUX/routing | ~2 ns |
+| **মোট (critical path)** | **~12 ns** |
+
+`12 ns` cycle মানে সর্বোচ্চ frequency `1 / 12ns ≈ 83 MHz`। কিন্তু এখানেই দুঃখ:
+**সব** instruction এই ১২ns-ই খরচ করে — এমনকি সরল `add`, যার আসলে memory দরকারই নেই
+আর ৬-৭ns-এই হয়ে যেত। এই অপচয়টাই single-cycle-এর জন্মগত দুর্বলতা।
+
+### CPI (Cycles Per Instruction) — সংখ্যাটা যেখানে প্রতারক
 
 ```
 Single-cycle: CPI = 1 (by definition)
-
-Every instruction takes 1 cycle
-Even simple ADD takes as long as LOAD!
-
-Improvement possible? Yes!
-- Multi-cycle (Chapter 15)
-- Pipeline (Chapter 16)
 ```
+
+CPI মানে প্রতি instruction-এ কত cycle লাগে। single-cycle-এ এটা **ঠিক ১** — সংজ্ঞা
+অনুযায়ীই, কারণ প্রতি instruction এক cycle-এ শেষ। কাগজে-কলমে দারুণ শোনায়! কিন্তু এটা
+একটা প্রতারক সংখ্যা: CPI=১ ঠিকই, কিন্তু সেই একটা cycle **ভয়ানক লম্বা** (১২ns)। তাই
+আসল গতি = `CPI × cycle time` — আর লম্বা cycle-ই এখানে খলনায়ক।
+
+তাহলে উন্নতির পথ? দুটো দিক থেকে আক্রমণ করা যায়:
+
+- **Multi-cycle (Chapter 15):** প্রতিটা instruction-কে ছোট ছোট ধাপে ভাগ করে দ্রুত
+  instruction-কে কম cycle দাও — cycle ছোট হয়, অপচয় কমে।
+- **Pipeline (Chapter 16):** একসাথে কয়েকটা instruction-কে বিভিন্ন ধাপে চালাও
+  (assembly line-এর মতো) — প্রতি cycle-এ একটা করে instruction শেষ হতে থাকে, throughput
+  বহুগুণ বাড়ে।
+
+এই দুই অধ্যায়ই আসলে আজকের single-cycle CPU-র সীমা ভাঙার গল্প। তাই হতাশ হয়ো না —
+তুমি যে CPU বানিয়েছ, সেটাই পরের সব উন্নতির ভিত্তি। 💪
 
 ---
 
 ## ১৪.১৪ Your 2-Week Build Plan
+
+একসাথে পুরো CPU বানাতে গেলে ভয় লাগতে পারে — তাই কাজটাকে ছোট ছোট দিনে ভেঙে নাও।
+মূলমন্ত্র একটাই: **প্রতিটা module আগে আলাদা করে test করো, তারপর জোড়ো।** একসাথে সব
+জুড়ে দিয়ে debug করতে গেলে কোথায় ভুল তা খুঁজে পাওয়া দুঃস্বপ্ন; কিন্তু প্রতিটা টুকরো
+আলাদা যাচাই করা থাকলে, integration-এ সমস্যা হলে সন্দেহের তালিকা ছোট থাকে। নিচের
+পরিকল্পনাটা ঠিক সেই ক্রমেই সাজানো — Week 1-এ টুকরো বানানো ও যাচাই, Week 2-এ জোড়া ও
+পুরো program চালানো।
 
 ### Week 1: Components
 
@@ -1437,6 +1461,17 @@ Improvement possible? Yes!
 ---
 
 ## ১৪.১৫ Chapter 14 Mission Complete!
+
+থামো, একটু গর্ব করো। 🏅 চ্যাপ্টারের শুরুতে তোমাকে বলেছিলাম — "যন্ত্রাংশগুলো তুমি
+আগেই বানিয়ে ফেলেছ, আজ শুধু তার দিয়ে জুড়ব।" সেটাই করলে। PC, register file, ALU,
+control unit — চেনা টুকরোগুলো এক datapath-এ বসিয়ে তুমি এমন একটা যন্ত্র বানালে যা
+**নিজে নিজে instruction পড়ে, বোঝে, আর চালায়**। এটা আর খেলনা নয়; এটা একটা সত্যিকারের
+RISC-V প্রসেসর, যা একই ISA মানে যেটা বড় বড় কোম্পানি chip-এ বসায়।
+
+আর সবচেয়ে দামি জিনিসটা শুধু কোড নয় — সেই **মানসিক ছবি**টা। এখন তুমি যেকোনো
+instruction দেখলে চোখ বুজে তার যাত্রা আঁকতে পারো: fetch → decode → register পড়া →
+ALU → memory → writeback। এই অন্তর্দৃষ্টিই তোমাকে পরের অধ্যায়গুলোয় (multi-cycle,
+pipeline) এগিয়ে রাখবে।
 
 ### তুমি এখন পারো:
 

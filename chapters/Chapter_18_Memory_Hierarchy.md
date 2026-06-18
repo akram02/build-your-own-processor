@@ -1099,9 +1099,13 @@ module cache_benchmark;
 endmodule
 ```
 
+simulation চালালে তুমি একটা পরিষ্কার রিপোর্ট পাবে — মোট cycle, hit/miss সংখ্যা, hit rate শতাংশে, AMAT cycle এ, আর সবচেয়ে তৃপ্তিদায়ক লাইনটা: cache ছাড়ার তুলনায় কত গুণ speedup। `$dumpfile`/`$dumpvars` দিয়ে একটা VCD ও তৈরি হবে, যেটা GTKWave এ খুলে তুমি cycle-by-cycle দেখতে পারবে কখন cache hit দিচ্ছে আর কখন miss এ DRAM এ যাচ্ছে। এটাই তোমার cache কে চোখে দেখার সুযোগ।
+
 ---
 
 ## ১৮.৯ Your 2-Week Build Plan
+
+পুরো chapter একসাথে দেখলে অনেক মনে হতে পারে, তাই দুই সপ্তাহে ভেঙে নাও। প্রথম সপ্তাহ — একটা cache কে একলা দাঁড় করানো এবং test করা; দ্বিতীয় সপ্তাহ — সেটাকে প্রসেসরে জুড়ে পুরো system বানানো ও tune করা। প্রতিদিন ছোট, অর্জনযোগ্য লক্ষ্য — তাড়াহুড়ো নয়, প্রতিটা ধাপ বুঝে এগোও।
 
 ### Week 1: Cache Implementation
 

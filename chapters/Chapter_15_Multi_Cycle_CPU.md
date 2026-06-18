@@ -1107,6 +1107,11 @@ architecture-এর আসল অন্তর্দৃষ্টি: একটা
 ```
 
 ### Day 3-4: Datapath Modifications
+
+Chapter 14-এর datapath নাও, আর এক ধাপের ফল পরের ধাপে ধরে রাখার জন্য সেই
+৫টি register বসাও। প্রতিটা যোগ করার পর নিজেকে জিজ্ঞেস করো — "এটা কোন cycle-এ
+লেখে, কোন cycle-এ পড়া হয়?":
+
 ```
 □ Add instruction register
 □ Add data registers (A, B)
@@ -1115,6 +1120,11 @@ architecture-এর আসল অন্তর্দৃষ্টি: একটা
 ```
 
 ### Day 5-6: Integration
+
+এবার মস্তিষ্ক ও শরীর জোড়ো। mux বসিয়ে control signal-গুলো সঠিক জায়গায়
+তার দিয়ে যুক্ত করো — বিশেষ করে `mem_addr` mux আর `pc_next` mux ঠিকঠাক
+লাগানো হয়েছে কিনা মিলিয়ে নাও:
+
 ```
 □ Connect FSM to datapath
 □ Add multiplexers
@@ -1123,6 +1133,12 @@ architecture-এর আসল অন্তর্দৃষ্টি: একটা
 ```
 
 ### Day 7: Testing & Debug
+
+ছোট প্রোগ্রাম চালিয়ে waveform দেখো — `state_debug` দিয়ে FSM-এর state
+cycle-ধরে অনুসরণ করো, আর single-cycle-এর সাথে চূড়ান্ত register-মান মিলিয়ে
+সঠিকতা নিশ্চিত করো। branch/jump-এর target ঠিক জায়গায় যাচ্ছে কিনা (মনে
+আছে `old_pc`?) বিশেষভাবে দেখো:
+
 ```
 □ Run sample programs
 □ Compare with single-cycle
@@ -1150,7 +1166,7 @@ architecture-এর আসল অন্তর্দৃষ্টি: একটা
 ### তুমি বানিয়েছো:
 ```
 ✅ Multi-cycle RISC-V processor
-✅ 5-state FSM controller
+✅ 9-state FSM controller (5 stages → 9 states)
 ✅ Optimized datapath
 ✅ Resource-shared design
 ✅ Variable-cycle execution
