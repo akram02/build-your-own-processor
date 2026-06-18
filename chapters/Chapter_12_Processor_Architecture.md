@@ -186,7 +186,7 @@ ISA নিয়ে গত কয়েক দশকে একটা বড় �
 - **8-bit data width** — একবারে ৮ bit data নিয়ে কাজ করে।
 - **8-bit address** — মানে $2^8 = 256$ byte পর্যন্ত memory ঠিকানা দেওয়া যায়।
 - **৪টি register** (R0–R3) — অল্প কিন্তু যথেষ্ট।
-- **৮টি instruction** — মূল কাজগুলো ঢেকে ফেলার মতো।
+- **৯টি instruction** — মূল কাজগুলো ঢেকে ফেলার মতো।
 
 প্রতিটা instruction ঠিক ৮ bit — fixed size, একদম RISC ঘরানার। ৮টা bit তিন ভাগে ভাগ করা: কোন কাজ (opcode), আর দুটো register কোনগুলো (Reg A, Reg B)।
 
@@ -198,7 +198,7 @@ ISA নিয়ে গত কয়েক দশকে একটা বড় �
        └───────────────┴───────┴───────┘
 ```
 
-Opcode ৪ bit মানে $2^4 = 16$টা ভিন্ন কাজ লেখা সম্ভব, যার মধ্যে আমরা ৮টা ব্যবহার করছি। আর Reg A / Reg B ২ bit করে — $2^2 = 4$টা register-কে ঠিকঠাক চিনিয়ে দেওয়ার জন্য যথেষ্ট। নিচে আমাদের ৮টা instruction:
+Opcode ৪ bit মানে $2^4 = 16$টা ভিন্ন কাজ লেখা সম্ভব, যার মধ্যে আমরা ৯টা ব্যবহার করছি। আর Reg A / Reg B ২ bit করে — $2^2 = 4$টা register-কে ঠিকঠাক চিনিয়ে দেওয়ার জন্য যথেষ্ট। নিচে আমাদের ৯টা instruction:
 
 | Opcode | Instruction | কাজ |
 |---|---|---|
@@ -899,7 +899,7 @@ IPS = 27,000,000 / 5
 ### Stats:
 ```
 Components designed: 5
-Instructions: 8
+Instructions: 9
 Register file: 4 registers
 Data width: 8-bit
 CPI: 5 cycles
