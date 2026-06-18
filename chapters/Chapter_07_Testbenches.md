@@ -962,6 +962,22 @@ end
 
 > 💡 একটা সতর্কতা: `$random` ঋণাত্মক সংখ্যাও দিতে পারে (এটা signed)। তাই `% 16` কখনো কখনো ঋণাত্মক ভাগশেষ দিতে পারে। `a` এর মতো unsigned `reg` এ রাখলে সাধারণত সমস্যা হয় না, কিন্তু হিসাবে সরাসরি ব্যবহার করলে এই খুঁটিনাটিটা মাথায় রেখো।
 
+```verilog
+reg [3:0] a;
+
+initial begin
+    repeat(10) begin
+        // Random 4-bit value (0-15)
+        a = $random % 16;
+        
+        // Random in range [5:10]
+        a = 5 + ($random % 6);
+        
+        #10;
+    end
+end
+```
+
 ### Random Testing with Coverage:
 
 এবার সব একসাথে — একটা ALU তে 1000টা random test। এখানে নতুন যা দেখবে: শুধু input না, **opcode টাও** random (`$random(seed) % 8` দিয়ে 0-7 এর মধ্যে, কারণ 8টা operation)। তাই প্রতিটা test এ ALU যেকোনো একটা কাজ যেকোনো input এ করছে — সত্যিকারের stress test।
