@@ -69,7 +69,7 @@ Ch 20:    Advanced architecture-ও দেখা হয়ে গেছে
 **ASIC** (Application-Specific Integrated Circuit) ঠিক উল্টো। এখানে তুমি একটা
 নির্দিষ্ট কাজের জন্য transistor-গুলো একদম স্থায়ীভাবে silicon-এ বসিয়ে দাও।
 একবার বানানো হয়ে গেলে আর বদলানো যায় না — কিন্তু বিনিময়ে পাও সর্বোচ্চ speed,
-সবচেয়ে কম power, আর কোটি-কোটি unit সস্তায় বানানোর সুযোগ। Intel, Apple,
+সবচেয়ে কম power, আর কোটি কোটি unit সস্তায় বানানোর সুযোগ। Intel, Apple,
 Qualcomm-এর সব chip আসলে এই ASIC।
 
 | বৈশিষ্ট্য | FPGA | ASIC (Chip) |

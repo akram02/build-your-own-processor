@@ -327,7 +327,7 @@ sky130_fd_sc_hd__and2_1
 | `sky130` | process |
 | `fd` | foundry (SkyWater) |
 | `sc` | standard cell |
-| `hd` | library variant — High density |
+| `hd` | library variant — High Density |
 | `__` | নাম থেকে function আলাদা করার separator |
 | `and2` | function — এখানে 2-input AND |
 | `_1` | drive strength |
