@@ -302,10 +302,10 @@ Data Bus (CDB)** দিয়ে একসাথে সবার কাছে br
 
 এই পুরো যন্ত্রপাতি **Intel, AMD, ARM**-এর high-end core-এ ব্যবহৃত হয়। দাম?
 **Complexity: Very high!** লাভ? in-order superscalar-এর তুলনায় সাধারণত
-**~20-30% performance** — তবে এই সংখ্যাটা workload-ভেদে অনেক বদলায় (FLAG:
-নিচে দেখো)।
+**~20-30% performance** — তবে এই সংখ্যাটা workload-ভেদে অনেক বদলায় (নিচের
+নোট দেখো)।
 
-> ⚠️ **লেখকের নোট (FLAG):** "Benefit: 20-30% performance" সংখ্যাটা একটা মোটা
+> ⚠️ **একটা সতর্কবার্তা:** "Benefit: 20-30% performance" সংখ্যাটা একটা মোটা
 > দাগের estimate; out-of-order-এর আসল লাভ workload আর baseline-এর উপর প্রচণ্ড
 > নির্ভরশীল (memory-heavy code-এ অনেক বেশি, সরল compute-এ কম)। সংখ্যাটা
 > চূড়ান্ত fact হিসেবে না নিয়ে "rough ballpark" হিসেবে পড়ো।
@@ -452,7 +452,7 @@ Meta-predictor মূলত একটা ছোট counter-এর table — প�
 হলে যাবে **কোথায়**? Target address তো সাধারণত instruction decode করার পরই জানা
 যায় — তত cycle অপেক্ষা করলে তো গভীর pipeline-এ বুদবুদ (bubble) তৈরি হবে!
 
-BTB এর সমাধান: এটা একটা ছোট cache, যেখানে PC দিয়ে index করলেই আগের বার ওই
+BTB-র সমাধান: এটা একটা ছোট cache, যেখানে PC দিয়ে index করলেই আগের বার ওই
 branch কোথায় গিয়েছিল সেই target পাওয়া যায় — **decode-এরও আগে**:
 
 | PC | Target | Valid |
@@ -897,7 +897,7 @@ General purpose + Accelerators! 🚀
 phone-এই AI চালায় (তাই data বাইরে পাঠাতে হয় না — privacy আর efficiency দুটোই)।
 এই দর্শনটাই ভবিষ্যৎ: **general-purpose core + একগুচ্ছ accelerator**।
 
-> ⚠️ **লেখকের নোট (FLAG):** "100× faster than GPU" সংখ্যাটা একটা মোটা দাগের,
+> ⚠️ **একটা সতর্কবার্তা:** "100× faster than GPU" সংখ্যাটা একটা মোটা দাগের,
 > প্রচারধর্মী (marketing-style) তুলনা — কোন প্রজন্মের TPU বনাম কোন GPU, কোন
 > metric (throughput, perf/watt, না perf/dollar), সব কিছুর উপর এটা ভীষণ
 > নির্ভরশীল। নির্দিষ্ট কাজে accelerator যে বড় সুবিধা দেয় সেই *ধারণাটা* ঠিক,
