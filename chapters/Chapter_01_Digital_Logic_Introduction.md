@@ -25,7 +25,7 @@ Week 1 Goals:
 
 **সময়:** ১ সপ্তাহ (দিনে ৩-৪ ঘণ্টা)  
 **যা লাগবে:** শুধু একটা browser! (CircuitVerse.org)  
-**খরচ:** ₹0 (সম্পূর্ণ ফ্রি!) — কোনো hardware কিনতে হবে না, কিছু install করতে হবে না।
+**খরচ:** ৳0 (সম্পূর্ণ ফ্রি!) — কোনো hardware কিনতে হবে না, কিছু install করতে হবে না।
 
 ---
 
@@ -1022,8 +1022,8 @@ Tag: #BuildYourOwnProcessor
 Community: processor-builders-bd
 ```
 
-### হলে কী হবে:
-- তোমার name এই book এ featured হবে
+### শেয়ার করলে কী হবে:
+- তোমার নাম এই বই-এ featured হবে
 - Community recognition
 - Inspire others to build
 - Build your portfolio!
