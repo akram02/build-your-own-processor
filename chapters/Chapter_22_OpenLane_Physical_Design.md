@@ -79,23 +79,49 @@ fabrication-ready GDSII তুলে দেয়।
 
 ## ২২.১ Setup OpenLane
 
+### আগে environment, পরে chip
+
+প্রতিটা physical design tool-এর নিজস্ব version, নিজস্ব library, নিজস্ব নির্ভরতা
+(dependency) আছে। একটা tool-এর জন্য Python 3.8 দরকার, আরেকটার জন্য একটা পুরনো
+library — এগুলো হাতে হাতে install করতে গেলে একটার সাথে আরেকটা সংঘর্ষ বাধায়, আর
+তুমি ঘণ্টার পর ঘণ্টা error খুঁজতে খুঁজতে হতাশ হয়ে পড়ো। এটাকেই engineer-রা মজা করে
+বলে **"dependency hell"**।
+
+এখানেই **Docker** ত্রাতা। Docker-কে ভাবো একটা **সিল করা টিফিন বাক্স** হিসেবে:
+OpenLane যা যা চায় — সঠিক version-এর প্রতিটা tool, library, setting — সব আগে থেকেই
+সেই বাক্সে গোছানো। তুমি বাক্সটা খুললেই ভিতরের সবকিছু একদম যেমন দরকার তেমন কাজ করে,
+তোমার নিজের কম্পিউটারে কী আছে না আছে তাতে কিছু আসে যায় না। তাই আমরা native install-এর
+ঝামেলায় না গিয়ে Docker ব্যবহার করব — এটাই সবচেয়ে সহজ আর নির্ভরযোগ্য পথ। 🐳
+
 ### System Requirements:
 
-```
-Hardware:
-- 8+ GB RAM (16 GB recommended)
-- 50+ GB disk space
-- Linux (Ubuntu 20.04/22.04)
-- Or use Docker!
+OpenLane হালকা tool নয় — synthesis আর routing প্রচুর RAM আর disk খরচ করে। নিচের
+জিনিসগুলো আগে নিশ্চিত করে নাও, যাতে মাঝপথে flow আটকে না যায়:
 
-Software:
-- Docker (easiest)
-- OR native install (complex)
+| জিনিস | ন্যূনতম | সুপারিশ | কেন দরকার |
+|-------|---------|----------|-----------|
+| RAM | ৮ GB | ১৬ GB | Placement/routing একসাথে অনেক ডেটা মেমোরিতে রাখে |
+| Disk | ৫০+ GB | ৫০+ GB | Docker image + প্রতিটা run-এর intermediate ফাইল জমা হয় |
+| OS | Ubuntu 20.04 / 22.04 | — | Docker দিয়ে যেকোনো platform-এ চলে |
+| Software | Docker | Docker | এক টিফিন বাক্সে পুরো environment |
 
-We'll use Docker! 🐳
-```
+> 💡 RAM কম থাকলেও দমে যেও না — ছোট design (যেমন আমাদের inverter) ৮ GB-তেও দিব্যি
+> চলে। বড় processor-এ গেলে তখন বেশি RAM-এর দরকার পড়বে।
 
 ### Installation Steps:
+
+নিচের ধাপগুলো একটা একটা করে চালাও। প্রতিটা command কী করছে সেটা পাশে বুঝিয়ে দিলাম —
+অন্ধভাবে copy-paste না করে বুঝে এগোলে পরে কিছু ভাঙলে নিজেই ঠিক করতে পারবে।
+
+- **ধাপ ১ — Docker install:** তোমার টিফিন বাক্স খোলার যন্ত্রটাই আগে বসাচ্ছ।
+  `usermod -aG docker $USER` line-টা তোমাকে `sudo` ছাড়াই Docker চালানোর অনুমতি দেয়।
+  তাই এটা চালানোর পর অবশ্যই একবার logout করে আবার login করতে হবে — নইলে অনুমতিটা কার্যকর হবে না।
+- **ধাপ ২ — OpenLane pull:** GitHub থেকে OpenLane-এর script নামাচ্ছ, আর
+  `make pull-openlane` দিয়ে সেই গোছানো টিফিন বাক্সটা (Docker image) download করছ।
+  এটা কয়েক GB, তাই ভালো internet থাকলে সুবিধা; একটু সময় লাগবে, ধৈর্য রাখো।
+- **ধাপ ৩ — Test:** `make test` একটা ছোট্ট নমুনা design পুরো flow-তে চালিয়ে দেখে
+  সব tool ঠিকঠাক বসেছে কিনা। `"Basic test passed"` দেখা মানে — তোমার পুরো
+  toolchain তৈরি, এখন তুমি chip বানাতে প্রস্তুত! 🎉
 
 ```bash
 # 1. Install Docker
