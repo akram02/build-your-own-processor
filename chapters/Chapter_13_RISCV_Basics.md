@@ -472,12 +472,12 @@ branch হলো শর্তসাপেক্ষ লাফ — "যদি `rs1
 Used for: Conditional branches
 
 Format:
-31   30        25 24    20 19    15 14  12 11   8 7   6      0
-┌─────┬───────────┬────────┬────────┬──────┬──────┬─┬────────┐
-│imm12│ imm[10:5] │  rs2   │  rs1   │funct3│imm   │0│ opcode │
-│     │           │        │        │      │[4:1] │ │        │
-└─────┴───────────┴────────┴────────┴──────┴──────┴─┴────────┘
- 1bit   6 bits     5 bits   5 bits  3 bits  4bits 1  7 bits
+31   30        25 24    20 19    15 14  12 11   8 7       6      0
+┌─────┬───────────┬────────┬────────┬──────┬──────┬─────┬────────┐
+│imm12│ imm[10:5] │  rs2   │  rs1   │funct3│imm   │imm  │ opcode │
+│     │           │        │        │      │[4:1] │[11] │        │
+└─────┴───────────┴────────┴────────┴──────┴──────┴─────┴────────┘
+ 1bit   6 bits     5 bits   5 bits  3 bits  4bits  1bit   7 bits
 
 Immediate: PC-relative byte offset; imm[0] সবসময় 0 (2-byte aligned)
 Range: ±4KB
@@ -485,13 +485,13 @@ Range: ±4KB
 Examples:
 - BEQ, BNE, BLT, BGE, BLTU, BGEU
 
-Note: imm[0] always 0 (halfword aligned)
-      Reconstructed: {imm[12], imm[10:5], imm[4:1], 0}
+Note: bit 7 holds imm[11]; imm[0] is implicit 0 (never stored, halfword aligned)
+      Reconstructed: {imm[12], imm[11], imm[10:5], imm[4:1], 0}
 ```
 
 দেখো immediate-এর বিটগুলো কেমন এলোমেলোভাবে ছড়িয়ে আছে — `imm[12]`, `imm[10:5]`, `imm[4:1]` নানা জায়গায়। **এটা পাগলামি নয়, এটা প্রকৌশল।** RISC-V ইচ্ছে করে immediate-এর প্রতিটা বিটকে ঠিক সেই অবস্থানে রেখেছে যেখানে সেটা I/S-type immediate-এর একই-নামের বিটের সাথে যতটা সম্ভব মেলে। ফলে immediate sign-extend করার জন্য যে hardware লাগে তা সব format-এ প্রায় একই তার দিয়ে চলে — আলাদা আলাদা বানাতে হয় না। মানুষের চোখে বিরক্তিকর, কিন্তু এই "scrambling" তোমার চিপের immediate-generator-কে অনেক ছোট করে দেয়। CPU চালানোর সময় এই ছড়ানো টুকরোগুলো জোড়া দিয়ে আর সবচেয়ে নিচে একটা ০ বসিয়ে আসল offset বানায়।
 
-> ⚠️ **FLAG (সম্ভাব্য encoding ভুল — আমি বদলাইনি):** উপরের bit-field চিত্রে বিট ৭-এর ঘরটা `0` লেখা, আর reconstruction-এ আছে `{imm[12], imm[10:5], imm[4:1], 0}`। কিন্তু RISC-V spec অনুযায়ী B-type-এ **বিট ৭ ধরে রাখে `imm[11]`** (offset-এর ১১তম বিট), আর যে বিটটা সবসময় ০ সেটা হলো `imm[0]` — যেটা মোটেই জমা রাখা হয় না (implicit)। সঠিক reconstruction হওয়া উচিত `{imm[12], imm[11], imm[10:5], imm[4:1], 0}` (১২+১১+৬+৪+১ = ১৩ বিট সমান ±4KB range)। নির্দেশ অনুযায়ী encoding-sensitive অংশ আমি পরিবর্তন করিনি — লেখক/maintainer যেন spec-এর সাথে মিলিয়ে নিশ্চিত করেন।
+> 💡 **মনে রেখো:** B-type-এ বিট ৭ ধরে রাখে `imm[11]`, আর `imm[0]` কখনো জমা থাকে না — সেটা সবসময় ০ (implicit, halfword aligned)। তাই reconstruction-এ সবচেয়ে নিচে একটা ০ বসিয়ে দিলেই আসল 13-বিট offset (±4KB) তৈরি হয়।
 
 ### U-Type (Upper immediate):
 
