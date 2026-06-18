@@ -1256,7 +1256,7 @@ register ক্রম এখানে হুবহু দেখা যায়:
 চালু করা। `timer_isr()` হলো সেই ISR যেটা প্রতি interrupt-এ `tick_count` বাড়ানোর
 কথা।
 
-> ⚠️ **মনে রাখো (section ১৯.৪-এর flag):** এই chapter-এর CPU core এখনো interrupt
+> ⚠️ **মনে রাখো (১৯.৪-এ যে কথাটা বলেছিলাম):** এই chapter-এর CPU core এখনো interrupt
 > সার্ভিস করে না (`interrupt_ack` হার্ডওয়্যারে `1'b0`)। তাই নিচের `timer_isr()`
 > আপনাআপনি **চলবে না**, আর `csrsi mstatus, 0x8` লাইনটাও এই core-এ কার্যকর হবে না।
 > এই উদাহরণটা interrupt-driven programming-এর **নকশা** দেখায় — পরে CPU-তে
