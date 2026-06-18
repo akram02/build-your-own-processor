@@ -190,7 +190,7 @@ endmodule
 নিচের ফাইলটাই দিলাম:
 
 ```tcl
-// config.tcl
+# config.tcl
 set ::env(DESIGN_NAME) inverter
 
 set ::env(VERILOG_FILES) [glob $::env(DESIGN_DIR)/src/*.v]
@@ -462,7 +462,7 @@ design-এ সত্যিকারের clock আছে, নির্দিষ
 নাম-ধরা net লাগবে। পুরো ফাইলটা:
 
 ```tcl
-// config.tcl
+# config.tcl
 set ::env(DESIGN_NAME) riscv_simple
 
 set ::env(VERILOG_FILES) [glob $::env(DESIGN_DIR)/src/*.v]
@@ -1077,7 +1077,7 @@ exercise-এর আসল শিক্ষা: বাস্তব chip design ম
 
 ```
 Level 22: ✅ COMPLETE - Physical Designer!
-Progress: [███████████████████████████████████] 88%
+Progress: [██████████████████████░░░] 88%
 
 XP Gained: +2500
 Skills: OpenLane, Physical Design, Layout

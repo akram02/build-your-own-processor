@@ -1637,7 +1637,7 @@ Bonus:
 
 ```
 Level 4: ✅ COMPLETE - Sequential Logic Expert!
-Progress: [████████████████████] 20%
+Progress: [████░░░░░░░░░░░░░░░░░░░░░] 16%
 
 XP Gained: +1500
 Skills: Memory, Registers, FSM, Control Logic

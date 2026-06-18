@@ -768,7 +768,7 @@ module led_breathe(
         end else begin
             slow_counter <= slow_counter + 1;
             
-            // Update brightness every ~100ms
+            // Update brightness every ~1.24 s (when slow_counter wraps)
             if (slow_counter == 0) begin
                 if (direction == 0) begin
                     if (brightness == 255)
@@ -1048,7 +1048,7 @@ module seven_seg_display(
     reg [15:0] counter;
     reg [3:0] current_bcd;
     
-    // Multiplex timer (~1kHz per digit = ~250Hz refresh)
+    // Multiplex timer (~410 Hz per digit = ~100 Hz refresh)
     always @(posedge clk) begin
         counter <= counter + 1;
         if (counter == 0) begin
@@ -1564,7 +1564,7 @@ Features:
 
 ```
 Level 11: ✅ COMPLETE - Systems Engineer!
-Progress: [█████████████████████████████████] 55%
+Progress: [███████████░░░░░░░░░░░░░░] 44%
 
 XP Gained: +4000
 Skills: Peripherals, Protocols, System Integration

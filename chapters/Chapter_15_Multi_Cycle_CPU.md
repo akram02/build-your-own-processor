@@ -1163,7 +1163,7 @@ cycle-ধরে অনুসরণ করো, আর single-cycle-এর সা�
 ✅ Professional optimization! 🎉
 ```
 
-### তুমি বানিয়েছ:
+### তুমি বানিয়েছো:
 ```
 ✅ Multi-cycle RISC-V processor
 ✅ 9-state FSM controller (5 stages → 9 states)
@@ -1220,7 +1220,7 @@ Requirements:
 
 ```
 Level 15: ✅ COMPLETE - CPU Optimizer!
-Progress: [██████████████████████████████████] 75%
+Progress: [███████████████░░░░░░░░░░] 60%
 
 XP Gained: +3000
 Skills: FSM Design, Resource Sharing, Optimization

@@ -1487,7 +1487,7 @@ pipeline) এগিয়ে রাখবে।
 ✅ তোমার নিজের CPU বানিয়েছ! 🎉
 ```
 
-### তুমি বানিয়েছ:
+### তুমি বানিয়েছো:
 ```
 ✅ Complete RV32I processor
 ✅ 32-register file
@@ -1546,7 +1546,7 @@ Requirements:
 
 ```
 Level 14: ✅ COMPLETE - CPU Designer!
-Progress: [████████████████████████████████] 70%
+Progress: [██████████████░░░░░░░░░░░] 56%
 
 XP Gained: +10000 🎉🎉🎉
 Skills: CPU Design, RISC-V Implementation

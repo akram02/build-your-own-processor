@@ -410,7 +410,7 @@ file দেখতে কেমন হয়:
 
 ```spice
 * Simple inverter
-.include "sky130_fd_pr/models/sky130.lib.spice tt"
+.lib "sky130_fd_pr/models/sky130.lib.spice" tt
 
 Xm1 out in gnd gnd nfet_01v8 w=1 l=0.15
 Xm2 out in vdd vdd pfet_01v8 w=2 l=0.15
@@ -422,7 +422,7 @@ Vin in 0 pulse(0 1.8 0 10p 10p 100n 200n)
 .end
 ```
 
-লাইনগুলো একটু ভেঙে বুঝলে SPICE file আর রহস্য থাকবে না: `.include` লাইনটা
+লাইনগুলো একটু ভেঙে বুঝলে SPICE file আর রহস্য থাকবে না: `.lib` লাইনটা
 Sky130-র transistor model টেনে আনে (`tt` মানে typical corner — সে গল্প
 ২৩.৭-এ); `Xm1` আর `Xm2` দুটো transistor — একটা NMOS, একটা PMOS — যেখানে
 `w` (width) আর `l` (length) দিয়ে transistor-এর মাপ বলা; `Vdd` দিচ্ছে 1.8V
@@ -905,7 +905,7 @@ Task: Analyze sky130_fd_sc_hd__and2_1
 
 ```
 Level 23: ✅ COMPLETE - PDK Expert!
-Progress: [████████████████████████████████████] 92%
+Progress: [███████████████████████░░] 92%
 
 XP Gained: +1500
 Skills: PDK Knowledge, Process Technology

@@ -1187,7 +1187,7 @@ FPGA is special because:
 
 ```
 Level 9: ✅ COMPLETE - FPGA Architecture Expert!
-Progress: [█████████████████████████████████] 45%
+Progress: [█████████░░░░░░░░░░░░░░░░] 36%
 
 XP Gained: +2000
 Skills: FPGA Knowledge, Hardware Architecture

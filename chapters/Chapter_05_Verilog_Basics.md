@@ -1216,7 +1216,7 @@ endmodule
 
 ```
 Level 5: ✅ COMPLETE - Verilog Programmer!
-Progress: [█████████████████████████] 25%
+Progress: [█████░░░░░░░░░░░░░░░░░░░░] 20%
 
 XP Gained: +2000
 Skills: HDL, Verilog, Simulation, Testbenches

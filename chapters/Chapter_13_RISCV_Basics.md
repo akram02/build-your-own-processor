@@ -1037,7 +1037,7 @@ Use:
 
 ```
 Level 13: ✅ COMPLETE - RISC-V Expert!
-Progress: [███████████████████████████████] 65%
+Progress: [█████████████░░░░░░░░░░░░] 52%
 
 XP Gained: +4000
 Skills: RISC-V ISA, Professional Architecture

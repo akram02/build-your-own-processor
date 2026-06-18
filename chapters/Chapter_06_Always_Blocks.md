@@ -1421,7 +1421,7 @@ This uses:
 
 ```
 Level 6: ✅ COMPLETE - Sequential Verilog Expert!
-Progress: [██████████████████████████████] 30%
+Progress: [██████░░░░░░░░░░░░░░░░░░░] 24%
 
 XP Gained: +3000
 Skills: Sequential Logic, FSMs, Critical Concepts

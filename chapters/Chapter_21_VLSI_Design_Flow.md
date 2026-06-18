@@ -874,7 +874,7 @@ yosys -p "
 
 ```
 Level 21: ✅ COMPLETE - VLSI Designer!
-Progress: [████████████████████████████████] 84%
+Progress: [█████████████████████░░░░] 84%
 
 XP Gained: +2000
 Skills: VLSI Flow, Physical Design Basics

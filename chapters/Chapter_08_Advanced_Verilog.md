@@ -1345,7 +1345,7 @@ This project uses:
 
 ```
 Level 8: ✅ COMPLETE - Advanced Verilog Expert!
-Progress: [████████████████████████████████] 40%
+Progress: [████████░░░░░░░░░░░░░░░░░] 32%
 
 XP Gained: +3000
 Skills: Functions, Tasks, Generate, Professional HDL

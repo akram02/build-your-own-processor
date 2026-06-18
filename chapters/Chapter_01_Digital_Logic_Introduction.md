@@ -181,7 +181,7 @@ Example:
 3-state (Ternary): 60% reliable ❌
 4-state (Quad):    30% reliable ❌❌
 
-Your processor uses 5+ billion transistors!
+Your processor uses 1+ billion transistors!
 All binary! All reliable!
 ```
 
@@ -1061,7 +1061,7 @@ What's the carry output of: 1+1+1 in Full Adder?
 
 ```
 Chapter 1: ✅ COMPLETE
-Progress: [█████░░░░░░░░░] 20%
+Progress: [█░░░░░░░░░░░░░░░░░░░░░░░░] 4%
 
 Knowledge Gained:
 - Digital logic fundamentals
@@ -1122,7 +1122,7 @@ Questions: GitHub Discussions
 **"তুমি এখন একজন Circuit Builder!**  
 **Now build your processor!"**
 
-Progress: ██████░░░░░░░░░░ 20% Complete
+Progress: [█░░░░░░░░░░░░░░░░░░░░░░░░] 4% Complete
 
 Made with ❤️ for builders | Builders এর জন্য ভালোবাসা দিয়ে
 

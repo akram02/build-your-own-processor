@@ -1222,7 +1222,7 @@ Bonus:
 
 ```
 Level 3: ✅ COMPLETE - Arithmetic Architect!
-Progress: [███████████████░░░░] 15%
+Progress: [███░░░░░░░░░░░░░░░░░░░░░░] 12%
 
 XP Gained: +1000
 Skills: Adders, ALU, Data Path Design

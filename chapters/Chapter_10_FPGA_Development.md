@@ -352,7 +352,7 @@ module led_blink(
 );
     // Counter for timing
     // 27,000,000 counts = 1 second
-    // Use bit [24] for ~1.24 Hz blink
+    // Use bit [24]: ~0.8 Hz blink (1.24 s period)
     reg [24:0] counter;
     
     always @(posedge clk) begin
@@ -1221,7 +1221,7 @@ Solution:
 ✅ Deploy Verilog to REAL hardware! 🎉
 ```
 
-### তুমি বানিয়েছ:
+### তুমি বানিয়েছো:
 ```
 ✅ LED blink project
 ✅ Multi-LED patterns
@@ -1280,7 +1280,7 @@ Bonus:
 
 ```
 Level 10: ✅ COMPLETE - Hardware Engineer!
-Progress: [██████████████████████████████████] 50%
+Progress: [██████████░░░░░░░░░░░░░░░] 40%
 
 XP Gained: +5000 🎉
 Skills: FPGA Programming, Hardware Deployment

@@ -800,7 +800,7 @@ flowchart TD
 
 ```
 Level 24: ✅ COMPLETE - Chip Submitter!
-Progress: [█████████████████████████████████████] 96%
+Progress: [████████████████████████░] 96%
 
 XP Gained: +2000
 Skills: Submission Process, Real Fabrication

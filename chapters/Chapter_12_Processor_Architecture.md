@@ -944,7 +944,7 @@ Test with:
 
 ```
 Level 12: ✅ COMPLETE - Processor Architect!
-Progress: [██████████████████████████████] 60%
+Progress: [████████████░░░░░░░░░░░░░] 48%
 
 XP Gained: +5000 🎉
 Skills: CPU Design, ISA, Architecture

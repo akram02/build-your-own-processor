@@ -1147,7 +1147,7 @@ Report:
 
 ```
 Level 17: ✅ COMPLETE - Pipeline Master!
-Progress: [████████████████████████████████████] 85%
+Progress: [█████████████████░░░░░░░░] 68%
 
 XP Gained: +4000
 Skills: Hazard Handling, Forwarding, Real Pipeline

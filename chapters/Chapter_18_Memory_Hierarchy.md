@@ -1242,7 +1242,7 @@ Report:
 
 ```
 Level 18: ✅ COMPLETE - Memory Architect!
-Progress: [█████████████████████████████████████████] 90%
+Progress: [██████████████████░░░░░░░] 72%
 
 XP Gained: +3500
 Skills: Cache Design, Memory Systems, Performance

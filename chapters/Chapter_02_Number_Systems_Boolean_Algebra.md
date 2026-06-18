@@ -438,7 +438,7 @@ F = C′
 
 ```
 Level 2: ✅ Number System Master!
-Progress: [██████████░░░░░] 10%
+Progress: [██░░░░░░░░░░░░░░░░░░░░░░░] 8%
 
 Skills Unlocked:
 ✅ Binary/Hex conversions
