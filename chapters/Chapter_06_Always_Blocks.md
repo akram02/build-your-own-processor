@@ -26,7 +26,17 @@
 
 ---
 
+Chapter 5 এ তুমি `assign` দিয়ে wire বানিয়েছো — gate, MUX, adder, সব। কিন্তু একটা জিনিস ছিল না: **memory**। `assign y = a & b;` লেখার সাথে সাথে `y` বদলে যায়, পরের মুহূর্তে আগের value মনে রাখে না। এটাই combinational logic — শুধু "এখন" নিয়ে কথা বলে, "আগে কী ছিল" ভুলে যায়।
+
+কিন্তু একটা processor মানেই তো memory। Register এ value জমা থাকে, program counter পরের instruction এর address মনে রাখে, counter গুনতে গুনতে এগোয়। এই "মনে রাখা" ক্ষমতাটাই **sequential logic** — আর Verilog এ এটা আসে `always` block দিয়ে।
+
+এই chapter এ আমরা প্রথমবার তোমার circuit কে **time** আর **state** দেবো। Clock এর প্রতিটা tick এ কী হবে, value কীভাবে এক cycle থেকে পরের cycle এ যাবে — সব তুমি নিজে control করবে। আর হ্যাঁ, এই chapter এর প্রাণভোমরা হলো **blocking (=) vs non-blocking (<=)** — এই একটা জিনিস ভুল করলে তোমার শখের shift register এক cycle এই সব value পার করে দেবে, FSM এলোমেলো হয়ে যাবে। তাই ধীরে পড়ো, intuition টা গাঁথো। একবার বুঝে গেলে আর কখনো ভুল হবে না। চলো শুরু করি! 🚀
+
+---
+
 ## 🚀 Quick Win - 5 মিনিটে তোমার First Sequential Code!
+
+কথা অনেক হলো — এবার হাতে কলমে। নিচের ৮ লাইন লিখলেই তুমি জীবনে প্রথমবার **hardware memory** code করে ফেলবে। একটা D Flip-Flop — যেটা clock এর প্রতিটা edge এ input কে ধরে রাখে। এটাই সব register, সব counter, সব processor state এর সবচেয়ে ছোট building block।
 
 ### এখনই লেখো - D Flip-Flop in Verilog:
 
@@ -50,9 +60,19 @@ endmodule
 
 **এই 8 lines = একটা D Flip-Flop chip!**
 
+লক্ষ্য করো তিনটা নতুন জিনিস, যেগুলো এই পুরো chapter জুড়ে বারবার ফিরে আসবে:
+
+- **`output reg q`** — Chapter 5 এ output ছিল শুধু `wire`। কিন্তু always block এর ভেতরে যাকে value দেবে, তাকে `reg` declare করতে হয়। `reg` মানে "এই signal এর value আমি always block এ procedurally set করব"। (নাম শুনে ঘাবড়িও না — `reg` সবসময় physical register বানায় না, এটা শুধু Verilog এর একটা variable type।)
+- **`always @(posedge clk)`** — "clock এর rising edge এ (0 থেকে 1 এ যাওয়ার মুহূর্তে) এই block টা চালাও"। এটাই circuit কে time এর সাথে বাঁধে।
+- **`q <= d`** — এই non-blocking assignment (`<=`)। এটাই flip-flop বানানোর সঠিক নিয়ম। কেন `<=` আর `=` নয়, সেটাই এই chapter এর সবচেয়ে বড় গল্প — একটু পরেই আসছি।
+
+এখন প্রতিটা টুকরো ভেঙে ভেঙে বুঝি।
+
 ---
 
 ## ৬.১ Always Blocks - The Heart of Sequential Logic
+
+Verilog এ logic লেখার দুটো জগৎ আছে। একটা হলো `assign` — যা তুমি Chapter 5 এ চিনে ফেলেছো, continuous আর wire-জগতের। আরেকটা হলো `always` — procedural, যেখানে তুমি step-by-step বলতে পারো "এটা হলে এটা করো, ওটা হলে ওটা"। আর সবচেয়ে গুরুত্বপূর্ণ — `always` block দিয়েই hardware এ **memory** তৈরি হয়। চলো পার্থক্যটা পাশাপাশি রেখে দেখি।
 
 ### assign vs always:
 

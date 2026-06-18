@@ -9,6 +9,8 @@
 
 ## 🎯 এই Chapter এ তুমি বানাবে:
 
+গত chapter-এ তুমি logic gate (AND, OR, NOT, XOR) চিনেছো আর Boolean algebra দিয়ে expression সরল করতে শিখেছো। ওগুলো ছিল ইট। এই chapter-এ আমরা সেই ইট দিয়ে আসল **দেয়াল** গড়ব — মানে কাজের circuit, যেগুলো সত্যিকারের কম্পিউটারের ভেতরে বসে আছে।
+
 ```
 ✅ Half Adder - তোমার প্রথম adder
 ✅ Full Adder - carry সহ যোগ
@@ -21,12 +23,16 @@
 ✅ ALU - তোমার processor এর brain! 🎉
 ```
 
+দেখো তালিকাটা কোথায় গিয়ে শেষ হচ্ছে — **ALU**, মানে Arithmetic Logic Unit। ওটাই তোমার বানানো processor-এর সেই অংশ যেটা আসলে যোগ-বিয়োগ-তুলনা করে। আর মজার ব্যাপারটা হলো, ALU পুরোটাই এই chapter-এর ছোট ছোট circuit জোড়া দিয়ে তৈরি। তাই আজকের প্রতিটা circuit তোমার চূড়ান্ত লক্ষ্যের দিকে একটা করে পা।
+
 **Time Required:** 2 weeks (3-4 hours/day)  
 **Tools Needed:** CircuitVerse, Paper, Calculator
 
 ---
 
 ## 🚀 Quick Win - 5 মিনিটে তোমার প্রথম Adder!
+
+theory পড়ার আগে চলো হাতেকলমে একটা জিনিস বানিয়ে ফেলি। মাত্র দুটো gate দিয়ে তুমি এমন একটা circuit বানাবে যেটা সত্যিকারের যোগ করে — এক bit আর এক bit যোগ করে উত্তর বের করে। এটাই তোমার ভেতরে আত্মবিশ্বাস তৈরি করবে: "ওহ, processor বানানো তাহলে আমার নাগালেই!"
 
 ### এখনই বানাও - Half Adder:
 
@@ -55,13 +61,21 @@ Test:
 
 🎉 **Congratulations! তুমি একটা working adder বানিয়েছো!**
 
-**এটাই তোমার processor এর ALU এর building block!**
+খেয়াল করো কী হলো — তুমি কোনো লম্বা গণিত করোনি, শুধু দুটো gate জুড়েছো, আর circuit-টা নিজে নিজেই যোগ করে দিল। হাত-গোনা যোগের নিয়মটা (`0+0=0`, `1+1=১০`) এখন তোমার বদলে এই দুই gate করছে। এটাই hardware-এর জাদু: একবার সঠিক gate বসিয়ে দিলে, সে আর কখনো ভুল করে না, ক্লান্ত হয় না।
+
+**এটাই তোমার processor এর ALU এর building block!** এই এক bit-এর adder-কেই আমরা পরে বারবার জুড়ে বড় সংখ্যা যোগ করব। ছোট থেকে বড় — এটাই আজকের পুরো গল্প।
 
 ---
 
 ## ৩.১ Combinational Circuits কী?
 
-### Definition:
+এই chapter-এর প্রতিটা circuit-এর একটা সাধারণ বৈশিষ্ট্য আছে — এগুলো সবাই **combinational**। নামটা একটু কঠিন শোনালেও ধারণাটা ভীষণ সহজ, আর একবার বুঝে গেলে পরের সব chapter অনেক পরিষ্কার লাগবে। তাই এক মিনিট থেমে এটা ভালো করে বুঝে নাও।
+
+### Definition: মানেটা আসলে কী?
+
+Combinational circuit মানে এমন একটা circuit যার **output শুধু এই মুহূর্তের input দেখে ঠিক হয়** — আগে কী হয়েছিল, তা সে মনে রাখে না।
+
+একটা সহজ উপমা ভাবো: **calculator-এর `+` বোতাম**। তুমি `5` আর `3` দিলে সে সবসময় `8` দেবে। সকালে দাও বা রাতে, আগে কী হিসাব করেছিলে — কোনো কিছুতেই কিছু আসে যায় না। input এক থাকলে output-ও এক। ঠিক এমন behaviour-ই combinational circuit-এর।
 
 ```
 Combinational Circuit:
@@ -77,17 +91,30 @@ Examples তুমি বানাবে:
 ✅ ALU
 ```
 
-### Sequential vs Combinational:
+মনে রাখার মন্ত্র: **"স্মৃতি নেই, শুধু হিসাব আছে।"** input ঢুকল, gate-এর ভেতর দিয়ে গেল, output বেরোল — মাঝখানে কিছু জমা থাকে না।
 
-```
-Combinational (This chapter):
-Input → [Logic Gates] → Output
-        No memory!
+### Sequential vs Combinational: পার্থক্যটা কোথায়?
 
-Sequential (Next chapter):
-Input → [Logic + Memory] → Output
-        Has memory!
+এর উল্টোটা হলো **sequential circuit**, যেটা তুমি পরের chapter-এ বানাবে। ওটার ভেতরে memory থাকে, তাই সে আগের অবস্থা মনে রাখতে পারে। উপমা দিলে — combinational হলো `+` বোতাম, আর sequential হলো calculator-এর সেই running total যেটা আগের ফলাফল ধরে রাখে।
+
+দুটোর গঠন পাশাপাশি দেখলে তফাতটা চোখে পড়বে:
+
+```mermaid
+flowchart LR
+    subgraph COMB["Combinational (এই Chapter)"]
+        direction LR
+        I1["Input"] --> G1["Logic Gates<br/>(কোনো memory নেই)"] --> O1["Output"]
+    end
+    subgraph SEQ["Sequential (পরের Chapter)"]
+        direction LR
+        I2["Input"] --> G2["Logic + Memory<br/>(আগের অবস্থা মনে রাখে)"] --> O2["Output"]
+        G2 -. "feedback (past state)" .-> G2
+    end
 ```
+
+পার্থক্যটা ওই feedback-এর তীরে — sequential circuit তার নিজের output-কে আবার নিজের ভেতরে ফেরত পাঠায়, তাই সে "মনে রাখতে" পারে। combinational-এ এমন কোনো ফেরত পথ নেই, input থেকে output — সোজা একমুখী রাস্তা।
+
+> 💡 **কেন আগে combinational?** কারণ এগুলো সরল — কোনো clock নেই, কোনো timing-এর ঝামেলা নেই। আর মজার কথা, sequential circuit-ও ভেতরে এই combinational অংশগুলোই ব্যবহার করে। তাই ভিতটা এখানেই গড়া হচ্ছে।
 
 ---
 
