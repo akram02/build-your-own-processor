@@ -874,6 +874,8 @@ endmodule
 
 ### ROM with Initialization:
 
+ROM (Read-Only Memory) হলো যেখানে data আগেই ভরা থাকে আর কখনো বদলায় না — শুধু পড়া যায়। processor এ এর সবচেয়ে গুরুত্বপূর্ণ ব্যবহার: **instruction memory**, যেখানে তোমার প্রোগ্রামটা (machine code) রাখা থাকে, আর CPU শুধু সেটা পড়ে চালায়। তাহলে data টা আসবে কোথা থেকে? একটা file থেকে — আর সেটাই এই উদাহরণের আসল শিক্ষা।
+
 ```verilog
 module rom #(
     parameter WIDTH = 8,
@@ -892,6 +894,8 @@ module rom #(
     assign data = memory[addr];
 endmodule
 ```
+
+দুটো জিনিস আলাদা করে বোঝো। প্রথমত, `$readmemh("rom_data.hex", memory);` — এই system task একটা hex file পড়ে পুরো `memory` array টা ভরে দেয়। `initial begin ... end` এর ভেতরে থাকায় এটা simulation শুরুর আগে একবারই চলে — মানে চিপ "boot" হওয়ার আগেই program টা ROM এ বসানো। দ্বিতীয়ত, read টা এখানে `assign data = memory[addr];` দিয়ে — কোনো clock নেই, মানে এই ROM **asynchronous/combinational**: address দিলেই তাৎক্ষণিক data বেরোয়, edge-এর অপেক্ষা নেই। (single-port RAM এ read ছিল clocked; এখানে নয় — এই পার্থক্যটা ইচ্ছাকৃত, আর তোমার design-এর timing-এর উপর নির্ভর করে কোনটা বাছবে।)
 
 ### Memory Initialization:
 

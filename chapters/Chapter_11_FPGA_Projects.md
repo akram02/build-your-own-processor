@@ -270,7 +270,7 @@ stateDiagram-v2
     note right of START
         tx = 0 (START bit)
     end note
-    DATA --> DATA: bit_index < 7
+    DATA --> DATA: আরও bit বাকি
     DATA --> STOP: 8টা bit পাঠানো শেষ
     note right of DATA
         tx = data[bit_index]

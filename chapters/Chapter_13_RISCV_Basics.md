@@ -841,7 +841,26 @@ JALR x0, x1, 0    # goto address in x1
 
 ## ১৩.৬ Calling Convention
 
+আমরা দেখেছি `JAL` দিয়ে function ডাকা যায় আর `ra`-তে ফেরার ঠিকানা থাকে। কিন্তু একটা বড় প্রশ্ন বাকি: argument কোন register-এ পাঠাব? উত্তর কোথায় ফেরত আসবে? function নিজের কাজে register ব্যবহার করলে caller-এর data নষ্ট হবে না তো? এসব প্রশ্নের উত্তর hardware দেয় না — দেয় একটা **convention (চুক্তি)**, যা সব RISC-V program মেনে চলে। এই চুক্তি না থাকলে এক compiler-এর বানানো function অন্য compiler-এর code থেকে ডাকা যেত না।
+
+চুক্তির মূল কথা মনে রাখার জন্য: ব্যবহার করো `a0`–`a7` argument-এর জন্য, `a0`(–`a1`) উত্তরের জন্য, `ra` ফেরার ঠিকানার জন্য, আর `sp` দিয়ে stack সামলাও।
+
+```mermaid
+sequenceDiagram
+    participant Caller as Caller (main)
+    participant Stack as Stack (memory)
+    participant Callee as Callee (add_func)
+    Caller->>Stack: ra সংরক্ষণ (sp কমিয়ে sw)
+    Caller->>Callee: a0, a1 তে argument বসিয়ে JAL
+    Note over Callee: হিসাব করে ফল a0 তে রাখে
+    Callee-->>Caller: ret (ra ঠিকানায় ফেরে)
+    Stack-->>Caller: ra পুনরুদ্ধার (lw, sp বাড়িয়ে)
+    Note over Caller: ফল a0 তে প্রস্তুত
+```
+
 ### Function Call Example:
+
+নিচের ছোট উদাহরণে পুরো নাচটা দেখো: `main` দুটো সংখ্যা `add_func`-কে দেয়, function যোগ করে ফেরত পাঠায়। ধাপে ধাপে comment পড়লেই বুঝবে কখন কী হচ্ছে।
 
 ```assembly
 # Caller
