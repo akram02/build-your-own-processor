@@ -136,7 +136,7 @@ end
 
 ---
 
-## ৬.২ Blocking vs Non-Blocking - ⚠️ CRITICAL!
+## ৬.২ Blocking vs Non-blocking - ⚠️ CRITICAL!
 
 এসে গেছি chapter এর সবচেয়ে গুরুত্বপূর্ণ জায়গায়। সত্যি বলতে, এই একটা concept ঠিকঠাক বুঝলে তুমি sequential Verilog এর অর্ধেক যুদ্ধ জিতে গেলে। আর এটা ভুল বুঝলে — তোমার code simulation এ হয়তো ঠিক চলবে, কিন্তু FPGA তে গিয়ে এমন আচরণ করবে যে তুমি মাথা চুলকাতে চুলকাতে রাত কাবার করবে। তাই এই অংশটা দুবার পড়ো। ❤️
 
@@ -852,7 +852,7 @@ endmodule
 
 ### SIPO - Serial In Parallel Out:
 
-এবার serial data ঢুকিয়ে এক সাথে গোটা byte বের করি। বিট একটা একটা করে আসে, কিন্তু ৮ বিট জমে গেলে পুরো `parallel_out` একসাথে পড়া যায় — ঠিক যেমন UART receiver একটা একটা বিট ধরে শেষে আস্ত একটা byte তোমার হাতে দেয়: 
+এবার serial data ঢুকিয়ে একসাথে গোটা byte বের করি। বিট একটা একটা করে আসে, কিন্তু ৮ বিট জমে গেলে পুরো `parallel_out` একসাথে পড়া যায় — ঠিক যেমন UART receiver একটা একটা বিট ধরে শেষে আস্ত একটা byte তোমার হাতে দেয়: 
 
 ```verilog
 module shift_reg_sipo(
@@ -872,7 +872,7 @@ endmodule
 
 ### PISO - Parallel In Serial Out:
 
-উল্টো দিক — গোটা byte এক সাথে ঢুকিয়ে এক বিট করে বের করি। এটাই UART transmitter-এর কাজ: তুমি ৮ বিট data দাও, সে একটা একটা করে তার দিয়ে পাঠায়। এখানে দুটো control: `load` দিয়ে এক ঝটকায় পুরো parallel data ভরো, তারপর `shift_en` দিয়ে এক বিট করে বের করো (পেছনে 0 ঢুকিয়ে): 
+উল্টো দিক — গোটা byte একসাথে ঢুকিয়ে এক বিট করে বের করি। এটাই UART transmitter-এর কাজ: তুমি ৮ বিট data দাও, সে একটা একটা করে তার দিয়ে পাঠায়। এখানে দুটো control: `load` দিয়ে এক ঝটকায় পুরো parallel data ভরো, তারপর `shift_en` দিয়ে এক বিট করে বের করো (পেছনে 0 ঢুকিয়ে): 
 
 ```verilog
 module shift_reg_piso(
