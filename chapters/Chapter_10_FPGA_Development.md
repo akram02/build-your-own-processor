@@ -662,7 +662,7 @@ Click "Cable Settings"
 Should detect: "USB Cable"
 ```
 
-> 💡 Tar লাগানোর পর board এর power LED জ্বলছে কিনা দেখো—এটাই প্রথম "জীবনের লক্ষণ"। আর যে JTAG/USB cable এর কথা বলা হচ্ছে, সেটা হলো তোমার কম্পিউটার আর chip এর মধ্যে কথা বলার চ্যানেল। কম্পিউটার যদি cable টা না চেনে (Windows এ driver, Linux এ সেই [udev rules](#installation-steps-linux))—programming এর সময় "no cable found" বলবে। তখন প্রথমেই এই সংযোগটা যাচাই করো।
+> 💡 তার লাগানোর পর board এর power LED জ্বলছে কিনা দেখো—এটাই প্রথম "জীবনের লক্ষণ"। আর যে JTAG/USB cable এর কথা বলা হচ্ছে, সেটা হলো তোমার কম্পিউটার আর chip এর মধ্যে কথা বলার চ্যানেল। কম্পিউটার যদি cable টা না চেনে (Windows এ driver, Linux এ সেই [udev rules](#installation-steps-linux))—programming এর সময় "no cable found" বলবে। তখন প্রথমেই এই সংযোগটা যাচাই করো।
 
 ### Programming Process:
 
