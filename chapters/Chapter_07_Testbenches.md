@@ -96,6 +96,14 @@ vvp sim
 
 ### What is a Testbench?
 
+সবচেয়ে সহজ ভাষায়: testbench হলো এমন একটা Verilog module যেটার নিজের কোনো input বা output port নেই। অদ্ভুত শোনাচ্ছে? ভাবো একটা ল্যাবরেটরির কথা। তোমার বানানো circuit টা হলো টেবিলের ওপর রাখা যন্ত্র, আর testbench হলো পুরো ল্যাব — power supply, signal generator, oscilloscope, সব। ল্যাবটা নিজে কোথাও plug হয় না; বরং ভেতরে যন্ত্রটা বসিয়ে তাকে নাড়াচাড়া করে দেখে।
+
+তোমার যে module টা test করছো তাকে বলে **DUT — Device Under Test** (কখনো কখনো UUT, Unit Under Test ও বলে)। Testbench তিনটা কাজ করে:
+
+1. **Stimulus দেয়** — DUT এর input port গুলোতে নানা value পাঠায় ("এই নাও a=5, b=3, এবার দেখি কী করিস")।
+2. **Response পড়ে** — DUT এর output port থেকে result নেয়।
+3. **বিচার করে** — সেই result ঠিক কিনা যাচাই করে আর report দেয়।
+
 ```
 Testbench = Verilog code that:
 ✅ Instantiates your module (DUT)
@@ -106,6 +114,27 @@ Testbench = Verilog code that:
 
 DUT = Device Under Test (তোমার module)
 ```
+
+এখানে শেষ লাইনটা — **NO hardware synthesis** — অসম্ভব গুরুত্বপূর্ণ, আর নতুনরা প্রায়ই এখানে গুলিয়ে ফেলে। DUT এর ভেতরের code টাকে শেষে আসল চিপ বা FPGA gate এ পরিণত হতে হবে, তাই সেখানে তুমি যা লিখবে সব synthesizable হতে হবে। কিন্তু testbench কখনো hardware হয় না — এটা শুধু তোমার computer এ simulator (Icarus Verilog) এর ভেতরে চলে। তাই testbench এ তুমি `#10` দিয়ে delay দিতে পারো, `$display` দিয়ে কথা ছাপতে পারো, file খুলতে পারো — এসব আসল hardware এ অসম্ভব, কিন্তু simulation এ একদম স্বাভাবিক। Testbench হলো তোমার কল্পনার জগৎ; এখানে নিয়ম অনেক শিথিল।
+
+এই DUT আর testbench এর সম্পর্কটা ছবিতে দেখলে পরিষ্কার হবে:
+
+```mermaid
+flowchart LR
+    subgraph TB["Testbench module (no ports)"]
+        STIM["Stimulus<br/>initial / always block<br/>reg দিয়ে input drive"]
+        MON["Checker / Monitor<br/>output পড়ে যাচাই করে<br/>$display / $monitor"]
+        subgraph DUTBOX["DUT (তোমার module)"]
+            DUT["module_name dut(...)"]
+        end
+        STIM -- "reg → input ports" --> DUTBOX
+        DUTBOX -- "output ports → wire" --> MON
+    end
+    TB --> VCD["waveform.vcd<br/>(GTKWave এ দেখা)"]
+    TB --> LOG["Console log<br/>PASS / FAIL"]
+```
+
+খেয়াল করো তীরের দিকগুলো: testbench থেকে signal **ভেতরে** যাচ্ছে DUT এর input এ, আর DUT এর output **বাইরে** আসছে testbench এর checker এ। এই দিক-নির্দেশনাটাই পরের অংশে input vs output এর গল্প ঠিক করে দেবে।
 
 ### Testbench Structure:
 
@@ -141,6 +170,15 @@ module testbench;
 endmodule
 ```
 
+এই কঙ্কালটা মনে রেখো — প্রায় সব testbench এর গঠন এমনই। চারটে অংশকে আলাদা করে বোঝো:
+
+- **Signal declarations** — DUT এর সাথে কথা বলার তার। মনে রাখার সহজ নিয়ম: তুমি যা DUT কে *দিচ্ছো* তা `reg`, আর যা DUT থেকে *পাচ্ছো* তা `wire`। কেন, সেটা একটু নিচেই।
+- **DUT instantiate** — তোমার আসল module টাকে testbench এর ভেতরে বসানো। এখানে `.input_port(inputs)` মানে "DUT এর `input_port` কে আমার testbench এর `inputs` তারের সাথে জোড়া লাগাও"। এই নাম-ধরে-জোড়ার পদ্ধতিকে বলে *named port connection*, আর বড় design এ সবসময় এটাই ব্যবহার করবে — তাহলে port এর order ভুল হলেও ভয় নেই।
+- **Stimulus generation** — `initial begin ... end` ব্লকে time এর সাথে সাথে input বদলানো। এটাই সেই "signal generator"।
+- **Response checking** — output ঠিক আছে কিনা দেখা। `(optional)` লেখা আছে কারণ technically testbench output না দেখেও চলে, কিন্তু একজন ভালো engineer কখনো এই অংশ বাদ দেয় না।
+
+আর প্রথম লাইনের `` `timescale 1ns/1ps `` — এটা simulator কে বলে "এই file এ আমি যখন `#10` লিখব, সেই 10 মানে 10 নanosecond; আর সময় মাপব 1 picosecond সূক্ষ্মতায়"। প্রথম সংখ্যা হলো **time unit** (তোমার delay গুলো এই এককে), দ্বিতীয়টা **time precision** (এর চেয়ে সূক্ষ্ম সময় simulator গোল করে ফেলবে)। এটা না দিলে simulator default ধরে নেয়, আর তখন একেক file একেক রকম time scale এ চললে হিসাব গুলিয়ে যেতে পারে — তাই অভ্যাস করে প্রতিটা testbench এর শুরুতে এটা লিখবে।
+
 ### Input vs Output in Testbench:
 
 ```verilog
@@ -157,6 +195,12 @@ module testbench;
     
     my_module dut(.clk(clk), .q(q));
 ```
+
+এই reg-বনাম-wire এর নিয়মটা নতুনদের সবচেয়ে বড় হোঁচট, তাই intuition টা ঠিক করে নাও। `reg` মানে এমন একটা signal যেটার value তুমি কোনো procedural block (`initial`/`always`) থেকে *নির্ধারণ করে রাখতে* পারো — যেমন "a কে 5 বানিয়ে রাখো, পরে বদলানোর আগ পর্যন্ত 5-ই থাকবে"। তাই DUT এর input গুলো testbench এ `reg` হতে হবে, কারণ এই value গুলো তুমি নিজে set করছো এবং ধরে রাখছো।
+
+অন্যদিকে DUT এর output তুমি set করছো না — সেটা DUT এর ভেতরের logic ক্রমাগত চালাচ্ছে। তোমার কাজ শুধু সেই তারের ওপর নজর রাখা। যে তার অন্য কারো দ্বারা চালিত হয় আর তুমি শুধু পড়ো, তাকে `wire` দিয়ে ধরতে হয়। উল্টোটা করলে — যেমন output কে `reg` বানালে — simulator হয় error দেবে নয়তো অদ্ভুত আচরণ করবে, কারণ তখন দুজন (তুমি আর DUT) একই তার চালানোর চেষ্টা করছে।
+
+মনে রাখার এক লাইনের মন্ত্র: **"আমি যা বলি তা `reg`, আমি যা শুনি তা `wire`।"**
 
 ---
 

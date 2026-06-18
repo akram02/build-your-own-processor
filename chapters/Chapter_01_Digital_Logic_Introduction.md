@@ -117,30 +117,40 @@ Example: Smartphone, laptop, তোমার processor!
 
 ### Physical Implementation - কিভাবে কাজ করে?
 
+তাহলে এই 0 আর 1 জিনিসটা hardware-এর ভেতরে আসলে দেখতে কেমন? খুব সহজ — এটা শুধু **voltage-এর মাত্রা**। আমরা ঠিক করে নিই যে একটা নির্দিষ্ট মানের চেয়ে বেশি voltage মানে 1 (HIGH), আর তার চেয়ে কম মানে 0 (LOW)। মাঝখানে একটা **threshold** থাকে — একটা সীমারেখা — যার এদিকে-ওদিকে থাকলেই circuit বুঝে নেয় তুমি 0 বলছ না 1। নিচের সংকেতটা দেখো: voltage যখন লাফ দিয়ে উপরে ওঠে তখন circuit পড়ে 1, যখন নিচে নামে তখন পড়ে 0। threshold-এর দুপাশের ফাঁকা জায়গাটাই হলো **noise margin** — এটাই digital-কে এত নির্ভরযোগ্য বানায়।
+
 ```
-Real Circuit (তোমার FPGA তেও এমন):
+Voltage Levels (তোমার FPGA তেও এমন):
 
-Voltage Levels:
-5V  ──┐       ┌───┐       ┌─────  Logic 1 (HIGH)
-      │       │   │       │
-      │       │   │       │       Threshold: ~2.5V
-      │       │   │       │       (Noise margin)
-      │       │   │       │
-0V  ──┴───────┘   └───────┘─────  Logic 0 (LOW)
+5V  ──┐       ┌───────┐       ┌─────   Logic 1 (HIGH)
+      │       │       │       │
+      │       │       │       │        Threshold: ~2.5V
+- - - │ - - - │ - - - │ - - - │ - - -  (Noise margin)
+      │       │       │       │
+0V    └───────┘       └───────┘──────   Logic 0 (LOW)
+```
 
+আর এই voltage HIGH/LOW করার কাজটা করে এক ক্ষুদ্র যন্ত্র — **transistor**। transistor-কে ভাবতে পারো একটা বৈদ্যুতিক switch হিসেবে, যেটার কোনো নড়াচড়া করা হাতল নেই; বরং একটা ছোট control signal (gate) দিয়ে এটাকে on/off করা যায়। gate-এ signal দিলে switch বন্ধ হয়, current বয়ে যায়, output হয় 1; signal না দিলে current থামে, output হয় 0।
+
+```
 Transistor (Building block):
-       ┌──── Output (0 or 1)
-       │
-    ───┤
-       │ ← Gate (Control signal)
-    ───┤
-       │
-      GND
+
+         ┌──── Output (0 or 1)
+         │
+      ───┤
+         │ ←── Gate (Control signal)
+      ───┤
+         │
+        GND
 
 Gate ON  → Current flows → Output = 1
 Gate OFF → No current    → Output = 0
+```
 
-1 transistor = 1 bit storage
+এবার আসল চমকটা ধরো: একটা transistor মানে একটা switch, একটা switch মানে একটা bit। আর একটা আধুনিক CPU-তে এমন **১০০ কোটিরও বেশি** transistor থাকে, যেগুলো প্রতিটা সেকেন্ডে কোটি কোটিবার নিখুঁতভাবে on/off হয়। ভয় পেয়ো না — তুমি ১০০ কোটি transistor হাতে বসাবে না! তুমি শিখবে কীভাবে অল্প কয়েকটা switch দিয়ে একটা ছোট building block বানাতে হয়, তারপর সেই block-গুলো বারবার বসিয়ে বড় কিছু গড়তে হয়। ঠিক যেভাবে কয়েকটা ইট দিয়ে দেয়াল, আর কয়েকটা দেয়াল দিয়ে গোটা বাড়ি।
+
+```
+1 transistor   = 1 bit storage
 1 billion transistors = 1 modern CPU!
 ```
 
@@ -148,7 +158,13 @@ Gate OFF → No current    → Output = 0
 
 ## ১.২ Binary - তোমার Processor এর ভাষা
 
+প্রসেসর কথা বলে মাত্র দুটো অক্ষরের একটা ভাষায়: 0 আর 1। এই ভাষার নাম **binary**। প্রথমে শুনতে অদ্ভুত লাগে — মাত্র দুটো অক্ষর দিয়ে কীভাবে গান, ছবি, ভিডিও, পুরো একটা গেম তৈরি হয়? কিন্তু একটু ভেবে দেখো, ইংরেজি ভাষার পুরো সাহিত্যও তো মাত্র ২৬টা অক্ষর দিয়ে লেখা। অক্ষর কম হলেও সমস্যা নেই, যদি তুমি সেগুলোকে অনেক লম্বা করে সাজাতে পারো। binary-তেও তাই — অক্ষর মাত্র দুটো, কিন্তু সাজানোর সুযোগ অসীম।
+
 ### কেন Binary? কারণ Transistor!
+
+প্রশ্নটা স্বাভাবিক: কম্পিউটার দুটোর বদলে তিন বা চারটা মান ব্যবহার করলে তো আরও কম জায়গায় বেশি তথ্য রাখতে পারত! তাহলে binary কেন? উত্তরটা আমরা আগের অংশেই আবিষ্কার করেছি — **transistor একটা switch, আর switch-এর স্বাভাবিকভাবেই দুটো অবস্থা: ON বা OFF**। কোনো switch-কে নিখুঁতভাবে "অর্ধেক খোলা" রাখা যায় না।
+
+ধরো তুমি একটা switch-কে তিনটা স্তরে রাখতে চাইলে — পুরো off, অর্ধেক, পুরো on। এখন noise এসে voltage একটু নাড়িয়ে দিলেই "অর্ধেক" মানটা গুলিয়ে যাবে পাশের মানের সাথে; circuit আর নিশ্চিত হতে পারবে না কোনটা আসল। মান যত বেশি, প্রতিটা মানের মধ্যেকার ফাঁক তত ছোট, আর ভুল হওয়ার সম্ভাবনা তত বেশি। তাই দুটো মানই সবচেয়ে নিরাপদ পছন্দ — এদের মধ্যে ফাঁকটা সবচেয়ে বড়, তাই সবচেয়ে কম ভুল হয়।
 
 ```
 Physical Reality:
@@ -169,7 +185,11 @@ Your processor uses 5+ billion transistors!
 All binary! All reliable!
 ```
 
+> 💡 উপরের শতাংশগুলো ঠিক মাপা সংখ্যা নয় — এগুলো শুধু intuition দেয় যে মান যত বাড়ে, নির্ভরযোগ্যতা তত দ্রুত কমে। মূল কথাটা মনে রাখো: **কম মান = বড় noise margin = বেশি নির্ভরযোগ্যতা**, আর সেজন্যই গোটা পৃথিবীর প্রতিটা CPU binary-তে চলে।
+
 ### Bit Power - Build to Understand
+
+পড়ে binary বোঝার চেয়ে চোখে দেখে বোঝা অনেক সহজ। তাই চলো একটা ছোট circuit বানাই যেটা তোমার চোখের সামনে binary-তে গুনবে — 0 থেকে 15 পর্যন্ত — চারটা LED জ্বালিয়ে-নিভিয়ে। এটা বানাতে যে যন্ত্রাংশগুলো লাগবে তার কিছু (যেমন T-flip-flop) এখনো তুমি শেখোনি, কিন্তু চিন্তা নেই — এখন শুধু লক্ষ্য করো **কীভাবে গোনাটা হয়**, ভেতরের কারিগরি পরে Chapter 4-এ শিখবে।
 
 **Build This in CircuitVerse:**
 
@@ -182,30 +202,37 @@ Components:
 
 Result: Count 0000 → 1111 in binary!
 Watch binary in action!
+```
 
-Connection:
-Clock → TFF0 → TFF1 → TFF2 → TFF3
-         ↓      ↓      ↓      ↓
-        LED0   LED1   LED2   LED3
+**Connection (প্রতিটা flip-flop তার আগেরটার সাথে যুক্ত, আর প্রতিটার output একটা LED-তে যায়):**
+
+```mermaid
+flowchart LR
+    CLK([Clock 1 Hz]) --> TFF0[TFF0] --> TFF1[TFF1] --> TFF2[TFF2] --> TFF3[TFF3]
+    TFF0 --> LED0([LED0])
+    TFF1 --> LED1([LED1])
+    TFF2 --> LED2([LED2])
+    TFF3 --> LED3([LED3])
 ```
 
 **তোমার binary counter circuit এরকম দেখতে হবে:**
 
 ![Binary Counter Circuit](../images/chapter_01/binary_counter_circuit.png)
 
-**What You'll See:**
-```
-Count | LED3 LED2 LED1 LED0 | Decimal
-------|---------------------|--------
-0000  |  OFF OFF OFF OFF    |   0
-0001  |  OFF OFF OFF ON     |   1
-0010  |  OFF OFF ON  OFF    |   2
-0011  |  OFF OFF ON  ON     |   3
-...   |  ...                |  ...
-1111  |  ON  ON  ON  ON     |  15
-```
+প্রতিবার clock একটা "টিক" করলে সবচেয়ে ডানের LED (LED0) জ্বলে-নেভে। LED0 দু'বার নিভলে তার বাঁ পাশের LED1 একবার পাল্টায় — ঠিক যেমন গাড়ির odometer-এ একের ঘর ১০ বার ঘুরলে দশের ঘর একবার ঘোরে। নিচে দেখো প্রতিটা গোনার ধাপে LED-গুলো কেমন থাকবে:
 
-🎉 **তুমি binary counter বানিয়ে ফেলেছো! This is in your CPU!**
+**যা দেখবে (LED3 = সবচেয়ে বাঁয়ের bit, LED0 = সবচেয়ে ডানের bit):**
+
+| Count | LED3 | LED2 | LED1 | LED0 | Decimal |
+|:-----:|:----:|:----:|:----:|:----:|:-------:|
+| 0000  | OFF  | OFF  | OFF  | OFF  |   0     |
+| 0001  | OFF  | OFF  | OFF  | ON   |   1     |
+| 0010  | OFF  | OFF  | ON   | OFF  |   2     |
+| 0011  | OFF  | OFF  | ON   | ON   |   3     |
+| ...   | ...  | ...  | ...  | ...  |  ...    |
+| 1111  | ON   | ON   | ON   | ON   |  15     |
+
+🎉 **তুমি binary counter বানিয়ে ফেলেছো! ঠিক এই গোনার কৌশলই তোমার CPU-র program counter-এ কাজ করে!**
 
 ### Binary Math - Build a Calculator
 

@@ -74,59 +74,52 @@ iverilog -o and_gate and_gate.v
 
 ### Hardware Description Language (HDL):
 
-```
-Traditional Way (Circuit Drawing):
-- Draw gates manually
-- Connect wires  
-- Time consuming
-- Hard to modify
-- Can't simulate easily
+নামটা ভেঙে দেখলেই মানে বেরিয়ে আসে: **Hardware Description Language** — মানে "hardware বর্ণনা করার ভাষা"। সাধারণ programming language (যেমন C বা Python) দিয়ে তুমি কম্পিউটারকে বলো *কী কী কাজ ধাপে ধাপে করতে হবে*। কিন্তু HDL দিয়ে তুমি বর্ণনা করো *যন্ত্রটা দেখতে কেমন হবে এবং ভেতরে তার কীভাবে জোড়া থাকবে*। তুমি instruction দিচ্ছো না, তুমি একটা circuit-এর নকশা আঁকছো — শুধু ছবির বদলে শব্দ দিয়ে।
 
-HDL Way (Write Code):
-✅ Write hardware as code
-✅ Simulate before building
-✅ Easy to modify
-✅ Reusable modules
-✅ Industry standard
-✅ Scale to millions of gates!
-```
+এই পার্থক্যটা একটু থেমে বুঝে নাও, কারণ এটাই Verilog শেখার সবচেয়ে বড় চাবিকাঠি। C তে তুমি যখন লেখো `a = b + c;`, সেটা একবার ঘটে, তারপর পরের লাইনে চলে যায়। Verilog এ যখন তুমি লেখো `assign y = a & b;`, সেটা "একবার ঘটে" না — এটা একটা স্থায়ী তার-জোড়া তৈরি করে, যেখানে `a` বা `b` বদলালে `y` সঙ্গে সঙ্গে বদলায়, সবসময়। তুমি সময় বর্ণনা করছো না, তুমি **জোড়া (connection)** বর্ণনা করছো।
+
+তাহলে কেন আগের মতো শুধু circuit এঁকে গেলে চলে না? CircuitVerse-এ গেট টানা মজার, কিন্তু সেটা ছোট circuit-এর জন্য। নিচের তুলনাটা দেখলেই দুই পদ্ধতির ফারাক পরিষ্কার হবে:
+
+| বিষয় | পুরোনো পদ্ধতি (Circuit আঁকা) | HDL পদ্ধতি (Code লেখা) |
+|---|---|---|
+| কীভাবে বানাও | হাতে গেট টেনে তার জোড়ো | কোডে গেট বর্ণনা করো |
+| Simulation | আলাদা করে, কষ্টসাধ্য | বানানোর আগেই সহজে simulate |
+| পরিবর্তন | একটা গেট সরালে সব এলোমেলো | একটা লাইন বদলালেই হলো |
+| পুনর্ব্যবহার | বারবার একই জিনিস আঁকো | একবার লেখা module বারবার ব্যবহার |
+| Industry | শেখার জন্য ভালো | আসল চাকরিতে এটাই চলে |
+| Scale | কয়েকশো গেটেই হাঁপিয়ে যাবে | লাখ লাখ গেট সামলায়! |
+
+মূল কথা: ছোট জিনিস বোঝার জন্য ছবি ভালো, কিন্তু বড় জিনিস বানানোর জন্য কোড। Intel বা AMD-র engineer-রা মাউস দিয়ে কোটি কোটি transistor টানে না — তারা HDL লেখে। তুমিও এবার সেটাই শিখছো।
 
 ### Verilog vs VHDL:
 
-```
-┌──────────┬─────────────┬──────────────┐
-│ Feature  │   Verilog   │    VHDL      │
-├──────────┼─────────────┼──────────────┤
-│ Syntax   │ C-like      │ Ada-like     │
-│ Learning │ Easier      │ Harder       │
-│ Industry │ Very common │ Common       │
-│ Usage    │ US/Asia     │ Europe       │
-│ We use   │ ✅ Yes!     │ No           │
-└──────────┴─────────────┴──────────────┘
+HDL জগতে দুটো বড় ভাষা আছে — **Verilog** আর **VHDL**। দুটোই কাজ করে, কিন্তু আমরা Verilog বেছে নিচ্ছি, কারণ তুমি যদি আগে একটুও C জাতীয় ভাষা দেখে থাকো তাহলে Verilog-এর syntax তোমার কাছে চেনা চেনা লাগবে — `if`, `&`, `{}` সব এক রকম দেখায়। VHDL আরও কড়া আর ভারী ভাষা (Ada থেকে এসেছে), শিখতে বেশি সময় লাগে। কোনটা "ভালো" তা নিয়ে তর্ক চলতেই থাকে, কিন্তু নতুনদের জন্য Verilog সহজ আর জনপ্রিয় — এটাই যথেষ্ট কারণ।
+
+| Feature | Verilog | VHDL |
+|---|---|---|
+| Syntax | C-এর মতো | Ada-এর মতো |
+| শেখা | সহজ | কঠিন |
+| Industry | খুব বেশি প্রচলিত | প্রচলিত |
+| কোথায় চলে বেশি | US/Asia | Europe |
+| আমরা ব্যবহার করব | ✅ হ্যাঁ! | না |
 
 আমরা Verilog শিখবো - easier এবং more popular!
-```
 
 ### Abstraction Levels:
 
+Verilog দিয়ে একই circuit তুমি কয়েকটা "উচ্চতা" বা **abstraction level** থেকে বর্ণনা করতে পারো। উচ্চতা মানে — কতটা দূর থেকে দেখছো। অনেক ওপর থেকে দেখলে শুধু কী হচ্ছে দেখো, খুব কাছ থেকে দেখলে প্রতিটা গেট আলাদা করে দেখো। ব্যাপারটা ম্যাপের মতো: দেশের ম্যাপে শুধু শহরগুলো দেখো, পাড়ার ম্যাপে প্রতিটা গলি। একই জায়গা, ভিন্ন উচ্চতা।
+
+```mermaid
+graph TD
+    A["১. Behavioral Level<br/>সবচেয়ে উঁচু — অ্যালগরিদমের মতো<br/>y = a + b;"] --> B["২. RTL — Register Transfer Level<br/>মাঝারি — register সহ<br/>always @(posedge clk) q &lt;= d;"]
+    B --> C["৩. Gate Level<br/>নিচু — আলাদা আলাদা গেট<br/>and(y, a, b);"]
+    C --> D["৪. Switch Level<br/>সবচেয়ে নিচু — transistor পর্যায়<br/>(খুব কমই লাগে)"]
+    style B fill:#d4edda,stroke:#28a745
 ```
-1. Behavioral Level:
-   High-level, algorithm-like
-   Example: y = a + b;
 
-2. RTL (Register Transfer Level):
-   Medium-level, with registers
-   Example: always @(posedge clk) q <= d;
-
-3. Gate Level:
-   Low-level, individual gates
-   Example: and(y, a, b);
-
-4. Switch Level:
-   Transistor-level (rarely used)
+এই চারটার মধ্যে আমরা বেশিরভাগ সময় থাকব **RTL** level এ — মাঝামাঝি উচ্চতায়। কেন এই level? কারণ এটা একটা চমৎকার আপস: যথেষ্ট উঁচু যে কোড পড়তে আর লিখতে আরামদায়ক, আবার যথেষ্ট নিচু যে compiler ঠিকঠাক বুঝে নিতে পারে কোন গেট কোথায় বসাতে হবে। RTL মানে তুমি বর্ণনা করো — কোন data কোন register থেকে কোন register এ যাচ্ছে, আর মাঝপথে তার ওপর কী হিসাব হচ্ছে। আসল চিপ industry-তেও সিংহভাগ কাজ এই RTL level এই হয়।
 
 আমরা mostly RTL level use করবো!
-```
 
 ---
 
