@@ -1284,42 +1284,45 @@ endmodule
 
 ## ৭.১৩ Debugging with Waveforms
 
+Test fail করল — এবার? এখানেই waveform তোমার সবচেয়ে বড় বন্ধু। `$display` তোমাকে বলে *কী* ভুল হলো, কিন্তু waveform দেখায় *কেন* — সময়ের সাথে কোন signal কোথায় গড়বড় করল তা চোখে দেখা যায়। নতুনরা প্রায়ই code এ অনুমান করে করে ঘণ্টার পর ঘণ্টা নষ্ট করে; অভিজ্ঞরা GTKWave খুলে কয়েক মিনিটে root cause খুঁজে ফেলে। এই section টা সেই অভ্যাসটাই শেখায়।
+
 ### Common Timing Issues:
 
-```
-Issue 1: Setup/Hold Violation
-Symptom: Random failures
-Fix: Check clock timing in waveform
+waveform এ যে সমস্যাগুলো বারবার চোখে পড়বে, তাদের একটা চটজলদি reference নিচে। লক্ষণ চিনতে পারলে অর্ধেক সমাধান হয়ে যায়:
 
-Issue 2: Race Condition
-Symptom: Inconsistent results
-Fix: Use non-blocking assignments
+| সমস্যা | লক্ষণ (Symptom) | সমাধান (Fix) |
+|---|---|---|
+| **Setup/Hold Violation** | এলোমেলো, অনিয়মিত failure | waveform এ clock এর সাপেক্ষে data কখন বদলাচ্ছে দেখো |
+| **Race Condition** | প্রতিবার আলাদা ফল | non-blocking assignment (`<=`) ব্যবহার করো |
+| **Glitch** | ক্ষণিকের অবাঞ্ছিত pulse | একটা pipeline stage যোগ করো |
+| **Clock Skew** | বিভিন্ন flip-flop ভিন্ন সময়ে update হয় | synchronous design করো |
 
-Issue 3: Glitch
-Symptom: Short unwanted pulse
-Fix: Add pipeline stage
-
-Issue 4: Clock Skew
-Symptom: Different FFs update differently
-Fix: Synchronous design
-```
+এই চারটেই আসলে এক সূত্রে গাঁথা — সবগুলোই "সময়ের" সমস্যা, আর সবগুলোই waveform এ edge গুলো মন দিয়ে দেখলে ধরা পড়ে। মনে রেখো, এদের বেশিরভাগই দূর হয় ভালো synchronous design আর non-blocking assignment দিয়ে — যা তুমি Chapter 6 এ শিখেছো।
 
 ### Debugging Workflow:
 
+bug খোঁজার একটা গোছানো পদ্ধতি আছে, আর এটা অনুসরণ করলে অন্ধভাবে হাতড়ানোর চেয়ে অনেক দ্রুত মূল কারণে পৌঁছবে। মূল কৌশলটা হলো **output থেকে পেছন দিকে হাঁটা** (trace backwards): যেখানে ভুল দেখা যাচ্ছে সেখান থেকে শুরু করে, "এই ভুল value কোথা থেকে এলো?" জিজ্ঞেস করতে করতে উৎসের দিকে এগোনো।
+
+```mermaid
+flowchart TD
+    A["১. Test fail — কোথায় ভুল চিহ্নিত করো"] --> B["২. GTKWave খোলো"]
+    B --> C["৩. যে সময়ে fail হলো সেই বিন্দু খুঁজে বের করো"]
+    C --> D["৪. সম্পর্কিত signal গুলো যোগ করো"]
+    D --> E["৫. Output থেকে পেছন দিকে trace করো"]
+    E --> F["৬. কোথায় signal ভুল হলো খুঁজে বের করো"]
+    F --> G["৭. সেই module এর input গুলো যাচাই করো"]
+    G --> H{"root cause<br/>পেয়েছ?"}
+    H -- "না, input-ও ভুল" --> E
+    H -- "হ্যাঁ" --> I["✅ bug fix করো"]
 ```
-1. Identify failure in test
-2. Open GTKWave
-3. Find failing time point
-4. Add relevant signals
-5. Trace backwards from output
-6. Find where signal goes wrong
-7. Check that module's inputs
-8. Continue until root cause
-```
+
+খেয়াল করো লুপটা — যদি কোনো module এর output ভুল হয় কিন্তু তার input ঠিক, তাহলে bug ওই module এ। কিন্তু input-ও যদি ভুল হয়, তাহলে সমস্যা আরও পেছনে; তখন তুমি সেই input এর উৎসে গিয়ে আবার একই প্রশ্ন করো। এভাবে পেছন দিকে হাঁটতে হাঁটতে একসময় ঠিক সেই জায়গায় পৌঁছবে যেখানে প্রথম ভুল জন্ম নিয়েছিল — সেটাই root cause।
 
 ---
 
 ## ৭.১৪ Professional Verification Tips
+
+এই chapter এর সব কৌশল তুমি শিখলে — এবার সেগুলোকে কয়েকটা সোনার নিয়মে গুছিয়ে নাও। এই তালিকাটা শুধু এই বইয়ের জন্য না; বিশ্বের যেকোনো বড় চিপ কোম্পানির verification team এই নীতিগুলো মেনে চলে। একটা কথা গেঁথে নাও — verification এ সবচেয়ে বড় পাপ হলো শুধু "happy path" (সব ঠিকঠাক চললে কী হয়) test করা। আসল bug লুকিয়ে থাকে প্রান্তে, ব্যতিক্রমে, সীমানায়। তাই তোমার মনে সবসময় একটা ছোট্ট ধ্বংসাত্মক প্রশ্ন রাখো: "এটাকে কীভাবে ভাঙা যায়?"
 
 ### Do's:
 ```
