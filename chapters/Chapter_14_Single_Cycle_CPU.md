@@ -127,102 +127,113 @@ flowchart TD
 
 ## ১৪.১ Complete Datapath Design
 
-### Major Components:
+একটা CPU আসলে কয়েকটা চেনা যন্ত্রাংশের একটা **দল** — আর তোমার দারুণ ব্যাপার হলো,
+এই দলের প্রায় প্রত্যেককে তুমি আগের অধ্যায়ে আলাদা আলাদা বানিয়ে ফেলেছ। এখানে আমরা
+তাদের নাম ধরে ডেকে নিই, পরিচয় ঝালিয়ে নিই, তারপর তার দিয়ে জুড়ে দল বানাই।
 
+### Major Components — দলের সদস্যরা
+
+| # | Component | কাজ | উপমা |
+|---|-----------|-----|------|
+| 1 | **Program Counter (PC)** | এখন কোন instruction চলছে তার address ধরে রাখে, প্রতি cycle-এ আপডেট হয় | বইয়ের bookmark — কোন লাইনে আছ |
+| 2 | **Instruction Memory** | পুরো program জমা রাখে, শুধু পড়া যায় (read-only) | রেসিপি বই — শুধু পড়ছ, লিখছ না |
+| 3 | **Register File** | ৩২টা register; একসাথে ২টা পড়া (read) ও ১টা লেখা (write) যায় | হাতের কাছের ৩২টা scratchpad |
+| 4 | **ALU** | সব arithmetic/logic হিসাব ও তুলনা | দলের ক্যালকুলেটর |
+| 5 | **Data Memory** | load/store-এর data; পড়া ও লেখা দুটোই | বড় গুদাম — দূরে, কিন্তু অনেক জায়গা |
+| 6 | **Control Unit** | instruction পড়ে সবাইকে নির্দেশ (control signal) দেয় | দলের পরিচালক/conductor |
+| 7 | **Multiplexer (MUX)** | কোন তার থেকে data নেবে তা বেছে নেয় | রেলের কাঁটা — কোন লাইনে গাড়ি যাবে |
+| 8 | **Adder** | যোগ করে: PC+4, branch target ইত্যাদি | ছোট ডেডিকেটেড যোগকারী |
+
+এদের মধ্যে **Control Unit** আর **MUX** দুটো নতুন ভূমিকায় মনোযোগ দাবি করে। বাকি
+সবাই data নিয়ে কাজ করে; এই দুজন ঠিক করে data **কোন পথে** যাবে। Control Unit হলো
+মস্তিষ্ক (instruction পড়ে সিদ্ধান্ত নেয়), আর MUX হলো সেই সিদ্ধান্ত কার্যকর করার
+সুইচ। একই datapath দিয়ে ৪৭টা আলাদা instruction চলতে পারে শুধু এই কারণে — প্রতিটার
+জন্য Control Unit আলাদা signal দেয়, আর MUX সেই অনুযায়ী আলাদা পথ খুলে দেয়।
+
+### Datapath Diagram — এই চ্যাপ্টারের হৃদয় 🫀
+
+এই একটা ছবি যদি মাথায় গেঁথে যায়, তাহলে পুরো single-cycle CPU তোমার মুঠোয়। নিচের
+diagram-এ data কীভাবে বইয়ে যায় সেটা **শক্ত তীর** দিয়ে দেখানো, আর Control Unit কে
+কোন signal কাকে পাঠিয়ে পথ ঠিক করে দিচ্ছে সেটা **ডটেড তীর** দিয়ে দেখানো। ভাবো,
+শক্ত তীরগুলো হলো রাস্তা (data এদের উপর দিয়ে চলে), আর ডটেড তীরগুলো হলো ট্রাফিক
+সিগন্যাল (Control Unit এদের দিয়ে রাস্তা খোলে-বন্ধ করে):
+
+```mermaid
+flowchart TD
+    PC["PC"] --> IMEM["Instruction Memory"]
+    PC --> PCADD["PC + 4 / branch / jump"]
+    PCADD -. "next PC" .-> PC
+
+    IMEM --> INSTR["Instruction (32-bit)"]
+
+    INSTR -- "opcode, funct3, funct7" --> CTRL["Control Unit + ALU Control"]
+    INSTR -- "rs1, rs2, rd" --> RF["Register File"]
+    INSTR --> IMM["Immediate Generator"]
+
+    RF -- "rs1_data" --> ALU["ALU"]
+    RF -- "rs2_data" --> AMUX["ALU Source MUX"]
+    IMM -- "immediate" --> AMUX
+    AMUX -- "operand B" --> ALU
+
+    CTRL -. "alu_control" .-> ALU
+    CTRL -. "alu_src" .-> AMUX
+
+    ALU -- "alu_result (address)" --> DMEM["Data Memory"]
+    RF -- "rs2_data (store data)" --> DMEM
+    CTRL -. "mem_read / mem_write" .-> DMEM
+
+    ALU -- "alu_result" --> WBMUX["Write-Back MUX"]
+    DMEM -- "data_read" --> WBMUX
+    IMM -- "for LUI / AUIPC" --> WBMUX
+    PCADD -- "PC + 4 for JAL/JALR" --> WBMUX
+
+    CTRL -. "mem_to_reg / lui / auipc / jump" .-> WBMUX
+    CTRL -. "reg_write" .-> RF
+
+    WBMUX -- "rd_data (write data)" --> RF
 ```
-1. Program Counter (PC)
-   - Tracks current instruction
-   - Updates every cycle
 
-2. Instruction Memory
-   - Stores program
-   - Read-only
+এখন diagram-টা পড়ার নিয়ম — উপর থেকে নিচে, প্রতিটা মোড়ে নিজেকে একটা প্রশ্ন করো:
 
-3. Register File
-   - 32 registers
-   - 2 read ports, 1 write port
+1. **PC → Instruction Memory**: "এই cycle-এ কোন instruction?" PC address দেয়, IMEM
+   ৩২-bit instruction ফেরত দেয়। পাশাপাশি একটা যোগকারী `PC + 4` হিসাব করে রাখে —
+   কারণ পরের instruction সাধারণত পরের ঘরেই (`branch`/`jump` না হলে)।
+2. **Instruction → তিন দিকে ভাগ**: instruction-এর bit-গুলো একসাথে তিন জায়গায় যায় —
+   Control Unit-এ (`opcode`/`funct` পড়ে সিদ্ধান্ত), Register File-এ (`rs1`/`rs2`/`rd`
+   কোন register), আর Immediate Generator-এ (ভেতরে লুকানো ধ্রুবক বের করতে)।
+3. **ALU Source MUX**: এখানেই প্রথম বড় সিদ্ধান্ত — ALU-র দ্বিতীয় হাতে কী যাবে?
+   `rs2_data` (যেমন `add x3,x1,x2`) নাকি `immediate` (যেমন `addi x3,x1,10`)? Control
+   Unit-এর `alu_src` signal সেই সুইচ টেপে।
+4. **ALU**: আসল হিসাব — যোগ, বিয়োগ, AND, shift, তুলনা... কোনটা করবে সেটা
+   `alu_control` বলে দেয়।
+5. **Data Memory**: শুধু `load`/`store`-এর জন্য। ALU-র ফলটা এখানে **address** হিসেবে
+   কাজ করে (মনে রেখো, `lw`/`sw`-তে ALU ঠিকানা যোগ করে), আর `rs2_data` হলো `store`-এ
+   লেখার data।
+6. **Write-Back MUX**: শেষ বড় সিদ্ধান্ত — register-এ ঠিক **কোন** মানটা ফিরবে? ALU-র
+   ফল? memory থেকে পড়া data? `LUI`-এর immediate? নাকি `JAL`-এর `PC+4` (return
+   address)? Control Unit-এর কয়েকটা signal মিলে এই MUX-এর পথ ঠিক করে।
+7. **Register File-এ writeback**: `reg_write` signal `1` হলে নির্বাচিত মানটা `rd`
+   register-এ লেখা হয় — পরের instruction-এর জন্য তৈরি।
 
-4. ALU
-   - All arithmetic/logic operations
-   - Comparisons
-
-5. Data Memory
-   - Load/Store data
-   - Read & Write
-
-6. Control Unit
-   - Decodes instructions
-   - Generates control signals
-
-7. Multiplexers
-   - Select data paths
-   - Route signals
-
-8. Adders
-   - PC+4
-   - Branch target
-   - ALU
-```
-
-### Datapath Diagram:
-
-```
-                PC
-                │
-                ↓
-        ┌───────────────┐
-        │ Instruction   │
-        │   Memory      │
-        └───────┬───────┘
-                │
-        [Instruction 32-bit]
-                │
-        ┌───────┴────────────────────┐
-        │                            │
-    [opcode] [rs1][rs2][rd] [imm]  │
-        │       │   │   │     │     │
-        ↓       ↓   ↓   ↓     ↓     │
-    ┌──────┐ ┌──────────────┐      │
-    │Ctrl  │ │  Register    │      │
-    │Unit  │ │    File      │      │
-    └──┬───┘ └──┬────┬──────┘      │
-       │        │    │              │
-    [signals]  rd1  rd2             │
-       │        │    │              │
-       │        ↓    ↓     imm      │
-       │     ┌──────────┐  ↓        │
-       │     │   MUX    │←─┘        │
-       │     └────┬─────┘           │
-       │          │                 │
-       │          ↓                 │
-       │      ┌───────┐             │
-       │      │  ALU  │             │
-       │      └───┬───┘             │
-       │          │                 │
-       │      [ALU_result]          │
-       │          │                 │
-       │          ↓                 │
-       │     ┌─────────┐            │
-       │     │  Data   │            │
-       │     │ Memory  │            │
-       │     └────┬────┘            │
-       │          │                 │
-       │          ↓                 │
-       │     ┌─────────┐            │
-       │     │   MUX   │            │
-       │     └────┬────┘            │
-       │          │                 │
-       └──────────┴─────────────────┘
-                  │
-              [Write Data]
-                  │
-                  ↓
-            Register File
-```
+> 💡 **মূল অন্তর্দৃষ্টি:** datapath-টা **স্থির** (fixed) — তার আর গেট একবার বসানোর পর
+> আর নড়ে না। যা বদলায় তা হলো **MUX-এর select আর control signal**। এই দুটো বদলে গিয়েই
+> একই হার্ডওয়্যার একবার `add`, একবার `lw`, একবার `beq` চালায়। তাই control signal-গুলো
+> ঠিকভাবে বোঝা মানে পুরো CPU বোঝা — আর সেটাই আমরা ১৪.৭-এ করব।
 
 ---
 
 ## ১৪.২ Program Counter Module
+
+CPU-র গল্প শুরু হয় এখান থেকেই — **PC (Program Counter)** হলো সেই register যে ধরে
+রাখে "এই মুহূর্তে কোন instruction-এর address-এ আছি"। ভাবো একটা বই পড়ছ আর তোমার
+আঙুল কোন লাইনে আছে — PC হলো সেই আঙুল।
+
+PC-র দুটোই বৈশিষ্ট্য খেয়াল করার মতো। প্রথমত, এটা **sequential** — `always @(posedge
+clk)`, অর্থাৎ প্রতি clock edge-এ একবার করে আপডেট হয়, এর মাঝে স্থির থাকে। এই
+স্থিরতাটাই দরকারি: পুরো cycle জুড়ে instruction memory একই address দেখবে, না হলে
+fetch ঠিকঠাক হবে না। দ্বিতীয়ত, **reset** এলে PC `0`-তে ফিরে যায় — কারণ আমাদের
+program memory-র শূন্য address থেকে শুরু হয়, তাই CPU চালু হলেই সে প্রথম
+instruction-টা ধরবে।
 
 ```verilog
 module program_counter(
@@ -240,7 +251,20 @@ module program_counter(
 endmodule
 ```
 
-### PC Update Logic:
+### PC Update Logic — পরের instruction কোথায়?
+
+PC তো শুধু একটা মান **ধরে রাখে**; কিন্তু পরের cycle-এ সে কোন মান নেবে, সেটা ঠিক করে
+এই `pc_update` module। আর সেটা একটা ছোট্ট অগ্রাধিকার-সিদ্ধান্ত (priority decision):
+
+- **jump হলে** → সরাসরি `jump_target`-এ লাফ দাও (`JAL`/`JALR`)।
+- নাহলে **branch নেওয়া হলে** → `branch_target`-এ যাও (`beq`/`bne` ইত্যাদি যখন শর্ত সত্য)।
+- নাহলে → সবচেয়ে সাধারণ পথ, পরের পরপর instruction, অর্থাৎ `pc_current + 4`।
+
+কেন **+4**? কারণ প্রতিটা RV32I instruction ঠিক **৪ byte** (৩২ bit)। তাই পরের
+instruction ঠিক ৪ ঘর পরে। এটা `always @(*)` দিয়ে লেখা — মানে **combinational**,
+কোনো clock লাগে না; input বদলালেই output সঙ্গে সঙ্গে বদলায়। এই হিসাবটা চলতি cycle-এ
+হয়ে যায়, আর তার ফল পরের clock edge-এ PC গিলে নেয়। এভাবেই "এখন কোথায় আছি" আর
+"পরে কোথায় যাব" — এই দুটো কাজ পরিষ্কার দুই module-এ ভাগ হয়ে যায়।
 
 ```verilog
 module pc_update(
@@ -265,6 +289,25 @@ endmodule
 ---
 
 ## ১৪.৩ Register File - 32 Registers
+
+ALU যদি দলের ক্যালকুলেটর হয়, তাহলে **register file** হলো তার হাতের কাছের scratchpad —
+৩২টা ৩২-bit register (`x0` থেকে `x31`), যেখানে CPU তার চলতি কাজের data রাখে। memory
+দূরের গুদাম (ধীর); register file নাকের ডগায় (দ্রুত)। তাই প্রায় প্রতিটা instruction
+register নিয়েই কাজ করে।
+
+এই module-টায় তিনটা সূক্ষ্ম কিন্তু গুরুত্বপূর্ণ নকশা-সিদ্ধান্ত লুকিয়ে আছে, খেয়াল করো:
+
+- **দুটো read, একটা write — একসাথে।** single-cycle CPU-তে একটা instruction (যেমন
+  `add x3,x1,x2`) এক cycle-এই দুই operand পড়বে (`x1`, `x2`) এবং ফল লিখবে (`x3`)। তাই
+  দুটো read port (`rs1`/`rs2`) আর একটা write port (`rd`) — তিনটাই একসাথে দরকার।
+- **read আর write-এর সময় আলাদা।** write হয় `always @(posedge clk)`-এ, অর্থাৎ
+  **clock edge-এ** (sequential)। কিন্তু read হয় নিচের `assign` দিয়ে —
+  **combinational**, কোনো clock ছাড়াই সঙ্গে সঙ্গে। এতে একই cycle-এ আগে operand পড়া,
+  তারপর ALU হিসাব, তারপর edge-এ ফল লেখা — সব সুন্দর মিলে যায়।
+- **`x0` সবসময় শূন্য।** RISC-V-এর নিয়ম: `x0` register সবসময় `0`, তাতে যত খুশি লেখো
+  কিছু বদলায় না। তাই write-এ `rd_addr != 0` শর্ত (x0-তে লেখা আটকানো), আর read-এ
+  `rs?_addr == 0` হলে সরাসরি `0` ফেরত। এই ছোট্ট নিয়মটা অনেক কাজে লাগে — `add x5,x0,x6`
+  মানেই `x5 = x6` (copy), `addi x5,x0,10` মানেই `x5 = 10` (constant load)।
 
 ```verilog
 module register_file(
@@ -302,6 +345,16 @@ endmodule
 ---
 
 ## ১৪.৪ ALU - Complete Operations
+
+**ALU (Arithmetic Logic Unit)** হলো CPU-র হিসাবকারী মাংসপেশি। দুটো ৩২-bit input
+(`a`, `b`) নেয়, একটা ৪-bit `alu_control` দেখে ঠিক করে কোন কাজটা করবে, আর একটা ৩২-bit
+`result` ফেরত দেয়। তুমি এটা Chapter 3 ও 5-এ আগেই বানিয়েছ — এখানে শুধু সব
+operation একসাথে এনে CPU-র কাজে লাগাচ্ছি।
+
+দুটো জিনিস নতুন করে খেয়াল করার মতো। প্রথমত, `alu_control` একটা **selector** — পুরো
+ALU হলো একটা বড় MUX, যা `alu_control`-এর মান দেখে কোন হিসাবের ফলটা বাইরে পাঠাবে তা
+বেছে নেয়। দ্বিতীয়ত, পাশে দুটো ছোট কিন্তু দামি signal: `zero` (ফল `0` কিনা — branch-এর
+সমতা যাচাইয়ে কাজে লাগে) আর `negative` (ফলের সবচেয়ে উপরের bit, অর্থাৎ চিহ্ন)।
 
 ```verilog
 module alu(
@@ -345,9 +398,40 @@ module alu(
 endmodule
 ```
 
+এই ১০টা operation মিলে RV32I-এর সব arithmetic ও logic instruction চালাতে পারে।
+এক নজরে দেখে নাও কোন code কোন কাজ করে:
+
+| `alu_control` | Operation | কাজ | উদাহরণ instruction |
+|:---:|:---|:---|:---|
+| `0000` | ADD  | যোগ | `add`, `addi`, এবং `lw`/`sw`-এর address হিসাব |
+| `0001` | SUB  | বিয়োগ | `sub`, এবং branch-এর তুলনা |
+| `0010` | AND  | bitwise AND | `and`, `andi` |
+| `0011` | OR   | bitwise OR | `or`, `ori` |
+| `0100` | XOR  | bitwise XOR | `xor`, `xori` |
+| `0101` | SLL  | বাঁয়ে shift (logical) | `sll`, `slli` |
+| `0110` | SRL  | ডানে shift (logical, উপরে ০ ভরে) | `srl`, `srli` |
+| `0111` | SRA  | ডানে shift (arithmetic, চিহ্ন রক্ষা করে) | `sra`, `srai` |
+| `1000` | SLT  | signed তুলনা: `a < b` হলে ১ | `slt`, `slti` |
+| `1001` | SLTU | unsigned তুলনা: `a < b` হলে ১ | `sltu`, `sltiu` |
+
+> 💡 **SRL বনাম SRA — কেন দুটো?** SRL উপরের খালি জায়গায় সবসময় `0` ভরে; ঠিক আছে
+> যদি সংখ্যাটা unsigned হয়। কিন্তু signed (ঋণাত্মক) সংখ্যা ডানে shift করলে চিহ্নটা
+> রাখা দরকার — না হলে `-8 >> 1` ভুল করে বড় ধনাত্মক সংখ্যা হয়ে যাবে। তাই SRA চিহ্ন
+> bit-টা টেনে নামায় (`$signed(a) >>> ...`)। ছোট পার্থক্য, কিন্তু গণিতে বিরাট তফাত।
+
 ---
 
 ## ১৪.৫ Branch Comparator
+
+Branch instruction (`beq`, `bne`, `blt`...) হলো program-কে "যদি... তাহলে..." বলার
+উপায় — loop, `if`, সব শর্তের ভিত্তি। কিন্তু একটা প্রশ্ন: branch নেওয়া হবে কি হবে না,
+সেই সিদ্ধান্ত কে নেয়? এখানে আমরা ALU-র উপর সব ভার না দিয়ে একটা ছোট ডেডিকেটেড
+**branch comparator** বানিয়েছি, যে শুধু দুটো register-এর মান তুলনা করে এক bit answer
+দেয়: `branch_taken` (১ মানে শর্ত সত্য, লাফ দাও)।
+
+কোন তুলনা করবে সেটা ঠিক করে `funct3` — instruction-এর ভেতরের ৩-bit ক্ষেত্র, যা
+RISC-V-এর encoding-এ প্রতিটা branch-কে আলাদা করে। নিচের `case` ঠিক সেই encoding-ই
+অনুসরণ করছে:
 
 ```verilog
 module branch_comparator(
@@ -373,9 +457,41 @@ module branch_comparator(
 endmodule
 ```
 
+ছয়টা branch, তিন জোড়ায় ভাগ — প্রতি জোড়া একে অপরের উল্টো:
+
+| `funct3` | Instruction | শর্ত | মানে |
+|:---:|:---:|:---|:---|
+| `000` | BEQ  | `rs1 == rs2` | সমান হলে |
+| `001` | BNE  | `rs1 != rs2` | অসমান হলে |
+| `100` | BLT  | `rs1 < rs2` (signed) | ছোট হলে (চিহ্ন ধরে) |
+| `101` | BGE  | `rs1 >= rs2` (signed) | বড়-বা-সমান হলে (চিহ্ন ধরে) |
+| `110` | BLTU | `rs1 < rs2` (unsigned) | ছোট হলে (চিহ্ন ছাড়া) |
+| `111` | BGEU | `rs1 >= rs2` (unsigned) | বড়-বা-সমান হলে (চিহ্ন ছাড়া) |
+
+> 💡 **signed বনাম unsigned কেন আলাদা?** `BLT` ব্যবহার করে `wire signed`, তাই
+> `0xFFFFFFFF`-কে `-1` ধরে (ছোট)। কিন্তু `BLTU`-তে একই bit-pattern হলো
+> ৪,২৯৪,৯৬৭,২৯৫ (বিশাল ধনাত্মক)। তাই `-1 < 5` সত্য (BLT), অথচ unsigned-এ
+> `4294967295 < 5` মিথ্যা (BLTU)। দুটোই দরকার — তোমার ডেটা signed না unsigned, সেই
+> বুঝে compiler ঠিক branch-টা বেছে নেয়।
+
 ---
 
 ## ১৪.৬ Immediate Generator
+
+অনেক instruction-এর ভেতরে একটা **ধ্রুবক (constant)** লুকানো থাকে — `addi x5,x0,10`-এর
+সেই `10`, বা `lw x5, 8(x6)`-এর সেই offset `8`। এই ভেতরে-লেখা ধ্রুবককে বলে
+**immediate**। Immediate Generator-এর কাজ একটাই: instruction-এর bit-গুলো থেকে এই
+ধ্রুবকটা বের করে পুরো ৩২ bit-এ সাজিয়ে দেওয়া।
+
+কিন্তু একটা মোচড় আছে — RISC-V immediate-এর bit-গুলোকে instruction-এর মধ্যে **এলোমেলো
+করে** ছড়িয়ে রাখে! কেন এই পাগলামি? হার্ডওয়্যারের সুবিধার জন্য: এভাবে সাজালে প্রতিটা
+format-এ immediate-এর বেশিরভাগ bit একই তারে থাকে, ফলে decode-এর জন্য কম MUX লাগে।
+মানুষের চোখে এলোমেলো, কিন্তু সিলিকনের জন্য পরিপাটি। তাই প্রতিটা format-এর জন্য আলাদা
+নিয়মে bit-গুলো জোড়া লাগাতে হয় — `case (opcode)` ঠিক সেটাই করছে।
+
+আর একটা সাধারণ থিম খেয়াল করো: প্রায় সব immediate **sign-extended**। মানে immediate-এর
+সবচেয়ে উপরের bit (`instruction[31]`) বারবার নকল করে উপরের খালি জায়গা ভরা হয় (যেমন
+`{{20{instruction[31]}}, ...}`), যাতে ঋণাত্মক ধ্রুবক ৩২ bit-এও ঋণাত্মকই থাকে।
 
 ```verilog
 module imm_gen(
@@ -421,9 +537,39 @@ module imm_gen(
 endmodule
 ```
 
+পাঁচটা immediate format, পাঁচ রকম instruction-এর জন্য:
+
+| Format | কাদের জন্য | immediate-এ কী থাকে |
+|:---:|:---|:---|
+| **I-type** | `ADDI`/`SLTI`/`XORI`... loads, `JALR` | ছোট ১২-bit signed ধ্রুবক বা offset |
+| **S-type** | stores (`SW`/`SH`/`SB`) | store-এর address offset (bit-গুলো দুই টুকরোয় ভাগ) |
+| **B-type** | branches | branch target পর্যন্ত দূরত্ব (২-এর গুণিতক, তাই সবচেয়ে নিচে `0`) |
+| **U-type** | `LUI`, `AUIPC` | উপরের ২০ bit (নিচের ১২ bit `0`) — বড় ধ্রুবক বানাতে |
+| **J-type** | `JAL` | jump target পর্যন্ত দূরত্ব (B-এর মতোই নিচে `0`) |
+
+> 💡 **B ও J-এর নিচে `1'b0` কেন?** branch ও jump target সবসময় জোড় address-এ
+> (২ byte-এর গুণিতক), তাই সবচেয়ে নিচের bit সবসময় `0` — সেটা encode করার দরকারই নেই,
+> hardware-ই বসিয়ে দেয়। এতে একই bit-সংখ্যায় দ্বিগুণ দূর লাফানো যায়।
+
 ---
 
 ## ১৪.৭ Control Unit - Complete Decoder
+
+এতক্ষণ আমরা যন্ত্রাংশ বানিয়েছি; এবার দলের **পরিচালক** — Control Unit। মনে আছে
+datapath diagram-এর সেই ডটেড তীরগুলো? সব ওখান থেকেই বের হয়। Control Unit-এর কাজ
+একটাই, কিন্তু সবচেয়ে দামি: instruction-এর `opcode` (ও দরকারে `funct3`/`funct7`) পড়ে
+ঠিক করে দেওয়া **প্রতিটা MUX কোন পথ নেবে, কে data পড়বে/লিখবে, memory চলবে কিনা** —
+অর্থাৎ control signal-গুলোর মান।
+
+এটা পুরোটাই **combinational** — `always @(*)` দিয়ে লেখা একটা বড় lookup table। কোনো
+state নেই, clock নেই; `opcode` ঢুকলেই signal বেরিয়ে আসে। এই সরলতাই single-cycle-এর
+সৌন্দর্য।
+
+কোডটা পড়ার সময় **একটা প্যাটার্ন** খেয়াল রাখো, এটাই সব বোঝার চাবি: প্রথমে সব signal
+**default `0`** করে দেওয়া হয় (অর্থাৎ "কিছু করবে না" — কোনো write না, কোনো memory
+access না)। তারপর প্রতিটা `opcode`-এর জন্য শুধু **যেগুলো `1` হওয়া দরকার** সেগুলোই
+on করা হয়। এই "default off, তারপর প্রয়োজন মতো on" কৌশলে ভুলে কোনো signal ছেড়ে দেওয়ার
+ঝুঁকি থাকে না — যা বলোনি, তা আপনিই `0`।
 
 ```verilog
 module control_unit(
@@ -525,7 +671,58 @@ module control_unit(
 endmodule
 ```
 
+প্রতিটা signal আসলে কী বলছে, তা না বুঝলে এই module শুধু রহস্য মনে হবে। তাই সংক্ষেপে:
+
+| Signal | `1` হলে মানে |
+|:---|:---|
+| `reg_write` | ফল register-এ লেখো (writeback করো) |
+| `alu_src` | ALU-র দ্বিতীয় হাতে `rs2` নয়, `immediate` দাও |
+| `mem_read` | data memory থেকে পড়ো (load) |
+| `mem_write` | data memory-তে লেখো (store) |
+| `mem_to_reg` | register-এ ALU-র ফল নয়, memory থেকে পড়া data লেখো |
+| `branch` | এটা branch instruction (comparator-এর সাথে মিলে target ঠিক হবে) |
+| `jump` | এটা jump (`JAL`/`JALR`) |
+| `lui` / `auipc` | এই দুটো বিশেষ upper-immediate instruction-এর জন্য |
+| `alu_op` | ALU Control-কে ইঙ্গিত: এটা কোন ধরনের কাজ (নিচে ১৪.৭-এর শেষাংশে) |
+
+এবার পুরো ছবিটা এক টেবিলে — প্রতিটা instruction-শ্রেণির জন্য Control Unit ঠিক কোন
+signal-গুলো on করে। এই একটা টেবিল মুখস্থ না করে **বুঝলে** তুমি যেকোনো instruction-এর
+পথ চোখ বুজে আঁকতে পারবে (`-` মানে `0`/আলগা):
+
+| opcode | শ্রেণি | `reg_write` | `alu_src` | `mem_read` | `mem_write` | `mem_to_reg` | `branch` | `jump` | `alu_op` |
+|:---|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| `0110011` | R-type | 1 | - | - | - | - | - | - | `10` |
+| `0010011` | I-arith | 1 | 1 | - | - | - | - | - | `10` |
+| `0000011` | Load | 1 | 1 | 1 | - | 1 | - | - | `00` |
+| `0100011` | Store | - | 1 | - | 1 | - | - | - | `00` |
+| `1100011` | Branch | - | - | - | - | - | 1 | - | `01` |
+| `1101111` | JAL | 1 | - | - | - | - | - | 1 | - |
+| `1100111` | JALR | 1 | 1 | - | - | - | - | 1 | `00` |
+| `0110111` | LUI | 1 | - | - | - | - | - | - | (`lui`=1) |
+| `0010111` | AUIPC | 1 | - | - | - | - | - | - | (`auipc`=1) |
+
+> 💡 **টেবিলটা পড়ার সহজ পথ:** শুধু জিজ্ঞেস করো "এই instruction কি register-এ ফল
+> লেখে?" (→ `reg_write`), "ALU-র দ্বিতীয় হাতে immediate লাগবে?" (→ `alu_src`),
+> "memory ছোঁবে?" (→ `mem_read`/`mem_write`)। এই তিন প্রশ্নের উত্তরেই বেশিরভাগ signal
+> বেরিয়ে আসে। যেমন `lw` সব দিক দিয়েই "হ্যাঁ": register-এ লেখে, immediate লাগে (offset),
+> এবং memory পড়ে — তাই তার সারিতে এত `1`।
+
 ### ALU Control:
+
+`alu_op` মাত্র ২ bit — তাহলে সে কীভাবে ALU-র ১০টা operation আলাদা করে? উত্তর: করে
+না, একাই করে না। এখানেই একটা সুন্দর **দুই-স্তরের decode** কৌশল। Control Unit মোটা
+দাগে বলে "এটা কোন ধরনের কাজ" (`alu_op`), আর এই `alu_control` module তার সাথে
+`funct3`/`funct7`-এর সূক্ষ্ম তথ্য মিলিয়ে ঠিক ৪-bit `alu_control_out` বানায়:
+
+- `alu_op = 00` → load/store, সবসময় **ADD** (address হিসাব)।
+- `alu_op = 01` → branch, সবসময় **SUB** (দুই মান বিয়োগ করে তুলনা)।
+- `alu_op = 10` → R-type বা I-arith — এখানেই `funct3`/`funct7` দেখে আসল operation
+  (`ADD`/`SUB`/`AND`/`OR`/`SLL`...) বাছাই হয়।
+
+কেন এই দুই-স্তর? কারণ load, store, branch-এর জন্য `funct3` দেখার দরকারই নেই (ALU
+শুধু যোগ/বিয়োগ করবে), তাই Control Unit ছোট ইঙ্গিতেই কাজ সারে। শুধু arithmetic-এর
+বেলায় (`alu_op=10`) পুরো `funct3`/`funct7` দরকার — আর সেই কাজটা এই আলাদা module-এ
+সরিয়ে রাখলে Control Unit ছোট ও পরিষ্কার থাকে।
 
 ```verilog
 module alu_control(
@@ -577,9 +774,37 @@ module alu_control(
 endmodule
 ```
 
+> ⚠️ **একটা সূক্ষ্ম ফাঁদ — `is_rtype` কেন দরকার?** খেয়াল করো `funct3 == 000`-এর
+> ভেতরে `if (funct7[5] && is_rtype)` শর্ত। `add` আর `sub` দুটোরই `funct3` `000`;
+> তাদের আলাদা করে `funct7`-এর bit 5 (`add`-এ `0`, `sub`-এ `1`)। কিন্তু `addi`-তে
+> সেই একই bit আসলে **immediate-এর অংশ**, `funct7` নয় — RV32I-তে `SUBI` বলে কিছু
+> নেই! তাই `is_rtype` (শুধু R-type হলে `1`) দিয়ে নিশ্চিত করা হয় যে immediate-এর `1`
+> ভুল করে `addi`-কে `sub` বানিয়ে না ফেলে। এটাই সেই ধরনের সূক্ষ্ম বাগ যা simulation
+> ছাড়া ধরা কঠিন — আর এই কোড সেটা ধরে রেখেছে।
+
 ---
 
 ## ১৪.৮ Top-Level Processor
+
+এই মুহূর্তটার জন্যই এত আয়োজন। 🎉 এতক্ষণ আমরা টুকরো টুকরো module বানিয়েছি; এবার
+সেগুলো **তার দিয়ে জুড়ে** একটা জীবন্ত CPU বানাব। এই `riscv_single_cycle` module-টা
+আসলে datapath diagram-এরই Verilog রূপ — প্রতিটা `wire` সেই diagram-এর একটা তীর,
+প্রতিটা module-instance একটা বাক্স।
+
+কোডটা পড়ার আগে এর গঠনটা মাথায় রাখো, তাহলে হারিয়ে যাবে না:
+
+1. **Internal wires ঘোষণা** — module-গুলোর মাঝে data বইবে যেসব তারে।
+2. **Instruction fields বের করা** — `instruction`-এর bit কেটে `opcode`, `rs1`, `rd`...
+   আলাদা করা (RISC-V-এর fixed encoding বলে এটা শুধু তার কেটে নেওয়া, কোনো হিসাব নয়)।
+3. **প্রতিটা module instantiate করা** — PC, register file, ALU, control unit...
+   প্রত্যেককে তার port-এ সঠিক wire জুড়ে দেওয়া।
+4. **MUX-গুলো `assign` দিয়ে বানানো** — diagram-এর সেই গুরুত্বপূর্ণ সিদ্ধান্ত-বিন্দু,
+   যেমন ALU source MUX আর write-back MUX।
+
+বিশেষভাবে তিনটে `assign` লাইনে চোখ রাখো, এগুলোই পুরো CPU-র "জোড়": (ক) `alu_b =
+alu_src ? immediate : rs2_data` — ALU source MUX; (খ) `rd_data = lui ? ... : auipc ?
+... : ...` — writeback MUX, একটা সাজানো অগ্রাধিকার-শিকল; (গ) `jump_target` — `JALR`
+আর `JAL`-এর target আলাদাভাবে হিসাব। বাকি সব শুধু আগের module-গুলো সঠিক তারে বসানো।
 
 ```verilog
 module riscv_single_cycle(
@@ -728,11 +953,58 @@ module riscv_single_cycle(
 endmodule
 ```
 
+### Write-Back MUX-টা একটু ভেঙে দেখা
+
+ওই শেষের `rd_data` assign-টা প্রথম দেখায় গোলমেলে লাগতে পারে, কিন্তু এটা আসলে একটা
+সাজানো **অগ্রাধিকার-শিকল** (priority chain) — উপর থেকে নিচে যেটা প্রথম সত্য, সেটাই
+জেতে:
+
+| অগ্রাধিকার | শর্ত | register-এ কী লেখা হয় | কোন instruction |
+|:---:|:---|:---|:---|
+| ১ | `lui` | `immediate` | `LUI` |
+| ২ | `auipc` | `pc + immediate` | `AUIPC` |
+| ৩ | `jump` | `pc + 4` (return address) | `JAL`, `JALR` |
+| ৪ | `mem_to_reg` | `data_read` (memory থেকে) | `lw` ইত্যাদি |
+| ৫ | (default) | `alu_result` | `add`, `addi`, `slt`... |
+
+খেয়াল করো `jump` হলে register-এ যায় `pc + 4` — কারণ function থেকে ফেরার সময় CPU-কে
+জানতে হবে কোথায় ফিরবে, আর সেটা হলো `jal`-এর ঠিক পরের instruction। এটাই
+`jal ra, func`-এর সেই "ra-তে return address রাখা"।
+
+### এক instruction-এর পুরো যাত্রা — `lw x5, 8(x6)`
+
+এই module-টা সত্যিই বুঝেছ কিনা যাচাই করতে, একটা load instruction-কে উপরের তারগুলো
+ধরে ধরে অনুসরণ করো:
+
+1. `pc` → `instr_addr` → instruction memory `lw x5, 8(x6)` ফেরত দেয়।
+2. fields কাটা হয়: `opcode=0000011`, `rs1=x6`, `rd=x5`, `funct3=010` (word)।
+3. Control Unit `opcode` দেখে on করে: `reg_write`, `alu_src`, `mem_read`,
+   `mem_to_reg`; `alu_op=00`।
+4. imm_gen ৮ (offset) বের করে; register file `x6`-এর মান পড়ে (`rs1_data`)।
+5. `alu_src=1`, তাই ALU-র দ্বিতীয় হাতে যায় `immediate` (৮)। ALU Control `alu_op=00`
+   থেকে **ADD** ঠিক করে → `alu_result = x6 + 8` = **address**।
+6. সেই address `data_addr`-এ যায়; `mem_read=1`, তাই data memory পড়ে `data_read` দেয়।
+7. write-back MUX-এ `mem_to_reg=1`, তাই `data_read`-ই বেছে নেওয়া হয়; `reg_write=1`,
+   তাই পরের clock edge-এ সেটা `x5`-এ লেখা হয়। ✅
+
+এই একটাই সাত-ধাপের গল্প — শুধু control signal আর MUX-এর পথ বদলে — `add` থেকে `beq`,
+সব instruction-এই খাটে। এটাই single-cycle CPU-র পুরো জাদু।
+
 ---
 
 ## ১৪.৯ Memory System
 
-### Instruction Memory:
+CPU তো বানানো হলো, কিন্তু সে চলবে কোন program-এ, আর data রাখবে কোথায়? এর উত্তর
+দুটো memory — **instruction memory** (program রাখে) আর **data memory** (load/store-এর
+data রাখে)। এই দুটোকে আলাদা রাখা হলো **Harvard architecture** (Chapter 12-এর সেই
+ধারণা): instruction আর data-র জন্য আলাদা পথ। তাতে এক cycle-এই একসাথে instruction
+fetch ও data access করা যায় — single-cycle-এর জন্য একদম দরকারি।
+
+### Instruction Memory — শুধু পড়ার রেসিপি বই
+
+instruction memory-র কাজ সরল: address দাও, instruction নাও। এটা **read-only** — CPU
+এখানে কখনো লেখে না, শুধু পড়ে। তাই এটা পুরোপুরি combinational (`assign`), কোনো clock
+লাগে না।
 
 ```verilog
 module instruction_memory #(
@@ -753,7 +1025,21 @@ module instruction_memory #(
 endmodule
 ```
 
-### Data Memory:
+দুটো ছোট কিন্তু জরুরি কৌশল এখানে। প্রথমত, `$readmemh("program.hex", memory)` —
+এটা simulation শুরুতে একটা hex ফাইল থেকে তোমার compiled program memory-তে ভরে দেয়
+(এই program.hex-ই তুমি ১৪.১১-এর assembly থেকে বানাবে)। দ্বিতীয়ত, `memory[address[31:2]]`-এ
+নিচের ২ bit ফেলে দেওয়া হয়েছে — কেন? কারণ memory array-টা **word** (৩২-bit) দিয়ে
+সাজানো, কিন্তু address byte গোনে। প্রতিটা word ৪ byte, তাই byte-address-কে
+word-index-এ বদলাতে ৪ দিয়ে ভাগ করতে হয় — আর binary-তে ৪ দিয়ে ভাগ মানে নিচের ২ bit
+কেটে ফেলা (`>> 2`)। সহজ কথায়: byte 0,1,2,3 সবাই word 0; byte 4,5,6,7 word 1।
+
+### Data Memory — বড় কিন্তু খুঁতখুঁতে গুদাম
+
+Data memory-টা instruction memory-র চেয়ে চটপটে: এখানে পড়া **ও** লেখা দুটোই হয়, আর
+এক, দুই, বা চার byte-এ (byte/half/word) কাজ করা যায়। তাই এটা byte-array হিসেবে বানানো
+(`reg [7:0] memory`), আর `mem_size` (`funct3` থেকে আসা) ঠিক করে কত byte ছোঁবে। পড়া
+combinational (সঙ্গে সঙ্গে), কিন্তু লেখা clock edge-এ — যাতে দুর্ঘটনাবশত data নষ্ট না
+হয়।
 
 ```verilog
 module data_memory #(
@@ -822,9 +1108,37 @@ module data_memory #(
 endmodule
 ```
 
+> 💡 **`LB` বনাম `LBU` — চিহ্নের গল্প আবার।** খেয়াল করো `LB` (signed) byte পড়ার সময়
+> উপরের ২৪ bit ভরে byte-এর চিহ্ন bit দিয়ে (`{{24{memory[address][7]}}, ...}`), যাতে
+> ঋণাত্মক byte ৩২ bit-এও ঋণাত্মক থাকে। কিন্তু `LBU` (unsigned) উপরে শুধু `0` ভরে
+> (`{24'b0, ...}`)। `SW`-এর সময় little-endian সাজানো খেয়াল করো — নিচের byte নিচের
+> address-এ (`memory[address] <= write_data[7:0]`)। এই খুঁটিনাটিগুলোই একটা CPU-কে আসল
+> RISC-V নিয়মের সাথে মেলায়।
+
 ---
 
 ## ১৪.১০ Complete System with Memories
+
+এবার শেষ জোড়াটা — CPU আর দুটো memory-কে এক বাক্সে এনে একটা **চলমান কম্পিউটার**
+বানানো। এই `riscv_system` module-টা শুধু তিনটে জিনিস জোড়ে: তোমার `riscv_single_cycle`
+CPU, একটা `instruction_memory`, আর একটা `data_memory`। CPU-র "memory interface"
+port-গুলো (যেগুলো ১৪.৮-এ বাইরে বের করে রেখেছিলে) এখানে এসে memory-র সাথে হাত মেলায়।
+
+```mermaid
+flowchart LR
+    IMEM["Instruction Memory"] -- "instruction" --> CPU["riscv_single_cycle (CPU)"]
+    CPU -- "instr_addr" --> IMEM
+    CPU -- "data_addr, data_write" --> DMEM["Data Memory"]
+    CPU -- "mem_read / mem_write / mem_size" --> DMEM
+    DMEM -- "data_read" --> CPU
+    CLK(["clk / reset"]) --> CPU
+    CLK --> DMEM
+```
+
+খেয়াল করো instruction memory-তে শুধু একটা তীর CPU থেকে যায় (`instr_addr`) আর একটা
+ফিরে আসে (`instruction`) — কারণ ওটা read-only। কিন্তু data memory-তে দুদিকেই তীর,
+কারণ load-এ পড়ে আর store-এ লেখে। এই দুটো memory আলাদা থাকাতেই (Harvard) এক cycle-এ
+একসাথে fetch ও data access সম্ভব।
 
 ```verilog
 module riscv_system(
@@ -876,7 +1190,16 @@ endmodule
 
 ## ১৪.১১ Sample Programs
 
-### Program 1: Simple Addition
+CPU তৈরি — এবার তাকে কিছু করতে দাও! নিচের তিনটা ছোট program ক্রমশ কঠিন হয়েছে:
+সরল যোগ → loop → function call। প্রতিটা চালালে তোমার datapath-এর আলাদা আলাদা অংশ
+পরীক্ষা হবে, আর তুমি নিজের চোখে দেখবে নকশাটা সত্যিই কাজ করছে।
+
+### Program 1: Simple Addition — প্রথম নিঃশ্বাস
+
+সবচেয়ে সহজটা দিয়ে শুরু: দুটো সংখ্যা যোগ করে memory-তে রাখা। এটা মূলত `addi`
+(immediate দিয়ে register সাজানো), `add` (R-type যোগ), আর `sw` (store) — তিনটা
+চিনিয়ে দেয়। নিচে assembly-র পাশেই hex machine code দেওয়া আছে; এই hex-ই তোমার
+`program.hex`-এ যাবে।
 
 ```assembly
 # Add two numbers and store result

@@ -25,97 +25,98 @@
 
 ---
 
-## 🚀 Quick Understanding - Pipeline Problems!
+## 🚀 Quick Understanding - Pipeline এর আসল সমস্যা!
 
-### What Are Hazards?
+Chapter 16-এ তুমি pipeline বানিয়েছিলে — পাঁচটা instruction পাশাপাশি, প্রতি cycle-এ একটা করে শেষ হচ্ছে, কাগজে-কলমে ৫× speedup। কিন্তু একটা সমস্যা চাপা পড়ে ছিল: ওই pipeline ধরে নিয়েছিল প্রতিটা instruction তার আগেরটার থেকে সম্পূর্ণ স্বাধীন। **আসল program কখনো এমন হয় না।**
 
-```
-Hazard = Problem that prevents next instruction
-         from executing in next cycle
+একটা instruction প্রায়ই আগেরটার হিসাবের ফলাফল ব্যবহার করতে চায়। আর সেই ফলাফল তখনো pipeline-এর ভেতরে আটকে আছে — register file-এ লেখা হয়নি। এই "চাওয়া আর পাওয়ার মাঝের ফাঁক"-কেই বলে **hazard**।
 
-Three types:
-1. Structural Hazards
-   - Hardware resource conflict
-   - Two instructions need same hardware
-   - Rare in RISC-V (separate memories)
+### Hazard আসলে কী?
 
-2. Data Hazards
-   - Instruction needs result not yet ready
-   - Read-After-Write (RAW) dependency
-   - MOST COMMON!
+Hazard মানে এমন একটা পরিস্থিতি যেখানে পরের instruction-কে তার নির্ধারিত cycle-এ চালালে **ভুল উত্তর** আসবে, কারণ pipeline এখনো প্রস্তুত নয়। তিনটা ভিন্ন কারণে এটা ঘটতে পারে — আর তিনটারই আলাদা নাম আছে:
 
-3. Control Hazards
-   - Don't know next instruction yet
-   - Branches, jumps
-   - CAUSES DELAYS!
+| ধরন | কেন হয় | কতটা সাধারণ | এই বইয়ের সমাধান |
+|------|---------|-------------|------------------|
+| **Structural Hazard** | একই hardware একসাথে দুজনের লাগে (একটাই memory port, একটাই ALU) | বিরল — RISC-V-এ instruction ও data memory আলাদা | নকশাতেই এড়ানো |
+| **Data Hazard** | আগের instruction-এর result এখনো তৈরি হয়নি, পরেরটা সেটা চায় (RAW dependency) | **সবচেয়ে সাধারণ** | Forwarding, দরকারে stall |
+| **Control Hazard** | branch/jump-এর সিদ্ধান্ত হওয়ার আগেই পরের instruction fetch করে ফেলি | ঘন ঘন (কোডে অনেক branch থাকে) | Predict not-taken + flush |
 
-Must handle ALL to make pipeline work!
-```
+এই তিনটার **সবগুলো** ঠিকঠাক সামলাতে না পারলে তোমার CPU ভুল প্রোগ্রাম চালাবে। এই chapter-এর পুরো লক্ষ্য — তিনটাকেই জয় করা।
 
-### Example Data Hazard:
+### একটা চোখে-দেখা Data Hazard
+
+ভাবো এই দুই লাইন:
 
 ```assembly
 ADD x1, x2, x3    # x1 = x2 + x3
 SUB x4, x1, x5    # x4 = x1 - x5  ← needs x1!
-
-Pipeline (without fix):
-Cycle: 1   2   3   4   5   6
-ADD:   IF  ID  EX  MEM WB
-SUB:       IF  ID  EX  MEM WB
-              ↑
-           Reads x1 here (cycle 3)
-           But ADD writes x1 in cycle 5!
-           WRONG VALUE! 💥
-
-Solution: FORWARDING!
-Take value from EX/MEM register
-Forward to SUB in cycle 3
-CORRECT VALUE! ✅
 ```
 
-🎉 **This chapter = Making pipeline actually work!**
+`SUB` কাজ করতে চায় `x1` দিয়ে, কিন্তু `x1` সবেমাত্র আগের `ADD` তৈরি করছে। সমস্যাটা সময়ের। দেখো কখন কী ঘটে:
+
+```text
+                        ┌─ ADD এখানে x1 হিসাব করে (EX, cycle 3)
+                        │
+   Cycle:  1     2     3     4     5
+   ADD:   [IF]  [ID]  [EX]  [MEM] [WB] ─┐
+   SUB:         [IF]  [ID]  [EX]  ...   │
+                       ▲                │
+                       │                └─ কিন্তু x1 register file-এ
+                       │                   লেখা হয় এখানে (WB, cycle 5)!
+                       └─ SUB তার operand পড়তে চায় ID-তে (cycle 3) —
+                          x1 তখনো পুরোনো (ভুল) মান! 💥
+```
+
+`ADD`-এর ফলাফল register file-এ পৌঁছায় cycle 5-এ, কিন্তু `SUB` operand চায় cycle 3-এ। দুই cycle-এর ফাঁক। কিছু না করলে `SUB` পাবে `x1`-এর পুরোনো মান — **ভুল উত্তর**।
+
+আসল কথাটা খেয়াল করো: ALU তো `x1`-এর মান cycle 3-এর শেষেই বের করে ফেলেছে! সেটা শুধু register file-এ পৌঁছাতে দেরি হচ্ছে। তাহলে আমরা register file-এ লেখার জন্য অপেক্ষা না করে **সরাসরি ALU-র আউটপুট থেকে মানটা ছিনিয়ে নিয়ে** পরের instruction-এর হাতে দিয়ে দিই না কেন?
+
+এই "লেখার আগেই ফলাফল ধরে ফেলা"-ই হলো **Forwarding** (বা bypassing) — এই chapter-এর প্রধান অস্ত্র। ✅
+
+🎉 **এই chapter = তোমার pipeline-কে সত্যিকারের কাজ করানো!**
 
 ---
 
-## ১৭.১ Data Hazards - The Main Problem
+## ১৭.১ Data Hazards - মূল সমস্যা
 
-### Types of Data Hazards:
+Data hazard-এর জন্ম একটা মাত্র সম্পর্ক থেকে: একটা instruction এমন register পড়তে চায় যেটাতে আগের কোনো instruction এখনো লিখে শেষ করেনি। বইয়ের ভাষায় এটাকে বলে **RAW (Read-After-Write) dependency** — আগে লেখা, পরে পড়া, কিন্তু পড়াটা লেখা শেষ হওয়ার আগেই চলে আসছে।
 
-```
-1. EX Hazard (ALU-to-ALU)
-   - Previous instruction in EX/MEM
-   - Current instruction in EX
-   - Forward from EX/MEM
+মজার ব্যাপার হলো — সব RAW dependency একইরকম বিপজ্জনক নয়। কোনটা কত cycle আগের instruction-এর উপর নির্ভর করছে, আর সেই আগের instruction-টা ALU-result না memory-load — এই দুটোর উপর নির্ভর করে সমাধান বদলে যায়। তাই data hazard-কে আমরা তিন ভাগে ভাগ করি:
 
-2. MEM Hazard (ALU result, 2 instructions back)
-   - Previous instruction in MEM/WB
-   - Current instruction in EX
-   - Forward from MEM/WB  (NOT a load-use case; see case 3)
+| Hazard | আগের instruction কোথায় | কী দিয়ে সমাধান | কেন |
+|--------|--------------------------|-----------------|------|
+| **EX Hazard** (ALU→ALU) | ঠিক আগেরটা, এখন EX/MEM-এ | EX/MEM থেকে forward (`2'b10`) | ALU result তৈরি, শুধু forward করলেই হয় |
+| **MEM Hazard** (এক ধাপ পুরোনো) | দুই আগেরটা, এখন MEM/WB-এ | MEM/WB থেকে forward (`2'b01`) | result এখনো register-এ যায়নি, কিন্তু পাওয়া যায় |
+| **Load-Use Hazard** | আগেরটা একটা `LW`, এখন EX-এ | **Forward করা যায় না — STALL!** | load-এর data MEM শেষ না হলে আসেই না |
 
-3. Load-Use Hazard
-   - Previous is LOAD (data not ready)
-   - Current needs that data
-   - MUST STALL! Cannot forward!
-```
+প্রথম দুটোর মধ্যে পার্থক্যটা শুধু "কত পুরোনো"। তৃতীয়টা মৌলিকভাবে আলাদা — সেখানে data **সময়মতো অস্তিত্বেই থাকে না**, তাই forwarding অসহায়। ওটা একটু পরেই আলাদা করে দেখব।
 
-### Hazard Examples:
+### তিন রকম Data Hazard — কোডে
 
 ```assembly
-# Example 1: EX Hazard
+# Example 1: EX Hazard (ঠিক পরের instruction চায়)
 ADD x1, x2, x3    # x1 = x2 + x3
-SUB x4, x1, x5    # Uses x1 (EX hazard)
+SUB x4, x1, x5    # Uses x1 (EX hazard)  → EX/MEM থেকে forward
 AND x6, x7, x8    # No hazard
 
-# Example 2: MEM Hazard
+# Example 2: MEM Hazard (এক instruction ফাঁক, তবু পুরোনো মান লেখা হয়নি)
 ADD x1, x2, x3    # x1 = x2 + x3
 NOP               # (bubble)
-SUB x4, x1, x5    # Uses x1 (MEM hazard)
+SUB x4, x1, x5    # Uses x1 (MEM hazard)  → MEM/WB থেকে forward
 
-# Example 3: Load-Use Hazard
+# Example 3: Load-Use Hazard (forwarding-ও যথেষ্ট নয়)
 LW  x1, 0(x2)     # Load x1 from memory
 ADD x4, x1, x5    # Uses x1 IMMEDIATELY
                   # Must stall! Data not ready yet!
 ```
+
+### এক ইউনিট, দুই দায়িত্ব: detection আর forwarding
+
+নিচের `hazard_detection_unit` আসলে দুটো কাজ একসাথে করে। প্রথমত, এটা ঠিক করে **কখন থামতে হবে** (load-use stall)। দ্বিতীয়ত, এটা ঠিক করে **কোথা থেকে data ছিনিয়ে আনতে হবে** (`forward_a`, `forward_b`)।
+
+খেয়াল করার মতো একটা সূক্ষ্ম ব্যাপার: stall detect করতে এটা **ID stage**-এর source register (`id_rs1`, `id_rs2`) দেখে — কারণ load-এর data ঠিক পরের instruction যখন ID-তে, তখনই ধরে ফেলতে হয়। কিন্তু forwarding ঠিক করতে এটা **EX stage**-এর source register (`ex_rs1`, `ex_rs2`) দেখে — কারণ forward করা মান যে instruction ব্যবহার করবে, সে তখন EX-এ বসে ALU চালাচ্ছে। দুই কাজ, দুই জায়গার register — গুলিয়ে ফেলো না।
+
+আর priority-র যুক্তিটাও সহজ: একই register যদি EX/MEM আর MEM/WB **দুই** জায়গাতেই পাওয়া যায়, তাহলে EX/MEM-টা জেতে — কারণ ওটাই **সবচেয়ে সাম্প্রতিক** (নতুন) মান।
 
 ### Data Hazard Detection:
 
@@ -165,22 +166,42 @@ module hazard_detection_unit(
 endmodule
 ```
 
+### এই ইউনিট মাথার ভেতরে কী ভাবছে
+
+প্রতিটা source register (ধরো `forward_a`-এর জন্য `ex_rs1`)-এর জন্য ইউনিটটা একটা ছোট প্রশ্নের সিঁড়ি বেয়ে নামে। প্রথমে সবচেয়ে নতুন মান (EX/MEM) খোঁজে, না পেলে একটু পুরোনোটা (MEM/WB), তাও না পেলে register file-এই ভরসা রাখে। এটাই priority। আর প্রতিটা মিলে অবশ্যই দুটো শর্ত — যে stage থেকে আনছি সে আসলেই register-এ লিখবে (`reg_write`), আর সেই destination যেন `x0` না হয় (RISC-V-এ `x0` সবসময় শূন্য, ওটা forward করার মানে নেই):
+
+```mermaid
+flowchart TD
+    Start([EX-এ থাকা instruction<br/>operand চায়: ex_rs1]) --> Q1{EX/MEM-এ লিখছে?<br/>mem_reg_write &<br/>mem_rd != 0 &<br/>mem_rd == ex_rs1}
+    Q1 -- হ্যাঁ --> F10["forward = 2'b10<br/>EX/MEM থেকে নাও<br/>সবচেয়ে নতুন মান"]
+    Q1 -- না --> Q2{MEM/WB-এ লিখছে?<br/>wb_reg_write &<br/>wb_rd != 0 &<br/>wb_rd == ex_rs1}
+    Q2 -- হ্যাঁ --> F01["forward = 2'b01<br/>MEM/WB থেকে নাও<br/>একটু পুরোনো, তবু ঠিক"]
+    Q2 -- না --> F00["forward = 2'b00<br/>register file থেকে নাও<br/>কোনো hazard নেই"]
+
+    F10 --> Mux([forwarding MUX<br/>ALU input বেছে নেয়])
+    F01 --> Mux
+    F00 --> Mux
+```
+
+`forward_b` (অর্থাৎ `ex_rs2`)-এর জন্যও হুবহু একই সিঁড়ি, শুধু `ex_rs1`-এর জায়গায় `ex_rs2`। দুটো source register, দুটো স্বাধীন decision — তাই দুটো আলাদা MUX।
+
 ---
 
 ## ১৭.২ Forwarding Unit
 
-### Forwarding Logic:
+Forwarding-এর পুরো ধারণাটা এক বাক্যে: **register file-এ মান পৌঁছানোর জন্য অপেক্ষা না করে, যেখানে মানটা ইতিমধ্যে তৈরি হয়ে আছে সেখান থেকেই তুলে এনে ALU-র হাতে দিয়ে দাও।** ALU তার operand কোথা থেকে পাবে — register file থেকে, নাকি pipeline register থেকে — সেটা ঠিক করার জন্য আমরা ALU-র ঠিক সামনে একটা MUX বসাই। সেই MUX-এর select line-ই হলো আমাদের `forward_a` / `forward_b`।
 
-```
-Forward sources:
-- 2'b00: No forwarding (use register file)
-- 2'b01: Forward from MEM/WB (MEM stage)
-- 2'b10: Forward from EX/MEM (EX stage)
+### কোথা থেকে কোন মান — তিনটা উৎস
 
-Priority:
-EX hazard > MEM hazard
-(Most recent value wins!)
-```
+| Select | উৎস | কোন stage থেকে আসে | কখন বেছে নিই |
+|--------|------|---------------------|--------------|
+| `2'b00` | Register file | স্বাভাবিক পড়া | কোনো hazard নেই |
+| `2'b01` | MEM/WB register | দুই-আগের instruction-এর result | MEM hazard |
+| `2'b10` | EX/MEM register | ঠিক-আগের instruction-এর result | EX hazard |
+
+দুটো হিসাব মিলে গেলে কে জেতে? **EX/MEM (`2'b10`)** — কারণ একই register দুবার লেখা হলে সবচেয়ে নতুন (ঠিক আগেরটা) মানই সঠিক। উপরের কোডে EX/MEM-এর শর্তটা আগে আসে বলে এই priority নিজে থেকেই বজায় থাকে।
+
+> **মনে রাখার সহজ ছবি:** `2'b10`-এর `1` যেন বলছে "এক ধাপ পিছনে" (EX/MEM), আর `2'b01`-এর `1` যেন বলছে "দুই ধাপ পিছনে" (MEM/WB)। যত কাছের উৎস, তত নতুন মান, তত বেশি priority।
 
 ### Forwarding Multiplexers:
 
@@ -202,6 +223,22 @@ module forwarding_mux(
     end
 endmodule
 ```
+
+এই MUX-টাই forwarding-এর হাত-পা। তিনটা সম্ভাব্য মান তার সামনে — register file-এর মান, EX/MEM-এর মান, MEM/WB-এর মান — আর `forward_select` বলে দেয় কোনটা ALU-তে যাবে। নিচের দৃশ্যটা মাথায় রাখো: forwarding হলো একটা "shortcut তার", যা pipeline register থেকে ফলাফল তুলে নিয়ে এক-দুই stage **পিছনে** ALU-র input-এ ফেরত পাঠায় — register file ঘুরে আসার দীর্ঘ পথ বাদ দিয়ে।
+
+```text
+            ┌──────────────────── EX/MEM থেকে shortcut (2'b10) ────────────────────┐
+            │                ┌──────────── MEM/WB থেকে shortcut (2'b01) ────────┐  │
+            │                │                                                  │  │
+            ▼                ▼                                                  │  │
+   ID ──► [ID/EX] ──► [ MUX ]──► ALU ──► [EX/MEM] ──► MEM ──► [MEM/WB] ──► WB ──┘  │
+                        ▲                     │                                    │
+                        │                     └────────────────────────────────────┘
+                  register file
+                  এর মান (2'b00)
+```
+
+মান তৈরি হয় ডান দিকে (EX/MEM, MEM/WB), আর তারটা সেটা টেনে আনে বাম দিকের ALU input-এ — সময়ের দিক থেকে "ভবিষ্যতের নিজের কাছ থেকে ধার নেওয়া" নয়, বরং **আগের instruction-এর সদ্য-তৈরি ফলাফল পরের instruction-এর হাতে তুলে দেওয়া**।
 
 ### Updated EX Stage with Forwarding:
 
@@ -284,26 +321,52 @@ module ex_stage_with_forwarding(
 endmodule
 ```
 
+এই module-টা একটু খুঁটিয়ে দেখো, কারণ এখানেই forwarding আসল কাজে লাগে। দুটো `forwarding_mux` — একটা `rs1`-এর জন্য (`fwd_a`), একটা `rs2`-এর জন্য (`fwd_b`) — register file-এর মান নিতে হবে নাকি কোনো pipeline register থেকে shortcut নিতে হবে, সেটা ঠিক করে। তাদের output `forwarded_rs1` আর `forwarded_rs2`-ই হলো ALU-র **আসল** input।
+
+আরও তিনটা সূক্ষ্ম জায়গা খেয়াল করো:
+
+- **Store-এর data-ও forward হয়।** `store_data = forwarded_rs2` — অর্থাৎ `SW`-এর যে মান memory-তে লেখা হবে সেটাও forwarded রাস্তা থেকে আসে। আগের instruction-এর ফলাফল সাথে সাথে store করতে চাইলে এটা না থাকলে ভুল মান লেখা হতো।
+- **Branch comparator-ও forwarded মান পায়।** `branch_comp`-কে `forwarded_rs1`/`forwarded_rs2` দেওয়া হয়েছে, register file-এর কাঁচা মান নয় — তাই `BEQ x1, x2`-এর ঠিক আগে যদি `x1` তৈরি হয়, তাহলে branch-ও সঠিক তুলনা করে।
+- **branch penalty কেন ২।** এই comparator EX stage-এ বসে। মানে branch নেওয়া হবে কি না, সেটা জানা যায় instruction EX-এ পৌঁছানোর পর — ততক্ষণে তার পিছনে দুটো instruction (IF/ID আর ID/EX-এ) ঢুকে গেছে। ভুল পথে গেলে ওই দুটোকে ফেলে দিতে হয় → **২ cycle penalty**। (এটা একটা verified-correct নকশাগত সিদ্ধান্ত, পরের section-এ পুরোটা দেখব।)
+
 ---
 
 ## ১৭.৩ Pipeline Stalling
 
-### Stall Logic:
+Forwarding দারুণ — কিন্তু একটা ক্ষেত্রে সে সম্পূর্ণ অসহায়। ভাবো:
 
+```assembly
+LW  x1, 0(x2)     # x1 memory থেকে আসবে
+ADD x4, x1, x3    # x1 এখুনি লাগবে
 ```
-When to stall:
-- Load-Use hazard detected
-- Data not available for forwarding
 
-Stall effect:
-- Keep IF/ID register unchanged
-- Prevent PC update
-- Insert NOP (bubble) into ID/EX
+`ADD` চায় `x1`, আর `LW` এখনো `x1` **আনছে**। সমস্যাটা টের পেতে দুটো instruction-কে পাশাপাশি timeline-এ বসাও:
 
-Duration:
-- 1 cycle stall for load-use
-- Then can forward
+```text
+   Cycle:  1     2     3      4      5
+   LW:    [IF]  [ID]  [EX]  [MEM]  [WB]
+                              ▲
+                              └─ x1-এর data সবে এখানে memory থেকে আসে!
+   ADD:         [IF]  [ID]  [EX]   ...
+                              ▲
+                              └─ কিন্তু ADD তার operand চায় এখানেই (cycle 4-এর EX)
 ```
+
+দেখো — `LW`-এর data হাতে আসে cycle 4-এর **শেষে** (MEM stage শেষ হলে), অথচ `ADD`-এর EX-ও চলছে ঠিক সেই cycle 4-এই। ALU-result-এর বেলায় forwarding কাজ করত, কারণ ALU-result আগের cycle-এই তৈরি হয়ে থাকত। কিন্তু load-এর data **ভবিষ্যৎ থেকে** আসছে — যে cycle-এ দরকার, সেই cycle শেষ হওয়ার আগে অস্তিত্বেই নেই। ভবিষ্যৎ থেকে forward করা যায় না।
+
+তাহলে উপায়? **`ADD`-কে এক cycle থামিয়ে দাও।** এক cycle অপেক্ষা করলে `LW`-এর data MEM/WB-তে চলে আসবে, আর তখন স্বাভাবিক forwarding-ই সেটা `ADD`-এর কাছে পৌঁছে দেবে। এই "এক cycle থামা"-কেই বলে **stall**, আর থেমে থাকার সময় pipeline-এ যে ফাঁকা slot ঢোকে তাকে বলে **bubble** (একটা NOP-এর মতো — কিছুই করে না, শুধু জায়গা দখল করে এগোয়)।
+
+### Stall ঠিক কী করে
+
+stall মানে আসলে pipeline-এর সামনের অংশটাকে **এক cycle স্থির রাখা**:
+
+| সংকেত | stall-এর সময় | কেন |
+|--------|----------------|------|
+| `pc_write = 0` | PC একই জায়গায় আটকে থাকে | একই instruction আবার fetch হবে, এগোবে না |
+| `if_id_write = 0` | IF/ID register বদলায় না | ID-তে থাকা instruction জায়গা ধরে রাখে |
+| ID/EX-এ bubble | একটা NOP EX-এ ঢোকে | যে instruction থামল, তার বদলে ফাঁকা কাজ এগোয় |
+
+লক্ষ করো — সামনের দুটো (PC, IF/ID) **জমে যায়**, কিন্তু পিছনের অংশ (EX, MEM, WB) **চলতেই থাকে**। এটাই দরকার: `LW`-কে তো এগিয়ে MEM-এ পৌঁছাতে হবে, নাহলে data আসবে কোত্থেকে? শুধু load-use-এর জন্য **মাত্র ১ cycle** stall লাগে — তারপর forwarding বাকিটা সামলে নেয়।
 
 ### Stall Implementation:
 
@@ -330,57 +393,72 @@ endmodule
 
 ### Load-Use Example with Stall:
 
+এক cycle stall ঢুকলে পুরো ছবিটা কেমন দাঁড়ায় দেখো। `ADD` cycle 3-এ ID-তে আটকে থাকে (পুনরায় ID), একটা bubble EX-এ এগিয়ে যায়, আর `LW` ততক্ষণে MEM/WB-তে পৌঁছে গিয়ে data হাতে নিয়ে নেয় — তারপর সেই data স্বাভাবিক forwarding দিয়ে `ADD`-এর কাছে পৌঁছায়:
+
 ```assembly
 LW  x1, 0(x2)     # Load x1
 ADD x4, x1, x3    # Use x1
-
-Pipeline with stall:
-Cycle: 1   2   3   4   5   6   7
-LW:    IF  ID  EX  MEM WB
-ADD:       IF  ID  stall EX  MEM WB
-                  ↑
-              Insert bubble
-              Wait for LW to reach MEM
-              Then forward from MEM/WB
-
-Total: 1 cycle penalty
 ```
+
+```text
+   Cycle:    1     2     3       4      5      6      7
+   LW:      [IF]  [ID]  [EX]   [MEM]  [WB]
+   ADD:           [IF]  [ID]   [ID]   [EX]   [MEM]  [WB]
+                         │       ▲      ▲
+                  stall এখানে    │      │
+                  ধরা পড়ে        │      └─ LW এখন MEM/WB-এ; data
+                  (LW EX-এ,      │         forward হয়ে ADD-এর EX-এ আসে ✅
+                  ADD ID-তে)     └─ ADD এক cycle ID-তে আটকে (পুনরায় ID)
+   bubble:               · · · ►[EX]──► (NOP, কিছুই করে না)
+```
+
+**মোট খরচ: ঠিক ১ cycle penalty।** একটা মাত্র bubble, তার বেশি নয়। তুলনা করো branch-এর সাথে (পরে দেখব) — সেখানে ভুল হলে **দুটো** instruction ফেলে দিতে হয়। load-use তুলনায় সস্তা, কিন্তু `LW`-এর ঠিক পরেই তার ফলাফল ব্যবহার করলে এটা প্রতিবার লাগবেই — তাই ভালো compiler `LW` আর তার ব্যবহারকারীর মাঝে অন্য একটা স্বাধীন instruction ঢুকিয়ে দিয়ে এই bubble-টাও বাঁচানোর চেষ্টা করে।
 
 ---
 
 ## ১৭.৪ Control Hazards
 
-### Branch Problem:
+Data hazard ছিল "কোন **মান** ব্যবহার করব" নিয়ে সমস্যা। Control hazard আরও গভীর — এটা "**কোন instruction**-ই বা পরে চালাব" নিয়ে সমস্যা।
 
-```
-Branch decision made in EX stage (cycle 3)
-But we fetch next instruction in cycle 2!
+মুশকিলটা হলো: pipeline প্রতি cycle-এ একটা নতুন instruction fetch করতে চায়, থামতে চায় না। কিন্তু একটা `BEQ` (branch) দেখলে পরের instruction কোনটা — সেটা নির্ভর করে branch নেওয়া হবে কি না-র উপর, আর সেই সিদ্ধান্ত আমাদের নকশায় হয় **EX stage**-এ। ততক্ষণে pipeline তো বসে থাকেনি — সে অনুমানের উপর ভিত্তি করে পরের দুটো instruction (`branch+4`, `branch+8`) fetch করে ফেলেছে।
 
-Options:
-1. Always stall (2 cycle penalty) ❌
-2. Predict not-taken (flush if wrong) ✅
-3. Predict taken (complex)
-4. Branch prediction (advanced)
-
-We use: Predict not-taken
+```text
+   Cycle:  1     2     3
+   BEQ:   [IF]  [ID]  [EX]  ◄── branch নেওয়া হবে কি না, জানা গেল এখানে
+                 ▲     ▲
+                 │     └─ ততক্ষণে BEQ+8 ঢুকছে (cycle 3-এ IF)
+                 └─ আর BEQ+4 আগেই ঢুকে গেছে (cycle 2-এ IF)
 ```
 
-### Branch Handling:
+branch যদি শেষ পর্যন্ত নেওয়া হয়, তাহলে ওই দুটো fetch করা instruction **ভুল পথের** — তাদের ফেলে দিতে হবে। এটাই control hazard।
 
-```
-Predict Not-Taken:
-1. Always fetch PC+4
-2. If branch NOT taken: Continue
-3. If branch taken: Flush & jump
+### কোন কৌশল বেছে নেব
 
-Branch taken (2 cycle penalty):
-Cycle: 1   2   3   4   5   6
-BEQ:   IF  ID  EX  MEM WB
-+4:        IF  ID  XX  (flush)
-+8:            IF  XX  (flush)
-Target:            IF  ID  EX...
+| কৌশল | কী করে | খরচ | আমরা? |
+|------|---------|------|--------|
+| Always stall | প্রতি branch-এ অপেক্ষা করি | সবসময় ২ cycle | ❌ বেশি দামি |
+| **Predict not-taken** | ধরে নিই branch নেওয়া হবে **না**, সোজা চলতে থাকি | ভুল হলেই কেবল ২ cycle | ✅ **আমাদের পছন্দ** |
+| Predict taken | ধরে নিই নেওয়া হবে | target আগে লাগে, জটিল | পরে |
+| Branch predictor | ইতিহাস দেখে অনুমান | hardware বেশি, কিন্তু দ্রুত | §১৭.৭-এ ঝলক |
 
-XX = flushed instructions (wasted work)
+আমরা **predict not-taken** বেছে নিচ্ছি কারণ এটা সরল আর প্রায়-বিনামূল্যে: branch নেওয়া **না** হলে আমরা যা fetch করেছিলাম তা-ই তো ঠিক ছিল — কোনো খরচ নেই। শুধু যখন অনুমান ভুল হয় (branch আসলে নেওয়া হয়), তখনই দণ্ড।
+
+### Predict Not-Taken — কীভাবে কাজ করে
+
+ধাপগুলো সহজ: (১) সবসময় ধরে নাও branch নেওয়া হবে না, তাই PC+4 fetch করতে থাকো। (২) EX-এ গিয়ে যদি দেখা যায় সত্যিই নেওয়া হয়নি — দারুণ, কিছুই করার নেই। (৩) যদি দেখা যায় নেওয়া হয়েছে — তাহলে ভুল পথের দুটো instruction **flush** (মুছে bubble বানাও) করো আর target থেকে নতুন করে fetch শুরু করো।
+
+branch **taken** হলে সেই ২-cycle penalty-র ছবি:
+
+```text
+   Cycle:   1     2      3       4      5      6
+   BEQ:    [IF]  [ID]   [EX]   [MEM]  [WB]
+                         ▲
+                         └─ taken! পিছনের দুটো ভুল পথ — flush করো
+   BEQ+4:        [IF]   [ID]   [XX]                  ◄── flushed (bubble)
+   BEQ+8:               [IF]   [XX]                  ◄── flushed (bubble)
+   Target:                     [IF]   [ID]   [EX] ...  ◄── এখান থেকে সঠিক পথ
+
+   XX = মুছে ফেলা (wasted) instruction → ঠিক ২টা bubble = ২ cycle penalty
 ```
 
 ### Branch Flush Logic:
@@ -406,9 +484,37 @@ module branch_controller(
 endmodule
 ```
 
+এখানে সবচেয়ে গুরুত্বপূর্ণ সিদ্ধান্ত — **ঠিক কোন কোন register flush হবে**। branch resolve হয় EX-এ, তাই ভুল পথে শুধু তার চেয়ে **ছোট** (younger) দুটো instruction: একটা IF/ID-তে, একটা ID/EX-তে। তাই ওই দুটোই flush। কিন্তু EX/MEM-এ যেটা আছে সেটা branch-এর চেয়ে **পুরোনো** — সে ভুল পথের নয়, তাকে শেষ হতে দিতেই হবে। **EX/MEM কখনো flush করো না** — করলে একটা সঠিক instruction হারিয়ে যাবে।
+
+### পুরো নিয়ন্ত্রণ এক ছবিতে: কখন stall, কখন flush
+
+প্রতি cycle-এ pipeline-কে তিনটা প্রশ্নের একটা সিঁড়ি বেয়ে নামতে হয় — থামব? মুছব? নাকি স্বাভাবিক চলব? নিচের flowchart-এ পুরো নিয়ন্ত্রণ-যুক্তি একসাথে:
+
+```mermaid
+flowchart TD
+    Start([প্রতি cycle শুরু]) --> Branch{branch_taken?<br/>EX-এ branch নেওয়া হলো?}
+    Branch -- হ্যাঁ --> Flush["FLUSH<br/>if_id_flush = 1<br/>id_ex_flush = 1<br/>(EX/MEM অক্ষত!)"]
+    Flush --> Redirect["target থেকে নতুন fetch<br/>২ cycle penalty"]
+    Branch -- না --> LoadUse{load-use hazard?<br/>ex_mem_read &<br/>ex_rd == id_rs1/rs2 &<br/>ex_rd != 0}
+    LoadUse -- হ্যাঁ --> Stall["STALL<br/>pc_write = 0<br/>if_id_write = 0<br/>ID/EX-এ bubble<br/>১ cycle penalty"]
+    LoadUse -- না --> Forward{EX-এর operand<br/>forward লাগবে?}
+    Forward -- হ্যাঁ --> DoFwd["forward_a / forward_b<br/>= 2'b10 বা 2'b01<br/>(কোনো bubble নেই — বিনামূল্যে!)"]
+    Forward -- না --> Normal["স্বাভাবিক এগোও<br/>সব register file থেকে"]
+```
+
+খেয়াল করো এই সিঁড়িতে একটা নীরব priority আছে: branch flush সবার আগে (সবচেয়ে জরুরি, ভুল পথ মুছতেই হবে), তারপর load-use stall, আর শেষে forwarding — যেটা একদম **বিনামূল্যে** hazard সারায়, কোনো cycle নষ্ট না করেই। এজন্যই forwarding-ই আমাদের প্রথম পছন্দ, আর stall/flush শেষ ভরসা।
+
 ---
 
 ## ১৭.৫ Complete Pipeline with Hazard Handling
+
+এবার সব টুকরো একসাথে জোড়া লাগানোর পালা। নিচের `riscv_pipelined_with_hazards` হলো Chapter 16-এর সেই pipeline-ই, কিন্তু এবার তার সাথে যুক্ত হয়েছে আমাদের তিন রক্ষী: `hazard_detection_unit` (forward আর stall ঠিক করে), `stall_controller` (PC/IF-ID জমিয়ে দেয়), আর `branch_controller` (ভুল পথ flush করে)।
+
+পড়ার সময় তিনটা সংযোগ খুঁজে বের করো — এগুলোই পুরো hazard-handling-এর শিরা-উপশিরা:
+
+- **forwarding-এর shortcut তার:** EX stage-কে `mem_alu_result` (EX/MEM থেকে) আর `wb_data` (MEM/WB থেকে) দেওয়া হয়েছে — এ দুটোই forwarding MUX-এর কাঁচামাল।
+- **stall-এর জমাট হাত:** `stall` সংকেত একসাথে IF stage, IF/ID register জমিয়ে দেয়, আর ID/EX register-এ bubble ঢোকায় (`id_ex_flush || stall`)।
+- **branch-এর মুছে ফেলা হাত:** `ex_branch_taken` থেকে `if_id_flush` আর `id_ex_flush` তৈরি হয়ে ভুল পথের দুটো instruction মুছে দেয়।
 
 ```verilog
 module riscv_pipelined_with_hazards(
@@ -726,53 +832,57 @@ endmodule
 
 ## ১৭.৬ Performance Analysis
 
-### Real Pipeline Performance:
+Chapter 16-এর "৫× speedup" ছিল স্বপ্ন — যেখানে কোনো hazard নেই। বাস্তবে hazard আছে, আর প্রতিটা stall বা flush কয়েকটা cycle "ভাড়া" নেয়। তাই বাস্তব হিসাবের ভাষা CPI — **Cycles Per Instruction**, গড়ে প্রতি instruction-এ কত cycle লাগছে। আদর্শ pipeline-এ এটা 1.0; আমাদের hazard-গুলো এটাকে একটু একটু করে বাড়ায়।
 
+### CPI কোথা থেকে বাড়ে
+
+| উৎস | CPI-তে যোগ | কেন |
+|------|------------|------|
+| Base (ideal) | 1.0 | প্রতি cycle একটা instruction শেষ |
+| Data hazards | +0.1–0.3 | forwarding বেশিরভাগ সারায়, তাই কম |
+| Load-use stalls | +0.2–0.5 | প্রতিটায় ১ bubble |
+| Branch mispredictions | +0.5–1.0 | প্রতিটায় ২ bubble — সবচেয়ে দামি |
+| **Typical মোট** | **CPI = 1.3–1.5** | বাস্তব pipeline-এর স্বাভাবিক মান |
+
+খেয়াল করো branch misprediction-ই সবচেয়ে বেশি যোগ করে — কারণ ২ cycle penalty load-use-এর ১ cycle-এর দ্বিগুণ, আর কোডে branch থাকে প্রচুর। এজন্যই §১৭.৭-এর branch prediction এত গুরুত্বপূর্ণ।
+
+### ১০০ instruction-এর হিসাব
+
+```text
+   Cycles ≈ 5 (pipeline fill) + 99 (বাকি instruction) + stalls
+          ≈ 104 + 30
+          ≈ 134 cycles
+
+   Single-cycle হলে লাগত: 100 instruction × 5 = 500 cycle-সমতুল্য কাজ
+   Speedup = 500 / 134 ≈ 3.7×
 ```
-CPI calculation:
-Base: 1.0 (ideal)
-Data hazards: +0.1-0.3 (forwarding reduces!)
-Load-use stalls: +0.2-0.5
-Branch mispredictions: +0.5-1.0
 
-Typical: CPI = 1.3-1.5
+প্রথম instruction-টা pipeline ভরাতে ৫ cycle নেয়, তারপর বাকি ৯৯টা আদর্শভাবে এক cycle করে — সাথে hazard-এর জন্য ~৩০ cycle stall যোগ হয়। ফল: ১০০ instruction-এ ~১৩৪ cycle। স্বপ্নের ৫× না হলেও এটা সত্যিকারের **3.7×** — আর এটাই আসল CPU-তে পাওয়া যায়। বাস্তব speedup সাধারণত **3.5–4.0×**।
 
-100 instructions:
-Cycles: 5 + 99 + stalls
-≈ 104 + 30 = 134 cycles
+> **মনে রেখো:** ৫× ছিল কাগজের সংখ্যা; 3.7× তোমার হাতে গড়া সত্যিকারের, কাজ-করা সংখ্যা। কম শোনালেও এটাই অনেক বেশি দামি।
 
-Still 3.7× faster than non-pipelined!
-(500 / 134 = 3.7)
+### Optimization Strategies — আরও দ্রুত করার পথ
 
-Real speedup: 3.5-4.0×
-```
+| কৌশল | কী করে | কে করে |
+|------|---------|--------|
+| **Better forwarding** | আরও বেশি stage থেকে forward, stall কমাও | hardware |
+| **Branch prediction** | taken/not-taken অনুমান + branch target buffer, flush কমাও | hardware |
+| **Code scheduling** | স্বাধীন instruction এগিয়ে এনে hazard-এর মাঝে ফাঁক ভরাও | compiler |
+| **Hardware scheduling** | out-of-order, superscalar (একসাথে একাধিক issue) | hardware (advanced) |
 
-### Optimization Strategies:
-
-```
-1. Better Forwarding
-   - Forward from more stages
-   - Reduce stalls
-
-2. Branch Prediction
-   - Predict taken/not-taken
-   - Branch target buffer
-   - Reduce flush penalty
-
-3. Code Scheduling
-   - Compiler reorders instructions
-   - Fill delay slots
-   - Minimize hazards
-
-4. Hardware Scheduling
-   - Out-of-order execution
-   - Superscalar (multiple issue)
-   - Advanced topics!
-```
+প্রথম দুটো এই chapter-এই ছুঁয়েছি। তৃতীয়টা compiler-এর কাজ — সে `LW`-এর ঠিক পরে তার ব্যবহারকারী না বসিয়ে মাঝে অন্য কাজ ঢুকিয়ে bubble বাঁচায়। চতুর্থটা — out-of-order আর superscalar — হলো আসল আধুনিক CPU-র জাদু, যেগুলো Chapter 20-এ দেখবে।
 
 ---
 
 ## ১৭.৭ Advanced: Branch Prediction
+
+আমাদের "predict not-taken" কৌশলটা সরল, কিন্তু একগুঁয়ে — সে প্রতিবার একই অনুমান করে। অথচ আসল কোডে loop থাকে, আর loop-এর branch প্রায় **সবসময়** taken হয় (loop-এ ফিরে যাওয়ার জন্য)! এমন branch-এ "not-taken" অনুমান প্রতিবার ভুল হবে → প্রতি iteration-এ ২ cycle নষ্ট।
+
+বুদ্ধিমান উপায়: **ইতিহাস মনে রাখো।** কোনো branch গতবার taken হলে এবারও সম্ভবত হবে — এই সরল অনুমানই বেশিরভাগ সময় কাজ করে।
+
+সবচেয়ে ছোট predictor হলো **1-bit predictor**: প্রতিটা branch-এর জন্য মাত্র এক bit রাখো — "গতবার taken ছিল কি?" পরের বার সেই bit-ই হলো অনুমান। নিচের module ঠিক এটাই করে: PC-র কিছু bit দিয়ে একটা ছোট table-এ index করে (`pc[7:2]`), সেই entry-র মান পড়ে অনুমান দেয়, আর branch resolve হলে আসল ফল দিয়ে entry-টা update করে।
+
+> **1-bit-এর দুর্বলতা:** loop শেষ হওয়ার সময় branch একবার উল্টো যায় — তখন 1-bit predictor **দুবার** ভুল করে (একবার বেরোনোর সময়, একবার পরের বার ঢোকার সময়)। এটা সারাতেই আসে **2-bit predictor** (saturating counter), যা একবার উল্টো ফল দেখলেই মত বদলায় না — কিন্তু সেটা তোমার final project-এর জন্য তোলা রইল।
 
 ### Simple 1-bit Predictor:
 
@@ -816,6 +926,10 @@ endmodule
 ---
 
 ## ১৭.৮ Testing & Debugging
+
+hazard-handling-এর সবচেয়ে ভয়ের ব্যাপার — ভুল হলে CPU **crash করে না**, শুধু চুপচাপ ভুল উত্তর দেয়। তাই শুধু "চলে কি না" দেখলে হবে না, **সঠিক উত্তর দেয় কি না** দেখতে হবে। ভালো testbench-এ এমন program চালাও যেখানে তিন রকম hazard-ই ঘটে — পরপর-নির্ভরশীল ALU instruction (forwarding পরীক্ষা), `LW`-এর ঠিক পরে তার ব্যবহার (load-use stall পরীক্ষা), আর taken branch (flush পরীক্ষা)।
+
+নিচের testbench DUT-এর সাথে আলাদা instruction ও data memory জুড়ে দেয়, program চালায়, আর শেষে performance counter পড়ে CPI ও stall rate ছাপে। ডিবাগ করার সময় `.vcd` ফাইলটা GTKWave-এ খুলে `forward_a`/`forward_b` ঠিক সময়ে `2'b10`/`2'b01` হচ্ছে কি না, আর `stall` সংকেত load-use-এর সময় উঠছে কি না — এই দুটো সবার আগে দেখো।
 
 ### Comprehensive Testbench:
 
@@ -897,6 +1011,8 @@ endmodule
 ---
 
 ## ১৭.৯ Your 2-Week Build Plan
+
+পরিকল্পনাটা সাজানো হয়েছে সহজ থেকে কঠিনের দিকে, আর প্রতি ধাপ আগেরটার উপর দাঁড়িয়ে। প্রথম সপ্তাহে data hazard — আগে detection, তারপর forwarding (বিনামূল্যের সমাধান), শেষে stall (যেখানে forwarding হার মানে)। দ্বিতীয় সপ্তাহে control hazard ও সব একসাথে জোড়া, তারপর মাপজোক আর optimization। প্রতিটা ধাপ আলাদা করে test করো — সব একসাথে জুড়ে তারপর ভুল খুঁজলে মাথা খারাপ হয়ে যাবে।
 
 ### Week 1: Hazard Detection
 

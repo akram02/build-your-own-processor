@@ -23,20 +23,52 @@
 **Time Required:** 2 weeks (6-8 hours/day)  
 **Prerequisites:** Chapters 14-15 complete
 
+গত দুই chapter-এ তুমি দুই ধরনের CPU বানিয়েছো। Chapter 14-এর single-cycle
+CPU প্রতিটা instruction এক ক্লকেই শেষ করে — কিন্তু সেই ক্লকটাকে এত লম্বা হতে
+হয় যে সবচেয়ে ধীর instruction-টাও তার ভেতরে এঁটে যায়, তাই clock frequency
+কম। Chapter 15-এর multi-cycle CPU হার্ডওয়্যার শেয়ার করে ছোট ক্লক চালায়,
+কিন্তু প্রতিটা instruction শেষ করতে কয়েক ক্লক লাগে, তাই CPI বেড়ে যায়।
+
+দুটোরই একটা সাধারণ সমস্যা আছে: **এক সময়ে শুধু একটা instruction নিয়ে কাজ
+হচ্ছে।** একটা instruction পুরোপুরি শেষ না হওয়া পর্যন্ত পরেরটা শুরুই হয় না।
+হার্ডওয়্যারের বেশিরভাগ অংশ তখন বসে থাকে — ALU যখন কাজ করছে, instruction
+memory আর register file চুপচাপ দাঁড়িয়ে।
+
+এই chapter-এ আমরা সেই অপচয়টা বন্ধ করবো। **Pipelining** হলো একটা instruction
+শেষ হওয়ার আগেই পরেরটা শুরু করে দেওয়ার কৌশল — যেন একসাথে অনেকগুলো instruction
+চলন্ত অবস্থায় থাকে, প্রতিটা আলাদা ধাপে। ছোট ক্লক থাকবে (multi-cycle-এর মতো),
+আবার প্রতি ক্লকে একটা করে instruction শেষও হবে (single-cycle-এর throughput-এর
+মতো)। দুই জগতের সেরাটা। আধুনিক প্রতিটা প্রসেসর — তোমার ফোন, ল্যাপটপ, সার্ভার
+— এই একই কৌশলেই দ্রুত চলে।
+
 ---
 
 ## 🚀 Quick Understanding - Pipeline Magic!
 
-### What is Pipelining?
+### What is Pipelining? — একটা assembly line-এর গল্প
+
+Pipelining বোঝার সবচেয়ে সহজ উপায় হলো একটা গাড়ির factory-র assembly line
+কল্পনা করা। ধরো একটা গাড়ি বানাতে তিনটা ধাপ লাগে: **Build** (কাঠামো জোড়া),
+**Paint** (রং করা), **Test** (পরীক্ষা) — প্রতিটায় ১ ঘণ্টা।
+
+প্রথমে ভাবো **assembly line ছাড়া** কীভাবে হতো — একজন কারিগর একটা গাড়ি পুরো
+শেষ করে তবেই পরের গাড়ি ধরছে। Paint-station আর Test-station তখন খালি পড়ে আছে,
+কারণ একসাথে শুধু একটা গাড়িতেই হাত পড়ছে। এটাই ঠিক single-cycle / multi-cycle
+CPU-র অবস্থা।
 
 ```
-Like an assembly line:
-
 Without Pipeline (Sequential):
 Car 1: [Build] → [Paint] → [Test] → Done (3 hours)
 Car 2:                              [Build] → [Paint] → [Test] → Done
 Total: 6 hours for 2 cars
+```
 
+এবার আসল assembly line-এর জাদু। তিনটা station-কে আলাদা রাখো, আর প্রতিটায়
+আলাদা কর্মী বসাও। Car 1 Build শেষ করে Paint-এ চলে গেলে, খালি হওয়া
+Build-station-এ সঙ্গে সঙ্গে Car 2 ঢুকে যায়। কোনো station আর বসে থাকে না —
+সব সময় তিনটা গাড়িতে একসাথে কাজ চলছে, প্রতিটা ভিন্ন ধাপে:
+
+```
 With Pipeline (Parallel):
 Time 0: Car 1 [Build]
 Time 1: Car 1 [Paint], Car 2 [Build]
@@ -50,7 +82,51 @@ CPU Pipeline = Same idea!
 Execute multiple instructions simultaneously!
 ```
 
-### CPU Pipeline Stages:
+এখানে দুটো ভিন্ন জিনিস আলাদা করে বোঝা খুব জরুরি, কারণ পুরো chapter এই
+পার্থক্যের উপর দাঁড়িয়ে:
+
+- **Latency (একটা গাড়ির নিজের সময়):** একটা গাড়ির এখনও ৩ ঘণ্টা লাগছে।
+  Pipeline একটা গাড়িকে দ্রুত বানায় না।
+- **Throughput (প্রতি ঘণ্টায় কয়টা গাড়ি বের হয়):** line ভরে যাওয়ার পর প্রতি
+  ঘণ্টায় একটা করে গাড়ি বেরোচ্ছে। আগে যেখানে ৩ ঘণ্টায় একটা, এখন ১ ঘণ্টায়
+  একটা — এটাই ৩× speedup।
+
+মনে রাখো — **pipeline একটা কাজকে দ্রুত করে না, কিন্তু একসাথে অনেক কাজ চালিয়ে
+ঘণ্টায় বেশি কাজ শেষ করে।** তিন-ধাপের line-এ একটা গাড়ি দ্রুত বেরোয় না, কিন্তু
+গোটা factory তিনগুণ বেশি গাড়ি ডেলিভারি দেয়। CPU-তেও ঠিক তাই হবে: একটা
+instruction-এর latency কমবে না, কিন্তু পুরো প্রোগ্রাম অনেক দ্রুত শেষ হবে।
+
+> 💡 **আরেকটা পরিচিত উদাহরণ:** বাড়িতে কাপড় ধোয়ার কথা ভাবো — washing machine,
+> তারপর dryer, তারপর ভাঁজ করা। এক বোঝা কাপড় পুরো শেষ করে তবেই পরের বোঝা
+> machine-এ দিলে dryer অর্ধেক সময় খালি বসে থাকে। বুদ্ধিমান মানুষ কী করে?
+> প্রথম বোঝা dryer-এ গেলেই দ্বিতীয় বোঝা washing machine-এ ঢুকিয়ে দেয়।
+> এটাই pipelining — খালি থাকা যন্ত্রকে কখনো বসে থাকতে না দেওয়া।
+
+### CPU Pipeline Stages: পাঁচটা station
+
+CPU-তে একটা instruction চালাতে যে কাজগুলো লাগে — তা আসলে চিরকালই কয়েকটা ধাপে
+ভাগ করা ছিল। Single-cycle CPU-তে ওই ধাপগুলো এক ক্লকের ভেতর পরপর ঘটে যায়।
+Pipeline শুধু সেই স্বাভাবিক ধাপগুলোর মাঝখানে দেয়াল তুলে দেয়, যেন প্রতিটা ধাপ
+আলাদা station হয়ে যায় আর একসাথে পাঁচটা ভিন্ন instruction নিয়ে কাজ করতে পারে।
+
+Classic RISC pipeline-এ station পাঁচটা — IF → ID → EX → MEM → WB। নিচের
+flowchart-এ দেখো কোন station-এ instruction কোন রূপ নিয়ে এগোচ্ছে, আর তোমার
+single-cycle CPU-র কোন ব্লকটা সেখানে কাজ করছে:
+
+```mermaid
+flowchart LR
+    PC["📥 PC<br/>(কোন instruction?)"] --> IF
+    IF["1️⃣ IF<br/>Instruction Fetch<br/><br/>• memory থেকে instruction আনো<br/>• PC ← PC+4"]
+    ID["2️⃣ ID<br/>Instruction Decode<br/><br/>• opcode/funct decode<br/>• register file পড়ো<br/>• immediate বানাও"]
+    EX["3️⃣ EX<br/>Execute<br/><br/>• ALU operation<br/>• branch decision<br/>• address হিসাব"]
+    MEM["4️⃣ MEM<br/>Memory Access<br/><br/>• load: data পড়ো<br/>• store: data লেখো"]
+    WB["5️⃣ WB<br/>Write Back<br/><br/>• result register-এ<br/>  ফেরত লেখো"]
+    IF --> ID --> EX --> MEM --> WB
+    WB -.write rd.-> ID
+```
+
+প্রতিটা station-এর কাজ আলাদা করে মনে গেঁথে নাও — পুরো chapter জুড়ে এই পাঁচটা
+নাম বারবার আসবে:
 
 ```
 5-Stage RISC-V Pipeline:
@@ -77,7 +153,18 @@ Execute multiple instructions simultaneously!
    - Write result to register
 ```
 
-### Pipeline Visualization:
+লক্ষ করো — এই পাঁচটা ধাপ মোটামুটি সমান কাজের ভাগে কাটা। তাই প্রতিটা stage-এর
+জন্য একটা ছোট, প্রায় সমান-দৈর্ঘ্যের ক্লক পিরিয়ড যথেষ্ট। Single-cycle-এ যে এক
+লম্বা ক্লকে পাঁচটা কাজই করতে হতো, সেটাকে পাঁচ ভাগে কেটে পাঁচগুণ দ্রুত ক্লক
+চালানোই pipeline-এর মূল চাল।
+
+### Pipeline Visualization: পুরো chapter-এর হৃদয়
+
+এই একটা ছবি যদি ভালো করে বুঝে ফেলো, তাহলে pipelining-এর পুরো ধারণাটাই তোমার
+হাতের মুঠোয়। নিচের চার্টে প্রতিটা সারি একটা instruction, প্রতিটা কলাম একটা
+clock cycle। লক্ষ করো প্রতিটা instruction কীভাবে আগেরটার ঠিক এক ধাপ পিছনে,
+সিঁড়ির ধাপের মতো নেমে এসেছে — Inst2 শুরু হয় Inst1-এর IF শেষ হওয়ামাত্র, তখন
+Inst1 ID-তে চলে গেছে।
 
 ```
 Time →
@@ -94,13 +181,48 @@ After 5 cycles:
 - 5× throughput (ideal case)!
 ```
 
-🎉 **This is how modern processors achieve speed!**
+ছবিটা **দুই দিক থেকে** পড়তে শেখো — এই দুই দৃষ্টিভঙ্গিই pipeline বোঝার চাবি:
+
+- **একটা সারি বরাবর (একটা instruction-এর যাত্রা):** Inst1-কে অনুসরণ করো — সে
+  IF → ID → EX → MEM → WB, পাঁচটা cycle পার করে শেষ হয়। অর্থাৎ একটা
+  instruction-এর **latency এখনও ৫ cycle**, ঠিক single-cycle-এর সমান কাজ।
+  Pipeline একে দ্রুত করেনি।
+- **একটা কলাম বরাবর (এক cycle-এ পুরো হার্ডওয়্যার):** Cycle 5-এর কলামটা উপর-নিচ
+  পড়ো — একই মুহূর্তে Inst1 WB-তে, Inst2 MEM-এ, Inst3 EX-এ, Inst4 ID-তে,
+  Inst5 IF-এ। অর্থাৎ পাঁচটা station-ই একসাথে ব্যস্ত, **পাঁচটা instruction
+  একসঙ্গে চলন্ত (in flight)।**
+
+একই চার্ট table আকারে — খালি ঘরগুলো হলো pipeline এখনও "ভরছে" (fill) বা
+"খালি হচ্ছে" (drain), আর হলুদ-চিহ্নিত cycle 5 থেকে cycle 5 পর্যন্ত হলো
+**steady state**, যেখানে প্রতি cycle-এ ঠিক একটা instruction শেষ হয়:
+
+| Instruction | C1 | C2 | C3 | C4 | C5 | C6 | C7 | C8 | C9 |
+|:-----------:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| **Inst1**   | IF | ID | EX | MEM| **WB** |    |    |    |    |
+| **Inst2**   |    | IF | ID | EX | MEM| WB |    |    |    |
+| **Inst3**   |    |    | IF | ID | EX | MEM| WB |    |    |
+| **Inst4**   |    |    |    | IF | ID | EX | MEM| WB |    |
+| **Inst5**   |    |    |    |    | IF | ID | EX | MEM| WB |
+
+খেয়াল করো: প্রথম instruction-টা cycle 5-এ শেষ হয় (pipeline ভরতে ৫ cycle
+লাগে)। কিন্তু এরপর Inst2 শেষ হয় cycle 6-এ, Inst3 cycle 7-এ — **প্রতি cycle-এ
+একটা করে।** এই "প্রতি cycle-এ একটা শেষ" হওয়াটাই throughput = 1 instruction
+per cycle, আর এখান থেকেই আসে আদর্শ 5× speedup।
+
+🎉 **This is how modern processors achieve speed!** আধুনিক প্রসেসর গাড়ির
+assembly line-এর মতোই — কখনো কোনো station-কে বসে থাকতে দেয় না।
 
 ---
 
 ## ১৬.১ Pipeline Benefits
 
-### Performance Gain:
+### Performance Gain: latency বনাম throughput
+
+এখন একটু সংখ্যা দিয়ে দেখি pipeline আসলে কতটা লাভ এনে দেয়। ধরো একটা প্রোগ্রামে
+১০০টা instruction আছে। মনে রাখো — pipeline করার পরেও প্রতিটা stage একই কাজ
+করছে, তাই একটা instruction-এর এখনও ৫টা ধাপ লাগছে। কিন্তু সব instruction যেহেতু
+একে অপরের পিছু পিছু সিঁড়ির ধাপে নামছে, প্রথমটা শেষ হওয়ার পর বাকি ৯৯টা প্রতি
+cycle-এ একটা করে বেরিয়ে আসে।
 
 ```
 Non-Pipelined:
@@ -119,7 +241,35 @@ Speedup = (Pipeline depth) × (Efficiency)
 Ideal 5-stage: 5×
 ```
 
-### Why Not Just Increase Clock?
+সংখ্যাটা একটু ভেঙে দেখো — `5 + 99` কেন? প্রথম instruction-টা pipeline-কে
+**ভরাতে** ৫ cycle নেয় (এটাকে বলে *fill* বা *pipeline startup*)। এরপর pipeline
+পুরো ভর্তি, তাই বাকি ৯৯টা instruction একটার পিঠে একটা, প্রতি cycle-এ একটা করে
+বেরিয়ে যায় — ৯৯ cycle। মোট 104 cycle।
+
+আদর্শভাবে speedup হওয়ার কথা ছিল ঠিক **৫×** (পাঁচ stage), কিন্তু পেলাম 4.8×।
+এই সামান্য কমতির কারণ ওই শুরুর ৫ cycle-এর fill — যতক্ষণ pipeline ভরছে, ততক্ষণ
+পুরো হার্ডওয়্যার ব্যবহার হচ্ছে না। প্রোগ্রাম যত লম্বা, এই fill-এর ভাগ তত ছোট
+হয়ে আসে আর speedup তত খাঁটি ৫×-এর কাছে পৌঁছায়। যেমন ১০,০০০ instruction হলে
+সময় হবে `5 + 9999 = 10004` cycle, speedup `50000 / 10004 ≈ 4.998×` — প্রায়
+নিখুঁত ৫×।
+
+মূল সূত্রটা মাথায় রাখো — এটাই pipeline-এর প্রতিশ্রুতি:
+
+> **Speedup = Pipeline depth × Efficiency**
+
+Depth মানে stage-সংখ্যা (আমাদের ৫), আর efficiency হলো pipeline কতটা ভরা
+থাকছে (আদর্শে ১, বাস্তবে hazard-এর কারণে একটু কম — সেটা পরের chapter-এ)।
+আর হ্যাঁ, খেয়াল রাখো একটা instruction-এর latency কিন্তু একটুও কমেনি — এখনও
+৫ cycle। আমরা প্রতিটা গাড়িকে দ্রুত বানাইনি; আমরা factory-র throughput বাড়িয়েছি।
+
+### Why Not Just Increase Clock? — শুধু ক্লক বাড়ালেই তো হয়?
+
+স্বাভাবিক প্রশ্ন — দ্রুত চাই, তাহলে clock frequency বাড়িয়ে দিলেই তো হলো,
+এত কষ্ট করে stage ভাঙার দরকার কী? সমস্যা হলো ক্লক ইচ্ছেমতো বাড়ানো যায় না।
+একটা clock cycle-কে এত ছোট করা যায় না যে সবচেয়ে লম্বা combinational পথটা —
+**critical path** — তার ভেতরে শেষ না হয়। Single-cycle CPU-তে সেই critical
+path হলো IF থেকে WB পর্যন্ত পুরো পথ; সিগন্যালকে গেটের পর গেট পেরিয়ে যেতে যে
+সময় লাগে, ক্লককে অন্তত ততটা লম্বা হতেই হবে, নাহলে ভুল মান latch হয়ে যাবে।
 
 ```
 Problem with faster clock:
@@ -132,12 +282,33 @@ Pipeline solution:
 ✅ Each stage faster
 ✅ Overall throughput increases
 ✅ More efficient
+```
 
-Balance point:
-5-7 stages: Good for embedded/low-power
-10-20 stages: Desktop processors
-20-31 stages: Intel Pentium 4 (Northwood 20, Prescott 31 — too deep!)
+Pipeline এই দেয়ালটা ভাঙে চালাকি করে — combinational logic-কে দ্রুত না বানিয়ে,
+সেই লম্বা পথটাকেই ছোট ছোট টুকরোয় (stage-এ) কেটে দেয়। এখন ক্লককে শুধু **সবচেয়ে
+ধীর একটা stage**-এর সমান লম্বা হলেই চলে, পুরো পথের সমান নয়। পাঁচ ভাগে কাটলে
+critical path প্রায় এক-পঞ্চমাংশ, তাই ক্লক প্রায় পাঁচগুণ দ্রুত চালানো যায় —
+আর এটাই আসল উৎস ওই 5× throughput-এর। (ব্যবহারিকভাবে stage-গুলো একদম সমান হয়
+না, আর প্রতিটা pipeline register নিজেও সামান্য বিলম্ব যোগ করে, তাই লাভ ঠিক
+পাঁচগুণ নয়, একটু কম।)
 
+তাহলে আরও বেশি stage-এ কাটলেই কি আরও দ্রুত? এক জায়গা পর্যন্ত — হ্যাঁ। কিন্তু
+stage যত বাড়ে, register-এর overhead বাড়ে, hazard সামলানো কঠিন হয়, branch ভুল
+হলে শাস্তি (penalty) বাড়ে, আর power খরচ লাফিয়ে বাড়ে। তাই বাস্তবে একটা balance
+আছে:
+
+| Pipeline depth | কোথায় ব্যবহার হয় | বৈশিষ্ট্য |
+|:--------------:|:-----------------|:----------|
+| 5–7 stages | Embedded / low-power CPU | সরল, কম power, hazard সহজ |
+| 10–20 stages | Desktop processor | বেশি clock, বেশি জটিলতা |
+| 20–31 stages | Intel Pentium 4 (Northwood 20, Prescott 31) | অতিরিক্ত গভীর — too deep! |
+
+Pentium 4-এর Prescott-কোর ৩১ stage পর্যন্ত গিয়েছিল, কিন্তু এত গভীর pipeline-এ
+একটা branch ভুল হলে এতগুলো cycle নষ্ট হতো যে লাভের চেয়ে ক্ষতি বেশি — তাই Intel
+পরে আবার অগভীর design-এ ফিরে আসে। আমরা শিখব **classic 5-stage RISC** pipeline —
+শেখার জন্য আদর্শ, যথেষ্ট দ্রুত, আর hazard বোঝার জন্য সবচেয়ে পরিষ্কার।
+
+```
 We'll use 5 stages: Classic RISC!
 ```
 
@@ -145,7 +316,20 @@ We'll use 5 stages: Classic RISC!
 
 ## ১৬.২ Pipeline Registers
 
-### Between Each Stage:
+### Between Each Stage: প্রতিটা station-এর মাঝে দেয়াল
+
+এবার সবচেয়ে গুরুত্বপূর্ণ প্রশ্ন — পাঁচটা instruction যদি একসাথে চলন্ত থাকে,
+তাহলে তাদের তথ্য একটার সঙ্গে আরেকটার মিশে যায় না কেন? Inst1-এর ALU result আর
+Inst2-এর register-পড়া মান তো একই তারের উপর দিয়েই যাচ্ছে — গোলমাল হবে না?
+
+উত্তর হলো **pipeline register**। প্রতি দুই stage-এর ঠিক মাঝখানে একটা করে
+register বসানো — IF আর ID-এর মাঝে IF/ID, ID আর EX-এর মাঝে ID/EX, এভাবে চারটা।
+প্রতি ক্লকের প্রান্তে (posedge) এরা আগের stage-এর ফলাফল ছবি তুলে ধরে রাখে আর
+পরের stage-এর হাতে তুলে দেয়। assembly line-এ এ যেন এক station আর পরের
+station-এর মাঝখানের **conveyor belt** — গাড়িটা (এবং তার সঙ্গে লাগানো কাজের
+নির্দেশ-চিরকুট) পরের station-এ নিয়ে যায়, কিন্তু দুই station-কে আলাদাও রাখে।
+
+এই register-গুলোর চারটা কাজ:
 
 ```
 Pipeline registers:
@@ -153,41 +337,77 @@ Pipeline registers:
 - Hold values for next stage
 - Enable parallel execution
 - Store control signals
-
-IF/ID Register:
-┌──────────────┐
-│ Instruction  │ (32 bits)
-│ PC + 4       │ (32 bits)
-└──────────────┘
-
-ID/EX Register:
-┌──────────────┐
-│ PC + 4       │
-│ rs1_data     │
-│ rs2_data     │
-│ Immediate    │
-│ rd_addr      │
-│ Control sigs │
-└──────────────┘
-
-EX/MEM Register:
-┌──────────────┐
-│ ALU result   │
-│ rs2_data     │ (for store)
-│ rd_addr      │
-│ Control sigs │
-└──────────────┘
-
-MEM/WB Register:
-┌──────────────┐
-│ ALU result   │
-│ Memory data  │
-│ rd_addr      │
-│ Control sigs │
-└──────────────┘
 ```
 
+খুব জরুরি একটা ব্যাপার — register শুধু *data* (যেমন ALU-র ইনপুট) বহন করে না,
+**control signal-ও** বহন করে। কারণ একটা instruction যখন EX-তে, তার `reg_write`
+বা `mem_read`-এর সিদ্ধান্ত তো নেওয়া হয়েছিল ID stage-এ control unit থেকে। সেই
+সিদ্ধান্তগুলোকে instruction-এর সঙ্গে সঙ্গে নিচের stage পর্যন্ত ভ্রমণ করাতে হয়,
+নাহলে MEM বা WB stage বুঝবেই না এই instruction-টা কী করতে চায়। তাই control
+signal হলো গাড়ির গায়ে সাঁটানো কাজের চিরকুট — গাড়ির সঙ্গে সঙ্গে belt বেয়ে যায়।
+
+কোন register-এ কী থাকে, সেটা যুক্তি দিয়ে বোঝা যায়: একটা stage যে ফল বানায়, আর
+যেসব মান পরে কোনো stage-এ আবার লাগবে — শুধু সেগুলোই পরের register-এ ঢোকে।
+যেমন `rs2_data` EX পেরিয়েও EX/MEM-এ থেকে যায়, কারণ store instruction-এ MEM
+stage-এ ওই মানটাই memory-তে লেখা হবে। নিচের diagram-এ চারটা register আর তাদের
+বহন করা ক্ষেত্রগুলো দেখো:
+
+```mermaid
+flowchart LR
+    subgraph IFID["🟦 IF/ID Register"]
+        direction TB
+        a1["Instruction (32b)"]
+        a2["PC + 4 (32b)"]
+    end
+    subgraph IDEX["🟩 ID/EX Register"]
+        direction TB
+        b1["PC + 4"]
+        b2["rs1_data"]
+        b3["rs2_data"]
+        b4["Immediate"]
+        b5["rd_addr"]
+        b6["Control signals"]
+    end
+    subgraph EXMEM["🟨 EX/MEM Register"]
+        direction TB
+        c1["ALU result"]
+        c2["rs2_data (store)"]
+        c3["rd_addr"]
+        c4["Control signals"]
+    end
+    subgraph MEMWB["🟧 MEM/WB Register"]
+        direction TB
+        d1["ALU result"]
+        d2["Memory data"]
+        d3["rd_addr"]
+        d4["Control signals"]
+    end
+    IFID --> IDEX --> EXMEM --> MEMWB
+```
+
+লক্ষ করো `rd_addr` (কোন register-এ লিখতে হবে তার ঠিকানা) আর control signal-গুলো
+**চারটা register জুড়েই** পাড়ি দিচ্ছে — কারণ সিদ্ধান্ত হয় ID-তে, কিন্তু আসল
+লেখা হয় একদম শেষে WB-তে, পাঁচ cycle পরে। instruction-টাকে নিজের পরিচয় আর
+উদ্দেশ্য সঙ্গে নিয়েই পুরো pipeline পাড়ি দিতে হয়।
+
 ### Pipeline Register Implementation:
+
+প্রতিটা pipeline register আসলে চেনা সেই Chapter 4-এর জিনিস — একগুচ্ছ D
+flip-flop, যারা প্রতি `posedge clk`-এ ইনপুট ধরে রাখে। শুধু কয়েকটা বাড়তি
+নিয়ন্ত্রণ যোগ হয়েছে, যেগুলো নিচের কোডে খেয়াল রাখো:
+
+- **`reset`:** চালু হওয়ার সময় register-কে নিরাপদ মানে (NOP / শূন্য) বসিয়ে দেয়,
+  যেন আবর্জনা মান pipeline-এ ঢুকে না পড়ে।
+- **`flush`:** register-টাকে জোর করে NOP-এ পরিণত করে — অর্থাৎ একটা "bubble"
+  (খালি instruction) ঢুকিয়ে দেয়। branch ভুল হলে ভুল পথে আনা instruction
+  এভাবেই বাতিল হবে (বিস্তারিত পরের chapter-এ)।
+- **`stall`:** register-কে এই ক্লকে পুরনো মানই ধরে রাখতে বলে — instruction-টাকে
+  এক জায়গায় থামিয়ে রাখে, যেন pipeline এক cycle অপেক্ষা করে।
+
+মন দিয়ে দেখো IF/ID-তে reset/flush হলে instruction-এর জায়গায় কেন
+`32'h00000013` বসছে — ওটাই RISC-V-এর `addi x0, x0, 0`, অর্থাৎ "কিছু করো না"
+NOP। এমন একটা instruction pipeline-এ গিয়ে কোনো ক্ষতি করে না, কারণ সে `x0`-তে
+শূন্য যোগ করে — যার কোনো effect নেই।
 
 ```verilog
 // IF/ID Pipeline Register
@@ -405,7 +625,62 @@ endmodule
 
 ## ১৬.৩ Pipelined Datapath
 
-### Complete Pipeline Stages:
+### Complete Pipeline Stages: পুরো ছবি একসাথে
+
+এবার সব টুকরো জোড়া লাগাই। মজার ব্যাপার হলো — pipelined datapath-এ ব্যবহৃত
+হার্ডওয়্যার ব্লকগুলো প্রায় সবই তোমার Chapter 14-এর single-cycle CPU থেকেই
+চেনা: একটাই PC, instruction memory, register file, ALU, data memory। শুধু
+সেগুলোকে পাঁচ ভাগে সাজিয়ে, প্রতি ভাগের মাঝে একটা করে pipeline register
+বসিয়ে দিয়েছি।
+
+নিচের datapath-এ লক্ষ করো তথ্য বাঁদিক থেকে ডানদিকে — IF থেকে WB-র দিকে —
+এগোচ্ছে, আর প্রতি দুই stage-এর মাঝে একটা register পাহারায় দাঁড়িয়ে। শুধু
+একটা তার উল্টোদিকে ফিরছে: WB stage যে মান হিসাব করে, সেটা register file-এ
+ফেরত লেখার জন্য ID stage-এ ফিরে যায় (নিচে dashed তীর)।
+
+```mermaid
+flowchart LR
+    PC["PC"] --> IMEM["Instruction<br/>Memory"]
+    IMEM --> R1{{"IF/ID"}}
+    R1 --> CU["Control<br/>Unit"]
+    R1 --> RF["Register<br/>File"]
+    R1 --> IMM["Immediate<br/>Gen"]
+    CU --> R2{{"ID/EX"}}
+    RF --> R2
+    IMM --> R2
+    R2 --> ALU["ALU"]
+    R2 --> BR["Branch<br/>Unit"]
+    ALU --> R3{{"EX/MEM"}}
+    BR --> R3
+    R3 --> DMEM["Data<br/>Memory"]
+    R3 --> R4
+    DMEM --> R4{{"MEM/WB"}}
+    R4 --> WB["WB<br/>mux"]
+    WB -.write rd.-> RF
+
+    subgraph S1["1️⃣ IF"]
+        PC
+        IMEM
+    end
+    subgraph S2["2️⃣ ID"]
+        CU
+        RF
+        IMM
+    end
+    subgraph S3["3️⃣ EX"]
+        ALU
+        BR
+    end
+    subgraph S4["4️⃣ MEM"]
+        DMEM
+    end
+    subgraph S5["5️⃣ WB"]
+        WB
+    end
+```
+
+প্রতিটা stage আলাদা করে দেখলে এই কাজগুলো ঘটছে — এই তালিকাটাই নিচের প্রতিটা
+Verilog module-এ রূপ নেবে:
 
 ```
 Stage 1: IF (Instruction Fetch)
@@ -429,7 +704,19 @@ Stage 5: WB (Write Back)
 MEM/WB ──→ Register File
 ```
 
+এখন আমরা প্রতিটা stage-কে আলাদা Verilog module হিসেবে লিখব। সুন্দর ব্যাপার
+হলো প্রতিটা module ছোট আর একটামাত্র কাজে মন দেয় — ঠিক assembly line-এর একেকটা
+station-এর মতো, যে শুধু নিজের একটা কাজ জানে। পরের section-এ এই module-গুলোকে আর
+চারটা pipeline register দিয়ে জুড়ে পুরো প্রসেসর দাঁড় করাবো।
+
 ### IF Stage (Instruction Fetch):
+
+pipeline-এর প্রথম station — এর একটাই কাজ: "এরপর কোন instruction?"। PC বলে দেয়
+কোন ঠিকানা থেকে instruction আনতে হবে, instruction memory সেই word ফেরত দেয়, আর
+PC নিজে এগিয়ে যায় পরের instruction-এর দিকে (`pc + 4`)। লক্ষ করো PC-update-এ
+`stall` শর্ত আছে — pipeline থামাতে হলে PC যেন এক জায়গাতেই দাঁড়িয়ে থাকে, একই
+instruction বারবার fetch করে। আর `branch_taken` হলে PC সাধারণ `pc+4`-এর বদলে
+`branch_target`-এ লাফ দেয়।
 
 ```verilog
 module if_stage(
@@ -464,6 +751,18 @@ endmodule
 ```
 
 ### ID Stage (Instruction Decode):
+
+দ্বিতীয় station instruction-টাকে "পড়ে বোঝে"। ৩২-বিট instruction-কে টুকরো করে
+বের করে — opcode, rd, rs1, rs2, funct3, funct7। তারপর তিনটা কাজ একসাথে হয়:
+register file থেকে `rs1`, `rs2`-এর মান পড়া হয়; immediate generator instruction
+থেকে constant মান বানায়; আর control unit ঠিক করে এই instruction-এর জন্য কোন
+কোন control signal লাগবে (`reg_write`, `mem_read`, `alu_src`, ইত্যাদি)।
+
+দুটো জিনিস খেয়াল রাখো। এক — register file-এর **write port** আসলে WB stage থেকে
+আসা সিগন্যালে চলছে (`wb_rd_addr`, `wb_rd_data`), অর্থাৎ এক instruction এখানে
+register পড়ছে আর পাঁচ cycle আগের আরেকটা instruction একই সময়ে register-এ লিখছে।
+দুই — control unit-এর দেওয়া `alu_op`-কে `alu_control` module পরিণত করে চূড়ান্ত
+৪-বিট ALU control-এ, যেটা instruction-এর সঙ্গে EX stage পর্যন্ত ভ্রমণ করবে।
 
 ```verilog
 module id_stage(
@@ -552,6 +851,17 @@ endmodule
 
 ### EX Stage (Execute):
 
+তৃতীয় station হলো আসল হিসাব-নিকাশের জায়গা। ALU এখানে যোগ-বিয়োগ, AND/OR,
+তুলনা — যা দরকার তাই করে। `alu_src` mux ঠিক করে ALU-র দ্বিতীয় ইনপুট আসবে
+register (`rs2_data`) থেকে নাকি immediate থেকে — R-type-এ register, কিন্তু
+`addi` বা load/store-এ immediate। একই সঙ্গে branch comparator দেখে শর্তটা সত্যি
+কিনা, আর সেটা `branch` signal-এর সঙ্গে AND করে চূড়ান্ত `branch_taken` ঠিক হয়।
+
+খেয়াল করো branch target হিসাব হচ্ছে branch-এর **নিজের PC** থেকে — কোডের মন্তব্য
+বলছে কেন `pc_plus_4 - 4` করে আসল branch-PC বের করে তার সঙ্গে immediate যোগ করা
+হচ্ছে। এই stage থেকেই (EX) branch-এর সিদ্ধান্ত আসে, তাই branch ভুল হলে এর পরের
+দুটো instruction-কে বাতিল করতে হবে — সেটাই উপরের `flush` logic-এর কাজ।
+
 ```verilog
 module ex_stage(
     input wire [31:0] pc_plus_4,
@@ -600,6 +910,13 @@ endmodule
 
 ### MEM Stage (Memory Access):
 
+চতুর্থ station শুধু load আর store instruction-এর জন্য সত্যিকারের ব্যস্ত — বাকি
+সব instruction এখান দিয়ে কেবল হেঁটে চলে যায়। load হলে ALU-র হিসাব করা ঠিকানা
+থেকে data memory পড়ে, আর store হলে `rs2_data`-র মান ওই ঠিকানায় লেখে। মন দিয়ে
+দেখো এখানে memory নিজে এই module-এর ভেতরে নেই — module শুধু বাইরের data
+memory-র সঙ্গে কথা বলার তারগুলো (address, write data, read/write signal, size)
+বের করে দেয়। কারণ বাস্তবে data memory বা cache থাকে SoC-তে, pipeline-এর বাইরে।
+
 ```verilog
 module mem_stage(
     // Data-memory bus — the memory now lives outside the pipeline (SoC/cache)
@@ -627,6 +944,13 @@ endmodule
 
 ### WB Stage (Write Back):
 
+শেষ station-এর কাজ সবচেয়ে ছোট, কিন্তু জরুরি — instruction-এর ফলাফল register
+file-এ ফেরত লেখা। এখানে আসলে শুধু একটা mux: register-এ কোন মানটা যাবে?
+তিনটা সম্ভাবনা — jump হলে return address (`pc_plus_4`), load হলে memory থেকে
+আনা data (`mem_data`), আর সাধারণ ALU instruction হলে `alu_result`। এই বাছাই করা
+মানটাই তারের মাধ্যমে ID stage-এর register file-এর write port-এ ফিরে যায়, যেন
+পাঁচ cycle আগে শুরু হওয়া instruction-টা অবশেষে নিজের ফল সংরক্ষণ করতে পারে।
+
 ```verilog
 module wb_stage(
     input wire [31:0] alu_result,
@@ -645,6 +969,27 @@ endmodule
 ---
 
 ## ১৬.৪ Complete Pipelined Processor
+
+এবার আসল মুহূর্ত — সব stage আর সব pipeline register জুড়ে পুরো প্রসেসর। নিচের
+top-level module-টা দেখতে লম্বা, কিন্তু ভয় পেও না: এটা আসলে আমাদের চেনা জিনিসই
+পরপর সাজানো। গঠনটা একদম সোজা — **stage → register → stage → register …**
+এই ছন্দে পাঁচটা stage আর চারটা register পরপর instantiate করা।
+
+পড়ার সময় wire-গুলোর নামের উপসর্গ (prefix) খেয়াল করলেই পুরো গল্পটা পরিষ্কার
+হয়ে যাবে — নাম দিয়েই বোঝা যায় সিগন্যালটা pipeline-এর কোন অংশে আছে:
+
+- `if_*` — IF stage থেকে বেরোনো signal (যেমন `if_instruction`)।
+- `id_*` — IF/ID register পেরিয়ে ID stage-এ পৌঁছানো signal।
+- `ex_*` — ID/EX register পেরিয়ে EX stage-এ পৌঁছানো signal।
+- `mem_*` — EX/MEM register পেরিয়ে MEM stage-এ পৌঁছানো signal।
+- `wb_*` — MEM/WB register পেরিয়ে WB stage-এ পৌঁছানো signal।
+
+অর্থাৎ একটা মান যখন এক register থেকে পরের stage-এ যায়, তার prefix-ও বদলে যায় —
+`if_instruction` → register → `id_instruction`। এই নামকরণ নিজেই pipeline-এর
+প্রবাহের ছবি এঁকে দেয়। আর একদম নিচে দুটো ছোট লাইন আছে —
+`if_id_flush = ex_branch_taken` আর `id_ex_flush = ex_branch_taken` — যেগুলো
+branch নেওয়া হলে ভুল পথে আনা দুটো instruction-কে flush করে দেয়। (এই
+control-hazard সামলানোর পুরো গল্প তোমার অপেক্ষা করছে Chapter 17-এ।)
 
 ```verilog
 module riscv_pipelined(
@@ -906,6 +1251,24 @@ endmodule
 
 ## ১৬.৫ Pipeline Performance
 
+প্রসেসরের গতি মাপার একটা সুন্দর সমীকরণ আছে, যেটা পুরো বইয়ে বারবার কাজে লাগবে:
+
+> **Execution time = Instruction count × CPI × Clock period**
+
+এখানে **CPI** মানে *Cycles Per Instruction* — গড়ে একটা instruction শেষ করতে কয়
+cycle লাগে। তিন ধরনের CPU-র চরিত্র এই সমীকরণ দিয়েই বোঝা যায়, আর pipeline কেন
+জেতে সেটাও পরিষ্কার হয়:
+
+| CPU ধরন | CPI | Clock period | মন্তব্য |
+|:--------|:---:|:------------:|:--------|
+| Single-cycle | 1 | খুব লম্বা (পুরো পথ এক ক্লকে) | CPI ভালো, কিন্তু ক্লক ধীর |
+| Multi-cycle | 4–5 | ছোট | ক্লক দ্রুত, কিন্তু CPI খারাপ |
+| **Pipelined** | **≈ 1** | **ছোট** | **দুটোরই সেরা — তাই দ্রুত!** |
+
+মূল অন্তর্দৃষ্টি এটাই — single-cycle-এর ভালো CPI আর multi-cycle-এর ছোট clock
+period, pipeline দুটোকে **একসাথে** পায়। সেই কারণেই pipeline সবচেয়ে দ্রুত।
+এবার সংখ্যা দিয়ে দেখি।
+
 ### Ideal Case:
 
 ```
@@ -924,7 +1287,18 @@ CPI: 104 / 100 = 1.04
 (Almost 1!)
 ```
 
-### Real Performance:
+CPI = 1.04 মানে গড়ে প্রতিটা instruction-এ প্রায় একটাই cycle খরচ হচ্ছে —
+আদর্শ pipeline-এর লক্ষ্যই হলো CPI-কে ঠিক ১-এর কাছে নিয়ে আসা। ১.০৪-এর ওই
+সামান্য বাড়তি অংশ পুরোটাই শুরুর fill থেকে আসছে, আর প্রোগ্রাম লম্বা হলে সেটা
+আরও কমে ১-এর গায়ে লেগে যায়।
+
+### Real Performance: বাস্তবে কী হয়?
+
+উপরের হিসাবটা **আদর্শ** pipeline-এর — যেখানে ধরে নিয়েছি প্রতি cycle-এ নিখুঁতভাবে
+একটা instruction শেষ হচ্ছে, কখনো কোনো বাধা নেই। বাস্তবে instruction-রা একে
+অপরের উপর নির্ভর করে (একটার ফল পরেরটার ইনপুট), আর branch-এর পথ আগে থেকে জানা
+থাকে না। এই সমস্যাগুলোকে বলে **hazard**, আর এদের সামলাতে মাঝে মাঝে pipeline
+থামাতে (stall) বা bubble ঢোকাতে হয়, যাতে CPI একটু বেড়ে যায়:
 
 ```
 With hazards (Chapter 17):
@@ -936,6 +1310,12 @@ Real CPI: 1.2 - 1.5
 
 Still 3-4× better than non-pipelined!
 ```
+
+খেয়াল করো — বাস্তব CPI ১.২–১.৫ হয়ে গেলেও pipeline এখনও single-cycle-এর চেয়ে
+৩-৪ গুণ দ্রুত। অর্থাৎ hazard-এর শাস্তি দিয়েও pipeline বিপুল লাভেই থাকে।
+**তবে এই chapter-এ আমরা ইচ্ছে করেই আদর্শ, পরিষ্কার pipeline নিয়েই থাকছি** —
+hazard কীভাবে চিনতে হয় আর কীভাবে forwarding/stalling দিয়ে সামলাতে হয়, সেই
+পুরো গল্প তোমার জন্য তোলা রইল ঠিক পরের chapter-এ।
 
 ---
 
