@@ -1220,7 +1220,13 @@ main:
 # 00100073  # ebreak
 ```
 
-### Program 2: Loop (Sum 1 to 10)
+### Program 2: Loop (Sum 1 to 10) — branch-এর আসল পরীক্ষা
+
+এবার একটু রক্ত-মাংস: ১ থেকে ১০ পর্যন্ত যোগফল বের করা loop দিয়ে। এখানেই তোমার
+`branch_comparator` আর PC update logic আসল পরীক্ষায় পড়ে — `bne x6, x7, loop` যতক্ষণ
+`x6 != x7`, ততক্ষণ PC-কে `loop`-এ ফিরিয়ে নেয়। শর্ত মিথ্যা হলে branch নেওয়া হয় না,
+PC স্বাভাবিকভাবে `+4` এগোয় আর loop থেকে বেরোয়। মনে মনে কয়েকবার চক্রটা ঘুরিয়ে দেখো —
+`x5`-এ যোগফল জমছে, `x6` বাড়ছে।
 
 ```assembly
 # Sum numbers from 1 to 10
@@ -1240,7 +1246,13 @@ loop:
     ebreak              # Stop
 ```
 
-### Program 3: Function Call
+### Program 3: Function Call — jump আর return
+
+সবচেয়ে কঠিনটা: একটা function ডাকা ও সেখান থেকে ফেরা। এটা `jal`/`jalr` এবং stack
+ব্যবহার দেখায়। `jal ra, add_func` লাফ দেওয়ার ঠিক আগে return address (`pc+4`) `ra`-তে
+রেখে যায় (মনে আছে writeback MUX-এর সেই ৩ নম্বর অগ্রাধিকার?); function শেষে
+`jalr x0, ra, 0` সেই `ra`-তে ফিরে যায়। আর `sp` দিয়ে stack-এ `ra` জমা রাখা — যাতে
+function-এর ভেতরে আরেকটা call হলেও return address হারিয়ে না যায়।
 
 ```assembly
 # Function call example
@@ -1270,7 +1282,17 @@ add_func:
 
 ## ১৪.১২ Testing the Processor
 
-### Comprehensive Testbench:
+বানানো শেষ, কিন্তু সত্যিই কাজ করছে কিনা **চোখে না দেখলে** বিশ্বাস নেই — আর সেটাই
+testbench-এর কাজ। testbench নিজে কোনো হার্ডওয়্যার নয়; এটা একটা সিমুলেশন-পরিবেশ যা
+তোমার CPU-কে একটা clock দেয়, reset দিয়ে চালু করে, কিছু cycle চালায়, আর ভেতরের সংকেত
+দেখায়।
+
+কোডে তিনটে অংশ খেয়াল করো: (১) **clock generation** — `forever #5 clk = ~clk` প্রতি
+৫ একক পর পর clock উল্টে ১০ns period বানায়; (২) **reset দিয়ে শুরু** — কিছুক্ষণ
+`reset=1` রেখে CPU-কে পরিষ্কার অবস্থায় আনা, তারপর `reset=0` করে ছেড়ে দেওয়া;
+(৩) **monitor** — প্রতি clock edge-এ `PC` ও চলতি `instruction` ছাপানো, যাতে instruction
+এক-এক করে এগোনো দেখা যায়। সাথে `$dumpvars` সব signal একটা `.vcd` ফাইলে রাখে — যেটা
+GTKWave-এ খুলে তুমি প্রতিটা তার ঢেউয়ের মতো দেখতে পারবে।
 
 ```verilog
 module riscv_tb;

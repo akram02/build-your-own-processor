@@ -1321,7 +1321,11 @@ hazard কীভাবে চিনতে হয় আর কীভাবে fo
 
 ## ১৬.৬ Pipeline Diagrams
 
-### Space-Time Diagram:
+pipeline নিয়ে কাজ করার সময় তুমি বারবার একটা ছবি আঁকবে — **space-time diagram**
+(একে instruction-time diagram-ও বলে)। এটাই pipeline-চিন্তার মূল ভাষা: একদিকে
+সময় (cycle), আরেকদিকে instruction। ধরো পরপর পাঁচটা সাধারণ instruction —
+ADD, SUB, AND, OR, XOR — pipeline-এ ঢুকছে। নিচে দেখো প্রতিটা কীভাবে সিঁড়ির
+ধাপে এক cycle পিছিয়ে নামছে:
 
 ```
 Time (cycles) →
@@ -1332,7 +1336,30 @@ SUB      IF  ID  EX  MEM WB
 AND          IF  ID  EX  MEM WB
 OR               IF  ID  EX  MEM WB
 XOR                  IF  ID  EX  MEM WB
+```
 
+এই ছবিটা পড়ার দুটো শক্তিশালী উপায় আছে — মনে আছে তো, আগেও বলেছিলাম?
+
+- **সারি বরাবর (→):** একটা instruction-এর জীবনকাহিনি — সে কোন cycle-এ কোন stage
+  পার করছে। এতে বোঝা যায় তার latency।
+- **কলাম বরাবর (↓):** একটা নির্দিষ্ট cycle-এ কোন কোন stage একসাথে ব্যস্ত। এতে
+  বোঝা যায় hardware utilization।
+
+কলাম বরাবর উল্টো করে পড়লে আরেকটা দরকারি ছবি পাওয়া যায় — **প্রতিটা stage কখন
+কোন instruction নিয়ে ব্যস্ত।** নিচে table-এ দেখো cycle 4 (সংখ্যায় 0-থেকে-গোনা)
+নাগাদ পাঁচটা stage-ই একসঙ্গে কাজ করছে — কোনো খালি নেই, পূর্ণ utilization:
+
+| Stage | C0 | C1 | C2 | C3 | C4 | C5 | C6 | C7 | C8 |
+|:------|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| **IF**  | ADD | SUB | AND | OR  | XOR |     |     |     |     |
+| **ID**  |     | ADD | SUB | AND | OR  | XOR |     |     |     |
+| **EX**  |     |     | ADD | SUB | AND | OR  | XOR |     |     |
+| **MEM** |     |     |     | ADD | SUB | AND | OR  | XOR |     |
+| **WB**  |     |     |     |     | ADD | SUB | AND | OR  | XOR |
+
+একই তথ্য সরল ASCII-তে, stage বরাবর সাজানো:
+
+```
 Stage usage:
 IF:  ADD SUB AND OR  XOR
 ID:      ADD SUB AND OR  XOR
@@ -1344,9 +1371,27 @@ All stages busy!
 Maximum utilization!
 ```
 
+মাঝখানের cycle-গুলোতে (যখন pipeline পুরো ভরা) প্রতিটা table-কলামে পাঁচটা ভিন্ন
+instruction-এর নাম — অর্থাৎ পাঁচটা hardware unit-ই একসাথে কাজ করছে, একটাও বসে
+নেই। এটাই pipeline-এর সাফল্যের ছবি: assembly line-এর প্রতিটা station সব সময়
+ব্যস্ত। আর এই table-ই হবে তোমার ডিবাগিং-এর সবচেয়ে বড় বন্ধু — পরের chapter-এ
+যখন hazard আসবে, তখন এর ভেতরে হঠাৎ ফাঁকা ঘর (bubble) দেখা দেবে, আর সেই ফাঁকাই
+তোমাকে দেখাবে কোথায় pipeline থমকে গেছে।
+
 ---
 
 ## ১৬.৭ Your 2-Week Build Plan
+
+তত্ত্ব যথেষ্ট হয়েছে — এবার হাতে-কলমে বানানোর পালা। ভালো খবর হলো, তুমি একদম
+শূন্য থেকে শুরু করছো না; এই pipeline-এর প্রায় প্রতিটা ছোট ব্লক (ALU, register
+file, control unit, immediate generator) তোমার Chapter 14-এর single-cycle CPU
+থেকেই আসছে। এই দুই সপ্তাহের কাজ মূলত সেই চেনা ব্লকগুলোকে পাঁচ ভাগে সাজানো আর
+চারটা pipeline register দিয়ে জোড়া দেওয়া।
+
+পরামর্শ — **নিচ থেকে উপরে (bottom-up) বানাও।** আগে ছোট ছোট অংশ (register, তারপর
+stage) আলাদা করে testbench দিয়ে যাচাই করো, তারপর সব জোড়া লাগাও। তাড়াহুড়ো করে
+পুরোটা একসাথে জুড়ে দিলে ভুল খুঁজে বের করা কঠিন হয়ে যায়। এক সপ্তাহ গঠন বানাতে,
+আরেক সপ্তাহ পরীক্ষা আর performance মাপতে — এই হলো পরিকল্পনা:
 
 ### Week 1: Pipeline Structure
 

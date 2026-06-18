@@ -1031,9 +1031,17 @@ module riscv_with_cache(
 endmodule
 ```
 
+দুটো জিনিস খেয়াল করো। প্রথমত, `cache_stall` সংকেতটা pipeline এ পাঠানো হচ্ছে — যাতে miss এর সময় সে নিজেকে জমিয়ে রাখে। দ্বিতীয়ত, debug output হিসেবে মোট hit (`instr_hits + data_hits`), মোট miss, আর মোট cycle বের করা হচ্ছে — ঠিক সেই সংখ্যাগুলো যা দিয়ে পরের section এ আমরা hit rate আর AMAT মাপব। এই module টাই তোমার "cache সহ সম্পূর্ণ প্রসেসর" — Chapter 14-17 এর CPU, এখন একটা আসল memory hierarchy পরে।
+
 ---
 
 ## ১৮.৮ Performance Testing
+
+বানানো শেষ — এবার প্রমাণ করি cache সত্যিই কাজ করছে। নিচের testbench টা প্রসেসরটা কিছুক্ষণ চালায়, hit/miss গোনে, তারপর নিজে থেকেই hit rate, miss rate, AMAT, আর speedup হিসাব করে ছাপিয়ে দেয়। মনে রাখো — এগুলো আর কাগজের হিসাব নয়, তোমার নিজের বানানো hardware এর আসল সংখ্যা।
+
+লক্ষ করো testbench এর শেষ কয়েক লাইন ঠিক আমাদের ১৮.৫ এর সূত্রগুলোই কোডে রূপ নিয়েছে — `hit_rate = hits / (hits + misses)`, তারপর `amat = 1.0 + (miss_rate * 100.0)`, আর `speedup = 100.0 / amat`। অর্থাৎ তত্ত্ব আর পরীক্ষা এখানে হাত মেলায়।
+
+> 💡 `real hit_rate, miss_rate, amat;` declaration গুলো module এর একদম উপরে কেন? কোডের comment-ই বলে দিচ্ছে — Verilog block এর মাঝখানে নতুন declaration করতে দেয় না, তাই floating-point হিসাবের variable গুলো শুরুতেই ঘোষণা করা হয়েছে।
 
 ### Cache Benchmark:
 

@@ -1389,6 +1389,12 @@ set_pin_assignment {led[5]} {LOCATION = H14; IOSTANDARD = LVCMOS33;}
 
 ## ১৯.৯ Your 2-Week Build Plan
 
+পুরো SoC একসাথে দেখলে বিশাল মনে হতে পারে — কিন্তু ভয় পেয়ো না। গোটা হাতিকে একবারে
+গিলতে যেও না; এক কামড়ে এক টুকরো। নিচের পরিকল্পনাটা ঠিক সেভাবে সাজানো: প্রথম
+সপ্তাহে এক এক করে peripheral বানাও আর আলাদাভাবে test করো; দ্বিতীয় সপ্তাহে bus
+দিয়ে সব জুড়ে software চালাও আর শেষে FPGA-তে নামাও। প্রতিটা peripheral যেহেতু
+স্বাধীন, তাই একটা শেষ করে test করে তবেই পরেরটায় যাও — এতে bug খোঁজা সহজ হবে।
+
 ### Week 1: Peripherals
 
 **Day 1-3: UART**
@@ -1442,6 +1448,26 @@ set_pin_assignment {led[5]} {LOCATION = H14; IOSTANDARD = LVCMOS33;}
 ---
 
 ## ১৯.১০ Chapter 19 Mission Complete!
+
+থামো একটু — পেছনে তাকাও। এই chapter-এ তুমি একটা জড় CPU-কে একটা **জীবন্ত
+computer** বানিয়ে ফেলেছো। পুরো গল্পটা এক নিঃশ্বাসে মনে করে নাও:
+
+> CPU (মাথা) কথা বলে **bus** (স্নায়ুতন্ত্র)-এর সাথে। bus **address decode** করে
+> ঠিক করে কথাটা **memory**-তে যাবে নাকি কোনো **peripheral**-এ। peripheral গুলো
+> memory-র মতোই ঠিকানায় বসে আছে (**memory-mapped I/O**), তাই CPU শুধু `LW`/`SW`
+> দিয়েই UART-এ লেখে (মুখ), GPIO পড়ে/লেখে (হাত-চোখ), Timer-এ সময় গোনে (ঘড়ি),
+> আর IntC জরুরি ঘটনা ধরে (কলিং বেল)। আর এই সব হার্ডওয়্যারকে নাচায় **software** —
+> `volatile` pointer দিয়ে।
+
+পুরো address map একনজরে, যাতে কোন ঠিকানায় কী আছে কখনো ভুলে না যাও:
+
+| Address | Block | মূল register |
+|---|---|---|
+| `0x0000_0000`+ | Memory (ROM/RAM) | — |
+| `0x1000_0000` | GPIO | DATA / DIR / INPUT |
+| `0x1000_1000` | UART | DATA / STATUS |
+| `0x1000_2000` | Timer | COUNTER / COMPARE / CONTROL / PRESCALER |
+| `0x1000_3000` | Interrupt Ctrl | PENDING / ENABLE / ACK |
 
 ### তুমি এখন পারো:
 
