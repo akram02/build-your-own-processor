@@ -56,69 +56,70 @@
 
 ## 🚀 Quick Overview - Single-Cycle Processor
 
-### What is Single-Cycle?
+### Single-Cycle মানে কী?
+
+নামটাই সব বলে দেয়: **single-cycle** মানে প্রতিটা instruction শুরু থেকে শেষ পর্যন্ত
+**একটা মাত্র clock cycle-এ** সম্পূর্ণ হয়। clock-এর একটা rising edge আসে, আর তার
+পরের rising edge আসার আগেই — instruction fetch হয়, decode হয়, ALU হিসাব করে,
+দরকার হলে memory পড়ে/লেখে, এবং ফল register-এ ফিরে যায়। সব এক ধাক্কায়।
+
+এটা বোঝার সবচেয়ে সহজ উপমা — **এক নিঃশ্বাসে একটা পুরো কাজ শেষ করা**। তুমি দম
+নিলে (clock edge), একটা কাজ করলে, আবার দম নেওয়ার আগেই কাজটা শেষ। প্রতিটা কাজ
+আলাদা দমে। কাজ ছোট হোক বা বড়, প্রতিটার জন্য তুমি একটা পুরো দম খরচ করছ।
+
+এই "এক দমে এক কাজ" নকশার ভালো-মন্দ দুটোই আছে:
+
+| দিক | কেন | মানে কী |
+|------|-----|---------|
+| ✅ Control logic সরল | কোনো state রাখতে হয় না, কোন cycle-এ আছি মনে রাখতে হয় না | বোঝা ও debug করা সহজ |
+| ✅ Implement করা সহজ | পুরো ছবিটা একসাথে চোখের সামনে | শেখার জন্য আদর্শ |
+| ✅ Debug করা সহজ | প্রতি cycle = ঠিক একটা instruction | waveform পড়া সোজা |
+| ❌ Clock ধীর | সবচেয়ে ধীর instruction-ই cycle-এর দৈর্ঘ্য ঠিক করে | frequency কম |
+| ❌ অপচয় | দ্রুত instruction-ও পুরো সময় বসে থাকে | শক্তি ও সময় নষ্ট |
+| ❌ বাস্তবে অব্যবহৃত | আসল chip pipeline ব্যবহার করে | তবে শেখার জন্য চমৎকার! |
+
+মূল কথাটা মনে রেখো — যেহেতু সব instruction-কে **একই দৈর্ঘ্যের** cycle-এর মধ্যে
+শেষ হতে হয়, সেই cycle-টা যথেষ্ট লম্বা হতে হবে যেন **সবচেয়ে ধীর** instruction-ও
+শেষ করতে পারে (সাধারণত `load`, কারণ সে memory পড়ে আবার register-এ লেখে)। ফলে
+সরল `add`-ও সেই লম্বা সময় ধরে অপেক্ষা করে। এটাই single-cycle-এর জন্মগত সীমা —
+আর ঠিক এই সমস্যা সমাধানের গল্পই Chapter 15 (multi-cycle) ও Chapter 16
+(pipeline)। কিন্তু সরলতার জন্য, শেখার শুরুটা এখান থেকেই সেরা।
 
 ```
-Single-Cycle Processor:
-- Each instruction completes in ONE clock cycle
-- Simple design
-- Easy to understand
-- Not very fast (long cycle time)
-
-Advantages:
-✅ Simple control logic
-✅ Easy to implement
-✅ Easy to debug
-✅ Perfect for learning!
-
-Disadvantages:
-❌ Slow clock (limited by slowest instruction)
-❌ Wasteful (most instructions faster than needed)
-❌ Not used in real processors (but great for learning!)
-
 Clock Period = Longest instruction path
 All instructions take same time
 ```
 
-### Datapath Overview:
+### Datapath Overview — পাখির চোখে পুরো ছবি
 
+আগে পুরো গল্পটা এক নজরে দেখে নাও। তথ্য (data) একটা নদীর মতো বাঁ থেকে ডানে বয়ে
+যায়: **PC** ঠিক করে কোন instruction আনতে হবে → **instruction memory** সেটা
+এনে দেয় → **decoder** সেটা পড়ে বুঝে control signal বানায় → **register file**
+থেকে operand পড়া হয় → **ALU** হিসাব করে → দরকার হলে **data memory** পড়ে/লেখে →
+শেষে ফল আবার **register file**-এ ফিরে লেখা হয় (writeback)। এই একই চক্র প্রতি
+cycle-এ ঘুরতে থাকে।
+
+```mermaid
+flowchart TD
+    PC["PC (Program Counter)"] --> IMEM["Instruction Memory"]
+    IMEM --> INSTR["Instruction (32-bit)"]
+    INSTR --> DEC["Decoder / Control Unit"]
+    DEC --> SIG["Control Signals"]
+    INSTR --> RF["Register File"]
+    SIG --> RF
+    RF --> OPS["rs1, rs2"]
+    OPS --> ALU["ALU"]
+    SIG --> ALU
+    ALU --> RES["Result"]
+    RES --> DMEM["Data Memory"]
+    DMEM --> WB["Write Back"]
+    WB --> RF
 ```
-┌─────────┐
-│   PC    │───┐
-└─────────┘   │
-    ↓         ↓
-┌─────────────────┐
-│ Instruction Mem │
-└────────┬────────┘
-         ↓
-    [Instruction]
-         ↓
-    ┌────────┐
-    │Decoder │
-    └────┬───┘
-         ↓
-    [Control Signals]
-         ↓
-┌─────────────────┐
-│  Register File  │
-└───────┬─────────┘
-        ↓
-    [rs1, rs2]
-        ↓
-    ┌───────┐
-    │  ALU  │
-    └───┬───┘
-        ↓
-    [Result]
-        ↓
-┌─────────────────┐
-│   Data Memory   │
-└────────┬────────┘
-         ↓
-    [Write Back]
-         ↓
-    Register File
-```
+
+খেয়াল করো, তীরটা শেষে আবার register file-এ ফিরে এসেছে — এটাই **writeback**, যেখানে
+এক instruction-এর ফল পরের instruction-এর জন্য তৈরি হয়ে যায়। এই "ফিরে আসা"-টাই
+একটা CPU-কে জীবন্ত করে তোলে: প্রতিটা instruction আগেরটার রেখে যাওয়া অবস্থার উপর
+কাজ করে।
 
 🎉 **This chapter = Complete working CPU!**
 
