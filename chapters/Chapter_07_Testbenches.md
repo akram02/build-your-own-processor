@@ -1085,6 +1085,10 @@ endmodule
 
 ## ৭.১১ Complete Testbench Example
 
+এবার সব শেখা একসাথে জড়ো করার সময়। নিচের ALU testbench টা এই chapter এর capstone — এতে তুমি একসাথে দেখবে: `` `timescale ``, পরিষ্কার signal declaration, named port দিয়ে DUT instantiate, একটা পুনর্ব্যবহারযোগ্য `task`, multiple counter দিয়ে গোছানো হিসাব (run/pass/fail), `case` দিয়ে operation এর নাম ছাপানো, একসাথে result আর সব flag (zero, carry, negative) যাচাই, একটা সুন্দর সারসংক্ষেপ, আর শেষে waveform dump। এটাই একটা সত্যিকারের, professional-মানের testbench দেখতে কেমন হয়।
+
+লক্ষ্য করো `test_alu` task টা একটা না, **চারটে জিনিস একসাথে** যাচাই করছে — result তো বটেই, সাথে তিনটে status flag-ও। কারণ একটা ALU "সঠিক উত্তর" দিলেও যদি flag ভুল তোলে (যেমন overflow হয়েও carry না তোলা), সেটাও একটা bug। ভালো test শুধু মূল output না, প্রতিটা পার্শ্ব-ফলাফলও পাহারা দেয়। আর একটা ছোট কৌশল: `reg [80*8:1] op_name;` হলো একটা string ধরে রাখার জায়গা (Verilog এ string আসলে একগুচ্ছ bit), যাতে error message এ "ADD" বা "SUB" নাম দিয়ে দেখানো যায় — সংখ্যার চেয়ে যা পড়তে অনেক সহজ।
+
 ### Testing 8-bit ALU:
 
 ```verilog

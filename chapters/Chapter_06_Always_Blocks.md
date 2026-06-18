@@ -1392,6 +1392,10 @@ Level: Sequential Verilog Master! 🏆
 
 ## 🎯 Final Project - Before Next Chapter
 
+এখন সব শেখা এক জায়গায় জড়ো করার সময় — একটা সত্যিকারের project! UART transmitter বানাও, যেটা parallel data নিয়ে একটা একটা বিট করে তার দিয়ে পাঠায়। কেন এটা নিখুঁত শেষ-প্রকল্প? কারণ এতে এই chapter-এর **সবকটা** ধারণা একসাথে লাগবে: কোন বিট কখন পাঠাবে তা ঠিক করতে **FSM**, data serialize করতে **shift register** (তোমার PISO!), আর baud rate-এর timing গুনতে **counter**। তিনটে আলাদা ইট মিলে একটা কাজের যন্ত্র — এটাই hardware design-এর আসল মজা।
+
+প্রথমবারে কঠিন লাগলে ভেঙে ভেঙে করো: আগে FSM-এর state গুলো কাগজে আঁকো (IDLE → START → DATA → STOP), তারপর এক এক অংশ লিখে আলাদা আলাদা test করো। আটকে গেলে ৬.৯ আর ৬.১০ আবার দেখো। পারবে — তুমি এতদূর এসেছ! 💪
+
 ### Project: Complete UART Transmitter
 
 **Requirements:**
