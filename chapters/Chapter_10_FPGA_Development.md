@@ -35,7 +35,11 @@
 
 ## 🚀 Quick Win - 30 মিনিটে LED Blink!
 
+পুরো chapter পড়ার আগে চলো পুরো যাত্রাটা একনজরে দেখে নিই—যাতে ভেতরে ঢুকলে দিশেহারা না লাগে। এই Quick Win টা একটা "trailer", পুরো "সিনেমা" নিচে আসছে। চারটা ধাপ, ব্যস:
+
 ### Step 1: Get the Board
+
+Tang Nano 9K হলো এই পুরো পার্টের নায়ক—হাতের তালুতে আঁটে এমন একটা ছোট্ট board, অথচ ভেতরে আস্ত একটা FPGA, যেটায় তুমি একটা পুরো RISC-V processor পর্যন্ত ফেলতে পারবে (পরের part-গুলোতে ঠিক সেটাই করব)। দামটাও ছাত্রবান্ধব—এক বেলা ভালো খাবারের সমান।
 
 ```
 Tang Nano 9K Board:
@@ -57,9 +61,15 @@ Where to buy:
 Shipping: 2-4 weeks from China
 ```
 
+> 💡 **আগে order দিয়ে রাখো!** China থেকে আসতে ২-৪ সপ্তাহ লাগে। তাই board টা আজই order করে দাও, আর অপেক্ষার সময়টায় Gowin EDA install করে, নিচের code পড়ে, simulation এ হাত পাকিয়ে নাও। Board এলে তুমি একদম তৈরি থাকবে—খুলেই সরাসরি LED জ্বালাবে। 📦
+
 ### Step 2: Install Tools (Later!)
 
+Gowin EDA—free, একবার বসিয়ে নিলেই হলো। বিস্তারিত নিচে [১০.২](#১০২-gowin-eda-installation) তে।
+
 ### Step 3: First Code
+
+এই পাঁচ লাইনই তোমার প্রথম hardware project। ভয় পেয়ো না—নিচে [১০.৩](#১০৩-your-first-project---led-blink) এ এক-একটা লাইন খুলে বুঝিয়ে দেব। আপাতত শুধু চোখ বুলিয়ে নাও, কাঠামোটা টের পাও:
 
 ```verilog
 module led_blink(
@@ -75,9 +85,15 @@ module led_blink(
 endmodule
 ```
 
+ভেতরের idea টা এক বাক্যে: একটা counter সেকেন্ডে ২ কোটি ৭০ লক্ষ বার বাড়ছে; আমরা শুধু তার সবচেয়ে ধীরে-বদলানো একটা bit (`counter[24]`) LED-তে জুড়ে দিচ্ছি। তাই LED টা চোখে দেখার মতো ধীরে blink করে। অঙ্কটা নিচে [১০.৩](#১০৩-your-first-project---led-blink) এ।
+
 ### Step 4: Program FPGA (Details later!)
 
+Synthesize → Place & Route → Bitstream → USB দিয়ে board এ পাঠাও। চারটা ক্লিক। পুরোটা নিচে [১০.৫](#১০৫-synthesis-and-implementation) আর [১০.৬](#১০৬-programming-the-fpga) এ।
+
 🎉 **First LED blink - You're now a hardware engineer!**
+
+ব্যস, এটুকুই trailer। এবার আসল সিনেমা—প্রতিটা ধাপ ধীরে, খোলামেলা, বুঝে বুঝে।
 
 ---
 

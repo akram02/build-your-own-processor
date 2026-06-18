@@ -61,23 +61,35 @@ Perfect for learning!
 
 ### RISC-V Modularity:
 
+RISC-V-এর সবচেয়ে সুন্দর idea হলো **modularity**। পুরো ISA এক ঢেলা নয় — একটা ছোট base আর তার ওপর ইচ্ছেমতো লাগানো extension। ভাবো একটা মোবাইল প্ল্যানের মতো: base plan সবার লাগে, বাকি features (data pack, calling) যার যেটা দরকার সে সেটা নেয়। তোমার IoT sensor-এ floating point দরকার নেই, তাই F/D extension বাদ — চিপ ছোট, সস্তা, কম power খায়। আবার supercomputer-এ vector (V) লাগবে — সেটা লাগিয়ে নাও। base অংশটা কখনো বদলায় না, তাই base-এর জন্য লেখা software চিরকাল চলবে।
+
+প্রথমে base ISA বেছে নিতে হয় — মূলত register আর data কত বিট চওড়া হবে সেটাই ঠিক করে:
+
+| Base ISA | Width | মানে |
+|----------|-------|------|
+| RV32I | 32-bit | integer register ও data ৩২ বিট |
+| RV64I | 64-bit | integer register ও data ৬৪ বিট |
+| RV128I | 128-bit | integer register ও data ১২৮ বিট |
+
+তারপর দরকার মতো extension লাগানো যায় (প্রতিটার একটা করে অক্ষর):
+
+| Extension | কাজ |
+|-----------|-----|
+| M | Multiply / Divide |
+| A | Atomic operations (lock-free sharing) |
+| F | Single-precision floating point |
+| D | Double-precision floating point |
+| C | Compressed instructions (16-bit, code ছোট করে) |
+| V | Vector operations |
+
+> উদাহরণ: একটা সাধারণ Linux-চালানো চিপকে বলা হয় **RV64GC** — এখানে `G` হলো `IMAFD` একসাথে (general-purpose set), আর `C` হলো compressed।
+
 ```
-Base ISA (required):
-RV32I  - 32-bit integer
-RV64I  - 64-bit integer
-RV128I - 128-bit integer
-
-Extensions (optional):
-M - Multiply/Divide
-A - Atomic operations
-F - Single-precision floating point
-D - Double-precision floating point
-C - Compressed instructions
-V - Vector operations
-
 We'll implement: RV32I
 (Base 32-bit, enough for complete processor!)
 ```
+
+আমরা বানাব শুধু **RV32I** — মানে base 32-bit integer set, কোনো extension ছাড়া। শুনতে সীমিত লাগলেও এটা একটা সম্পূর্ণ, কাজ-করা Turing-complete প্রসেসর — এতেই loop, function, recursion, এমনকি একটা ছোট OS পর্যন্ত চলে। guণ-ভাগ (M) না থাকলে সেগুলো add আর shift দিয়ে software-এ করে নেওয়া যায়। শেখার জন্য এটাই perfect: যথেষ্ট ছোট যে পুরোটা বানানো যায়, আবার যথেষ্ট আসল যে গর্ব করা যায়।
 
 ### RV32I at a Glance:
 

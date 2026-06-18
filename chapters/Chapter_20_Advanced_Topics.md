@@ -37,26 +37,35 @@
 
 ## 🚀 Quick Overview - The Modern Era!
 
-### Where We've Been:
+তুমি গত ১৯টা অধ্যায়ে যা বানিয়েছ, সেটা একটা **পূর্ণাঙ্গ, কাজ করা computer**।
+কিন্তু একটা মজার সত্যি জেনে রাখো — তোমার সেই CPU আর Apple-এর M-series বা
+Intel-এর Core i9-এর মধ্যে পার্থক্যটা *মূলনীতির* (principle) নয়, *মাত্রার*
+(scale) আর *চালাকির* (cleverness)। দুটোই instruction fetch করে, decode করে,
+execute করে, result লেখে। তফাৎ শুধু — modern CPU একই কাজ অনেক বেশি smart
+ভাবে, অনেক বেশি সমান্তরালে (in parallel) করে।
 
-```
-Your Journey:
-Ch 1-4:  Digital foundations
-Ch 5-8:  Verilog mastery
-Ch 9-11: FPGA deployment
-Ch 12-13: CPU architecture
-Ch 14:   Single-cycle (CPI = 1, slow clock)
-Ch 15:   Multi-cycle (resource sharing)
-Ch 16:   Pipeline (throughput = 1 inst/cycle)
-Ch 17:   Hazards (make it work)
-Ch 18:   Cache (10× memory speedup)
-Ch 19:   Complete system (peripherals)
+এই অধ্যায়ে আমরা ঠিক সেই "চালাকিগুলো" দেখব — কীভাবে একটা single-cycle ধারণা
+থেকে শুরু করে engineer-রা আজকের দানবীয় (monstrous) performance পেয়েছে।
 
-Result: Working computer! ✅
-Performance: 3-4× speedup
-```
+### Where We've Been — তুমি কতদূর এসেছ:
 
-### Where Computing is Going:
+| অধ্যায় | কী শিখলে | মূল লাভ |
+|--------|-----------|----------|
+| Ch 1-4 | Digital foundations | গেট থেকে circuit |
+| Ch 5-8 | Verilog mastery | Hardware-কে code-এ লেখা |
+| Ch 9-11 | FPGA deployment | আসল hardware-এ চালানো |
+| Ch 12-13 | CPU architecture | CPU-র ভেতরের নকশা |
+| Ch 14 | Single-cycle | CPI = 1, কিন্তু clock ধীর |
+| Ch 15 | Multi-cycle | Resource sharing |
+| Ch 16 | Pipeline | Throughput = ~1 inst/cycle |
+| Ch 17 | Hazards | Pipeline-কে নির্ভুল করা |
+| Ch 18 | Cache | Memory ~10× দ্রুত |
+| Ch 19 | Complete system | Peripherals সহ পূর্ণ SoC |
+
+**Result:** একটা Working computer! ✅ — pipelining + cache মিলিয়ে naive
+single-cycle design-এর তুলনায় মোটামুটি **3-4× speedup**।
+
+### Where Computing is Going — সামনে কী আছে:
 
 ```
 Modern Processors:
@@ -72,6 +81,12 @@ Modern Processors:
 Performance: 100-1000× your design!
 But same principles! 🚀
 ```
+
+এই তালিকাটা ভয় পাওয়ার মতো লাগতে পারে, কিন্তু একটা কথা মনে রাখো: এর
+প্রতিটা trick-এর পেছনে একটাই সহজ লক্ষ্য — **কোনো cycle যেন বসে বসে নষ্ট না
+হয়** (keep the hardware busy)। তোমার pipeline-এ stall হলে যেমন cycle নষ্ট
+হতো, modern CPU সেই নষ্ট cycle-গুলো একে একে উদ্ধার করার গল্প। আমরা এক এক করে
+দেখব কীভাবে।
 
 🎉 **This chapter = Understanding modern CPUs!**
 

@@ -136,9 +136,21 @@ endmodule
 
 🎉 **First serial communication! Send text to PC!**
 
+**এই code টা কী করছে, একটু ভেঙে দেখি।** পুরো ব্যাপারটা একটা ছোট্ট state machine — চারটে অবস্থা: `IDLE`, `START`, `SEND`, `STOP`। চলো প্রতিটা অংশের পেছনের যুক্তি বুঝি:
+
+- **`CYCLES_PER_BIT = CLK_FREQ / BAUD_RATE`** — এটাই পুরো UART এর হৃদয়। তোমার clock চলছে 27 MHz এ, কিন্তু একটা bit থাকতে হবে অনেক ধীরে (9600 baud মানে প্রতি bit ≈ 104 মাইক্রোসেকেন্ড)। তাই প্রতি bit এ কতগুলো clock cycle অপেক্ষা করতে হবে? `27,000,000 / 9600 = 2812` cycle। অর্থাৎ FPGA তার দ্রুত ঘড়ির ২৮১২টা টিক গুনে তবেই একটা bit এগোয়। এই counting-ই UART কে "ধীর" করে receiver এর তালে মেলায়।
+
+- **`tx_data <= {1'b1, data, 1'b0}`** — এখানে তোমার 8-bit data টাকে একটা ১০-bit frame এ মুড়ে ফেলা হচ্ছে: নিচে START bit (0), উপরে STOP bit (1)। কেন এই ক্রম? কারণ পরে আমরা `tx_data[0]` থেকে একটা একটা করে bit বের করব — তাই যেটা আগে যাবে (START), সেটা থাকবে সবচেয়ে নিচের bit এ।
+
+- **shift register এর চাল** — `SEND` state এ প্রতিবার এক bit সময় শেষ হলে `tx_data <= {1'b1, tx_data[9:1]}` চলে। এটা পুরো register টাকে একঘর ডানে ঠেলে দেয়, আর উপর থেকে 1 (idle/stop মান) ঢুকিয়ে দেয়। ফলে `tx_data[0]` সবসময় পরের পাঠানো bit ধরে রাখে। shift register হলো serial সব protocol-এর সবচেয়ে কাজের যন্ত্র — parallel data কে এক-এক করে তারে বের করে দেয়, ঠিক যেন একটা PEZ ক্যান্ডির বাক্স থেকে একটা একটা lozenge বেরোয়।
+
+> 💡 **ছোট লক্ষ্যণীয় ব্যাপার:** এই Quick-Win version টা সহজ রাখার জন্য `START` state এ counter দিয়ে অপেক্ষা করে না (তাই START bit টা পরের গুনতির সাথে মিশে যায়) — তুমি কেবল ধারণাটা ধরবে বলে এটা ইচ্ছাকৃত সরল। নিচের "Complete Implementation" version এ প্রতিটা state ঠিকঠাক `CLKS_PER_BIT` গোনে, যেটা আসল hardware এ চালানোর উপযোগী। তাই concept বুঝতে এটা, আর board এ চালাতে নিচেরটা ব্যবহার করো।
+
 ---
 
 ## ১১.১ UART Communication - Complete Implementation
+
+Quick Win এ তুমি ধারণাটা পেলে। এবার production-grade version — যেখানে প্রতিটা bit এর timing নিখুঁত, reset আছে, আর `tx_done`/`tx_busy` সংকেত দিয়ে বাকি system জানতে পারে কখন পাঠানো শেষ। এই দুটো module (TX আর RX) মিলেই তোমার সম্পূর্ণ serial link।
 
 ### UART TX (Transmitter):
 
