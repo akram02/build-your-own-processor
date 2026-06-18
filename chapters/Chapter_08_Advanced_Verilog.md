@@ -234,7 +234,7 @@ endtask
 
 ### Example 1 - UART Transmit Task:
 
-ধরো তুমি একটা byte serial line দিয়ে পাঠাবে। UART protocol অনুযায়ী আগে একটা start bit (0), তারপর ৮টা data bit, তারপর একটা stop bit (1) — আর প্রতিটা bit লাইনে কিছুক্ষণ ধরে রাখতে হবে (baud rate অনুযায়ী)। লক্ষ্য করো, এখানে **সময়** জড়িত — "bit রাখো, অপেক্ষা করো, পরের bit"। এটা function দিয়ে কখনো লেখা যাবে না, কারণ function এ `@(posedge clk)` নিষিদ্ধ। এখানেই task উজ্জ্বল হয়। নিচে দেখো কিভাবে একটা ছোট task (`send_bit`) আরেকটা বড় task (`send_byte`) এর ভেতরে বারবার ব্যবহার হচ্ছে — ঠিক যেমন কাজকে ছোট ছোট ধাপে ভাগ করো।
+ধরো তুমি একটা byte serial line দিয়ে পাঠাবে। UART protocol অনুযায়ী আগে একটা start bit (0), তারপর ৮টা data bit, তারপর একটা stop bit (1) — আর প্রতিটা bit লাইনে কিছুক্ষণ ধরে রাখতে হবে (baud rate অনুযায়ী)। লক্ষ্য করো, এখানে **সময়** জড়িত — "bit রাখো, অপেক্ষা করো, পরের bit"। এটা function দিয়ে কখনো লেখা যাবে না, কারণ function এ `@(posedge clk)` নিষিদ্ধ। এখানেই task উজ্জ্বল হয়। নিচে দেখো কীভাবে একটা ছোট task (`send_bit`) আরেকটা বড় task (`send_byte`) এর ভেতরে বারবার ব্যবহার হচ্ছে — ঠিক যেমন কাজকে ছোট ছোট ধাপে ভাগ করো।
 
 ```verilog
 module uart_tx(
