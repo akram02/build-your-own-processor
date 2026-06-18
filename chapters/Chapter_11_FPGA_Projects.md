@@ -1251,14 +1251,14 @@ START → ADDRESS → ACK → DATA → ACK → STOP
 
 ```mermaid
 sequenceDiagram
-    participant M as Master (FPGA)
-    participant S as Slave (address মেলে)
-    M->>S: START (SDA পড়ে যখন SCL HIGH)
+    participant M as Master / FPGA
+    participant S as Slave / address মেলে
+    M->>S: START — SDA পড়ে যখন SCL HIGH
     M->>S: 7-bit ADDRESS + R/W bit
-    S-->>M: ACK (slave SDA LOW টানে = "আমি আছি")
+    S-->>M: ACK — slave SDA LOW টানে = আমি আছি
     M->>S: 8-bit DATA byte
-    S-->>M: ACK ("পেয়েছি")
-    M->>S: STOP (SDA ওঠে যখন SCL HIGH)
+    S-->>M: ACK — পেয়েছি
+    M->>S: STOP — SDA ওঠে যখন SCL HIGH
 ```
 
 দুটো জিনিস খেয়াল করো। প্রথমত, **START আর STOP বিশেষ** — সাধারণত SDA শুধু SCL LOW থাকা অবস্থায় বদলায়, কিন্তু START/STOP ইচ্ছাকৃতভাবে SCL HIGH অবস্থায় SDA বদলায়, যাতে এরা data থেকে আলাদা করে চেনা যায় (একটা "শুরু/শেষ" ঘণ্টা)। দ্বিতীয়ত, প্রতিটা byte এর পর **ACK** — যে slave এর address মিলেছে সে SDA LOW টেনে বলে "হ্যাঁ, আমি শুনছি"। কোনো ACK না এলে (line HIGH থেকে গেলে) master বুঝে নেয় ওই address এ কেউ নেই — এটাই `ack_error`।

@@ -1114,6 +1114,10 @@ For LED blink:
 
 ## ১০.১১ Common Mistakes & Solutions
 
+এই চারটা ভুল প্রায় প্রত্যেক নতুন FPGA শিক্ষার্থী একবার না একবার করে—আমিও করেছি, তুমিও করবে, আর সেটা একদম স্বাভাবিক। আগে থেকে চিনে রাখলে যখন আটকাবে, ঘণ্টার পর ঘণ্টা মাথা চাপড়ানোর বদলে এক মিনিটেই ধরে ফেলবে। তাই এই তালিকাটা মন দিয়ে পড়ো; এটা তোমার "প্রথম-সাহায্য বাক্স"। 🩹
+
+লক্ষ করো একটা মজার মিল: এই চারটার তিনটাই **নীরব** ভুল—compile দিব্যি হয়ে যায়, কোনো লাল error নেই, অথচ board এ কিছু হয় না। সবচেয়ে বিভ্রান্তিকর ঠিক এই ধরনের ভুল, কারণ toolchain তোমাকে কিছু বলে না।
+
 ### Mistake 1: Wrong Pin Numbers ❌
 
 ```
@@ -1124,7 +1128,11 @@ Symptom:
 - Synthesis passes
 - Programming succeeds
 - Nothing happens
+```
 
+ভুল pin দিলে toolchain অভিযোগ করে না—কারণ pin 99 ও তো একটা বৈধ pin, শুধু সেখানে কোনো LED জোড়া নেই! তোমার signal নিরীহভাবে একটা খালি header pin বা অন্য কিছুতে চলে যায়, আর LED অন্ধকারেই থাকে। এটাই সবচেয়ে common "কিছু হচ্ছে না" এর কারণ। সমাধান—[pin reference টেবিল](#tang-nano-9k-pin-reference) খুলে নম্বরগুলো মিলিয়ে নাও:
+
+```
 Solution:
 ✅ Check Tang Nano 9K schematic
 ✅ Verify pin numbers
@@ -1140,7 +1148,11 @@ No .cst file added
 Symptom:
 - Synthesis fails
 - Error: "No constraint file"
+```
 
+এটা অন্তত সৎ ভুল—toolchain সরাসরি বলে দেয় "constraint file নেই"। কারণ pin map ছাড়া সে জানেই না তোমার signal কোথায় যাবে, তাই কাজ থামিয়ে দেয়। নতুনরা প্রায়ই Verilog ফাইল যোগ করে, কিন্তু `.cst` যোগ করতে ভুলে যায়। সমাধান সহজ:
+
+```
 Solution:
 ✅ Create .cst file
 ✅ Add to project
@@ -1156,7 +1168,11 @@ Clock pin wrong or missing
 Symptom:
 - No activity on FPGA
 - Design doesn't run
+```
 
+Clock হলো তোমার design এর হৃৎস্পন্দন—এটা না থাকলে counter বাড়বে না, কিছুই নড়বে না, পুরো design মৃত। আর mistake 1 এর মতোই, ভুল clock pin দিলে এটাও নীরবে fail করে। তাই LED একদম "জমে গেছে" মনে হলে প্রথমেই clock টা সন্দেহ করো—pin 52 ঠিক আছে তো?
+
+```
 Solution:
 ✅ IO_LOC "clk" 52;
 ✅ Verify clock connection
@@ -1171,16 +1187,26 @@ Programmed in SRAM, power cycled
 
 Symptom:
 - Design lost after power off
+```
 
+মনে আছে [১০.৬](#১০৬-programming-the-fpga) এর সেই whiteboard vs খাতা analogy? এখানেই সেটা ফেরত আসে। SRAM mode এ program করে power বন্ধ করলে design মুছে যায়—এটা bug নয়, SRAM এর স্বভাব। নতুনরা ভাবে board টা নষ্ট হয়ে গেছে; আসলে শুধু আবার program করতে হবে (বা Flash mode এ লিখতে হবে)। তাই সবসময় জানো—তুমি কোন mode এ আছ:
+
+```
 Solution:
 ✅ Use SRAM for development
 ✅ Use Flash for production
 ✅ Know which mode you're in!
 ```
 
+> 💡 **মূল শিক্ষা:** FPGA জগতে "compile হলো মানেই কাজ করবে" কথাটা খাটে না। উপরের ভুলগুলোর বেশিরভাগই compile পার করে যায়, তবু board এ চুপচাপ। তাই সবসময় physical দিকটা—pin, clock, mode—আলাদা করে যাচাই করার অভ্যাস গড়ো। code আর hardware, দুটো আলাদা জগৎ; দুটোই মিলতে হয়।
+
 ---
 
 ## ১০.১২ Chapter 10 Mission Complete!
+
+থামো একটু, আর পেছনে তাকাও। এই chapter শুরুর আগে তোমার code বাস করত কম্পিউটারের ভেতরে—কাল্পনিক waveform এ। আর এখন? তোমার লেখা যুক্তি সত্যিকারের সিলিকনের ভেতরে চলছে, সত্যিকারের আলো জ্বালাচ্ছে, তোমার আঙুলের চাপে সাড়া দিচ্ছে। সেই অদৃশ্য দেয়ালটা তুমি ভেঙে ফেলেছ। 🎉
+
+আর শুধু একটা LED জ্বালানো শেখোনি—শিখেছ পুরো toolchain flow (synthesis → place & route → bitstream → program), constraint file দিয়ে design-কে আসল pin এ বাঁধা, আর হার্ডওয়্যারে debug করার সেই কঠিন কিন্তু দামি শিল্পটা। এই workflow টাই তুমি বাকি পুরো বইজুড়ে বারবার ব্যবহার করবে—এমনকি যখন আস্ত একটা processor program করবে, তখনও ঠিক এই একই চারটা ধাপ।
 
 ### তুমি এখন পারো:
 
@@ -1226,7 +1252,11 @@ Level: FPGA Developer! 🏆
 
 ## 🎯 Final Project
 
+এবার নিজের পায়ে দাঁড়ানোর পালা। এতক্ষণ যা শিখলে—counter, button, reset, pattern, debug—সব একসাথে জড়ো করে একটা পূর্ণ project বানাও। নিচে কোনো ready-made code দিইনি, ইচ্ছে করেই; কারণ নিজে struggle করে বানালে যা শিখবে, copy-paste করে তার ছিটেফোঁটাও না। আটকে গেলে আগের section-গুলোতে ফিরে যাও, code-গুলো টুকরো টুকরো করে কাজে লাগাও।
+
 ### Project: Binary Counter with 7-Segment Display
+
+একটা গোনা-যন্ত্র বানাও যেটা button দিয়ে নিয়ন্ত্রণ করা যায়—ওপরে/নিচে গোনা, reset, গতি বদল, থামানো-চালানো। প্রতিটা feature আসলে এই chapter এর এক-একটা শেখা ধারণার পরীক্ষা: count = counter, up/down = একটা flag, reset = তোমার চেনা `if (!btn)`, pause = clock enable। সবগুলো জোড়া দিতে পারলে বুঝবে তুমি সত্যিই FPGA developer হয়ে গেছ।
 
 **Requirements:**
 ```

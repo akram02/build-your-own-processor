@@ -899,6 +899,14 @@ endmodule
 
 ### Memory Initialization:
 
+Memory তে শুরুর data বসানোর তিনটা প্রধান উপায় আছে। কোনটা কখন, সেটা টেবিলে দেখো:
+
+| পদ্ধতি | কীভাবে | কখন ভালো |
+|---|---|---|
+| Method 1: `initial` block | হাতে এক এক ঘর লেখা | অল্প কয়েকটা মান, দ্রুত পরীক্ষা |
+| Method 2: `$readmemh` | hex file থেকে | আসল program/data, পড়া সহজ |
+| Method 3: `$readmemb` | binary file থেকে | bit-level data, একই কাজ ভিন্ন format |
+
 ```verilog
 // Method 1: initial block
 reg [7:0] memory [0:255];
@@ -929,9 +937,13 @@ end
 // 34
 ```
 
+শেষের hex file format টা একটু খেয়াল করো, কারণ Chapter 14 এ তুমি ঠিক এভাবেই তোমার CPU এর program লোড করবে। `@00` মানে "এখান থেকে address 0 এ লেখা শুরু করো", তারপর প্রতিটা লাইনে একটা করে byte (`AA`, `55`, `FF`)। মাঝখানে `@10` দিয়ে তুমি লাফ দিয়ে address ১৬ (hex 10) এ চলে যেতে পারো — মানে file এ ফাঁক রাখা যায়, সব ঘর পরপর ভরতে হয় না। Method 1 (হাতে লেখা) ছোট পরীক্ষার জন্য ঠিক আছে, কিন্তু আসল program এর জন্য সবসময় `$readmemh` ব্যবহার করবে — কারণ তোমার RISC-V assembler/compiler সরাসরি এই hex file বানিয়ে দিতে পারে, তুমি হাতে একটা byte-ও লিখবে না।
+
 ---
 
 ## ৮.৭ File I/O System Tasks
+
+আগের section এ `$readmemh` দিয়ে memory ভরা দেখলে। কিন্তু Verilog এর file-handling তার চেয়ে অনেক বেশি পারে — সাধারণ text file খোলা, লাইন ধরে পড়া, ফল file এ লেখা — প্রায় একটা মিনি programming language এর মতো। মনে রাখো, এই সব **শুধু simulation এ** চলে (testbench এ), hardware এ না — কারণ চিপের তো কোনো hard disk নেই। কিন্তু verification এ এগুলো সোনার খনি: তুমি test vector গুলো একটা file এ রাখতে পারো, simulation এ পড়তে পারো, আর ফলাফল আরেকটা file এ লিখে পরে মিলিয়ে দেখতে পারো।
 
 ### Reading Files:
 
@@ -964,6 +976,8 @@ initial begin
 end
 ```
 
+এই দ্বিতীয় অংশটা একটু বড়, কারণ এটা সাধারণ file পড়ার পুরো ছন্দ দেখায় — আর এটা C-এর file handling এর প্রায় হুবহু নকল। ধাপগুলো এই: `$fopen("input.txt", "r")` দিয়ে file খোলো (`"r"` মানে read mode), যেটা একটা file handle ফেরত দেয়। সবসময় যাচাই করো handle শূন্য কিনা — শূন্য মানে file খোলেনি (হয়তো নামটা ভুল), তখন সুন্দরভাবে থেমে যাও। তারপর `while (!$feof(file))` দিয়ে file এর শেষ (`feof` = file end-of-file) না আসা পর্যন্ত লুপ চালাও, প্রতিবার `$fscanf` দিয়ে একটা মান পড়ো। শেষে অবশ্যই `$fclose` — খোলা file বন্ধ করা ভালো অভ্যাস। লক্ষ্য করো `$fscanf` একটা status ফেরত দেয় (কয়টা জিনিস সফলভাবে পড়া গেল) — সেটা দিয়ে পড়া ঠিকঠাক হলো কিনা যাচাই করা যায়।
+
 ### Writing Files:
 
 ```verilog
@@ -986,9 +1000,24 @@ initial begin
 end
 ```
 
+লেখার দিকটা পড়ার আয়না। `$fopen(..., "w")` দিয়ে write mode এ file খোলো, তারপর `$fwrite`/`$fdisplay` দিয়ে লেখো (পার্থক্য: `$fdisplay` শেষে নিজে একটা newline দেয়, `$fwrite` দেয় না — ঠিক `$display` বনাম `$write` এর মতো)। আর `$writememh`/`$writememb` হলো `$readmem*` এর উল্টো — পুরো memory array টা একটা file এ ঢেলে দেয়। এটা debug এ দারুণ কাজের: simulation কিছুক্ষণ চালিয়ে memory এর একটা "snapshot" file এ নামিয়ে নাও, তারপর শান্তিতে দেখো ভেতরে কী আছে। তোমার CPU বানানোর সময় এভাবে data memory dump করে যাচাই করবে প্রোগ্রাম ঠিক ফল লিখেছে কিনা।
+
 ---
 
 ## ৮.৮ Synthesis Attributes
+
+Synthesizer (যে tool তোমার Verilog কে gate এ পরিণত করে) খুব চালাক — সে নিজে থেকে অনেক সিদ্ধান্ত নেয়: কোন signal বাদ দেওয়া যায়, memory কোথায় বসবে, FSM কীভাবে encode হবে। বেশিরভাগ সময় তার সিদ্ধান্ত ঠিক। কিন্তু মাঝে মাঝে তুমি জানো তার চেয়ে ভালো — তখন তুমি একটা **attribute** দিয়ে তাকে ইশারা (বা সরাসরি নির্দেশ) দাও। Attribute লেখা হয় `(* ... *)` দিয়ে, আর এটা যে জিনিসের ঠিক আগে বসে তার উপর প্রযোজ্য হয়।
+
+ভাবো attribute হলো তোমার design-এ লাগানো sticky-note — "এই signal টা মুছো না", "এই memory টা block RAM এ রাখো", "এই FSM টা one-hot এ encode করো"। নিচে সবচেয়ে দরকারি কয়েকটা:
+
+| Attribute | কী বলে synthesizer কে | কখন দরকার |
+|---|---|---|
+| `keep = "true"` | এই signal মুছে ফেলো না | debug এ signal probe করতে |
+| `ram_style = "block"` | array কে block RAM এ রাখো | বড় memory |
+| `ram_style = "distributed"` | array কে LUT-based RAM এ রাখো | ছোট, দ্রুত memory |
+| `fsm_encoding = "one_hot"` | প্রতিটা state এক bit | দ্রুত, কিন্তু বেশি flip-flop |
+| `fsm_encoding = "sequential"` | state binary তে গোনা | কম flip-flop |
+| `dont_touch = "true"` | এই module/signal এ হাত দিও না | hierarchy অক্ষত রাখতে |
 
 ### Common Attributes:
 
@@ -1023,11 +1052,19 @@ endcase
 module my_module(...);
 ```
 
+দুটো জিনিস গভীরভাবে বোঝার মতো। প্রথমত, `keep`/`dont_touch` কেন লাগে — synthesizer optimization এর সময় "অপ্রয়োজনীয়" signal মুছে ফেলে। কিন্তু debug করতে গিয়ে তুমি হয়তো একটা ভেতরের signal probe করতে চাও, যেটা সে মুছে দিয়েছে — তখন `keep` দিয়ে সেটা টিকিয়ে রাখো। দ্বিতীয়ত, `fsm_encoding` এর one-hot বনাম sequential — এটা একটা ক্লাসিক trade-off: one-hot এ প্রতিটা state এর জন্য আলাদা flip-flop (তাই বেশি flip-flop খায়), কিন্তু "এখন কোন state" বোঝা দ্রুত (শুধু একটা bit দেখলেই হয়), তাই circuit দ্রুত চলে। FPGA তে flip-flop প্রচুর থাকে, তাই one-hot প্রায়ই ভালো; চিপে জায়গা কম হলে sequential বাছা হয়।
+
+সতর্কতা: attribute হলো শেষ অস্ত্র, প্রথম নয়। আগে পরিষ্কার, ঠিক code লেখো — বেশিরভাগ সময় synthesizer নিজেই সঠিক কাজ করবে। attribute তখনই ব্যবহার করো যখন তোমার কাছে নির্দিষ্ট কারণ আছে, আর tool কে override করার দরকার বুঝেছো। এগুলোর পুরো শক্তি তুমি Part 5 (VLSI) এ OpenLane নিয়ে কাজ করার সময় টের পাবে।
+
 ---
 
 ## ৮.৯ Advanced Patterns
 
+এবার সব টুকরো একসাথে জুড়ে দুটো বাস্তব, parameterized module দেখি — যাতে দেখতে পাও কীভাবে এই chapter এর ধারণাগুলো মিলেমিশে কাজ করে।
+
 ### Parameterized Encoder:
+
+**Priority encoder** — যেটা একগুচ্ছ bit এর মধ্যে সবচেয়ে গুরুত্বপূর্ণ (সর্বোচ্চ-priority) যে bit টা ১, তার নম্বর বের করে। interrupt handling এ এটা অপরিহার্য: একসাথে অনেকগুলো interrupt এলে কোনটা আগে সামলাবে সেটা ঠিক করতে priority encoder লাগে।
 
 ```verilog
 module priority_encoder #(
@@ -1056,6 +1093,8 @@ module priority_encoder #(
     assign valid = found;
 endmodule
 ```
+
+এই module এ তিনটা ধারণা একসাথে কাজ করছে, খেয়াল করো: (১) **parameter** `WIDTH` দিয়ে এটা যেকোনো আকারের input নিতে পারে; (২) **`$clog2(WIDTH)`** দিয়ে output এর প্রস্থ নিজে হিসাব হয় (৮ input এর index ০-৭ ধরতে ৩ bit); (৩) loop টা MSB থেকে নিচে নামছে, আর `!found` দিয়ে নিশ্চিত করছে শুধু **প্রথম** (সর্বোচ্চ) set-bit টাই ধরা হয় — এটাই "priority"। আর `valid` output টা একটা গুরুত্বপূর্ণ সংকেত: input এ একটাও ১ না থাকলে `encoded` শূন্য দেখাবে, কিন্তু সেই শূন্য তো bit-0 কেও বোঝাতে পারে! `valid=0` দিয়ে তুমি বোঝো "আসলে কিছুই set ছিল না" — তাই এমন encoder এ `valid` ছাড়া চলে না।
 
 ### Gray Counter with Generate:
 
@@ -1087,9 +1126,15 @@ module gray_counter #(
 endmodule
 ```
 
+এই উদাহরণটা সুন্দরভাবে দেখায় কীভাবে **sequential আর generate একসাথে** কাজ করে। প্রথম অংশটা একটা সাধারণ binary counter — `always @(posedge clk)` এ প্রতি edge এ ১ বাড়ে। তারপর `generate` অংশটা সেই binary count কে তাৎক্ষণিকভাবে Gray code এ রূপান্তর করে: সবচেয়ে উপরের bit একই থাকে, আর প্রতিটা নিচের bit হলো পাশের দুটো binary bit এর XOR (Example 3 এর উল্টো রূপান্তর)। generate-for টা এখানে WIDTH-1টা XOR gate বসায় — WIDTH বদলালে gate সংখ্যা নিজে মিলে যায়।
+
+কেন Gray counter দরকার? কারণ Gray code এ পরপর দুটো সংখ্যার মধ্যে ঠিক **একটা** bit বদলায়। সাধারণ binary তে ৭ (`0111`) থেকে ৮ (`1000`) এ যেতে চারটা bit একসাথে বদলায় — আর এই bit গুলো যদি একদম একই মুহূর্তে না বদলায় (বাস্তবে কখনোই হয় না), মাঝখানে ক্ষণিকের জন্য ভুল মান (glitch) দেখা দিতে পারে। Gray code এ একবারে একটা bit বদলায় বলে এই বিপদ নেই — তাই এটা asynchronous FIFO আর clock-domain crossing (দুটো ভিন্ন clock এর মধ্যে data পাঠানো) এ অপরিহার্য, যেখানে glitch মানে data নষ্ট।
+
 ---
 
 ## ৮.১০ Your 1-Week Build Plan
+
+পড়া এক জিনিস, হাতে করা আরেক — আর hardware এ হাতে না করলে কিছুই গাঁথে না। তাই নিচে একটা ৭ দিনের পরিকল্পনা, প্রতিদিন একটা করে topic। তাড়াহুড়ো কোরো না; প্রতিটা feature নিজে লিখে, simulate করে, GTKWave এ দেখে তবেই পরের দিনে যাও। শেষ দিনে সব একসাথে জুড়ে দেবে — সেটাই আসল পরীক্ষা।
 
 ### Day 1: Functions
 ```
@@ -1151,7 +1196,11 @@ endmodule
 
 ## ৮.১১ Common Mistakes
 
+প্রতিটা নতুন শেখার মতো, এই advanced feature গুলোতেও কিছু সাধারণ ফাঁদ আছে যেখানে প্রায় সবাই একবার হলেও পা দেয়। আগেভাগে চিনে রাখলে অনেক হতাশার রাত বাঁচবে। তিনটা সবচেয়ে ঘন ঘন ঘটা ভুল দেখি।
+
 ### Mistake 1: Function with Timing ❌
+
+সবচেয়ে সাধারণ ভুল — function এর ভেতরে `#delay` বা `@(posedge clk)` বসিয়ে দেওয়া। মনে আছে কেন এটা চলে না? function হলো combinational, তাৎক্ষণিক — তার কোনো "সময়" নেই। যেখানে সময় বা অপেক্ষা দরকার, সেখানে function নয়, **task** ব্যবহার করো। নিচে ভুল আর সঠিক দুটোই পাশাপাশি দেখো:
 
 ```verilog
 // ❌ WRONG

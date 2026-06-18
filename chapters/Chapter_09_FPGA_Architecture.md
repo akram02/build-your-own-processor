@@ -899,6 +899,8 @@ FPGA = Perfect prototyping tool!
 
 ## ৯.১১ Major FPGA Vendors
 
+তত্ত্ব তো বুঝলে, এবার বাজারের দিকে তাকাও — FPGA কারা বানায়, আর তুমি কোনটা দিয়ে শুরু করবে? FPGA-এর জগৎটা মূলত কয়েকটা বড় কোম্পানির — প্রত্যেকের আলাদা শক্তি, আলাদা দাম, আর আলাদা tool। মজার ব্যাপার, এদের সবার চিপের ভেতরে কিন্তু সেই একই মূল উপাদান যা তুমি এই chapter-এ শিখলে: LUT, CLB, routing, BRAM, DSP। শুধু সংখ্যা, গতি আর দামে পার্থক্য। চলো চারজন প্রধান খেলোয়াড়ের সাথে পরিচিত হই।
+
 ### Xilinx (AMD):
 
 ```
@@ -920,6 +922,8 @@ Pros: Industry standard, huge ecosystem
 Cons: Expensive (board + tools for large devices)
 ```
 
+**Xilinx** হলো এই গল্পের আদি নায়ক — যারা ১৯৮৪ সালে প্রথম FPGA-টাই আবিষ্কার করেছিল (মনে আছে, সেই XC2064?)। আজ এরা AMD-এর অংশ, এবং industry-এর de facto standard। তুমি যদি কোনো বড় কোম্পানিতে FPGA engineer হিসেবে চাকরি করো, খুব সম্ভবত Xilinx-এর চিপ আর তাদের **Vivado** tool-ই ব্যবহার করবে। লক্ষ্য করো এদের family-গুলো কীভাবে সাজানো — entry-level Spartan থেকে high-end Virtex পর্যন্ত একটা সিঁড়ি, আর Zynq-এ তো FPGA-এর সাথে আস্ত ARM processor জোড়া! শক্তি এর বিশাল ecosystem, দুর্বলতা — বড় চিপ আর tool ব্যয়বহুল।
+
 ### Intel (Altera):
 
 ```
@@ -940,6 +944,8 @@ Pros: Good performance, Intel backing
 Cons: Complex tools, steeper learning
 ```
 
+**Intel** এই বাজারে ঢুকেছে **Altera** নামের পুরোনো প্রতিষ্ঠানকে কিনে (২০১৫)। এদের অবস্থান Xilinx-এর ঠিক পরেই — দ্বিতীয় বৃহত্তম। Xilinx-এর মতোই এদেরও entry (Cyclone) থেকে high-end (Stratix) পর্যন্ত পূর্ণ লাইনআপ, আর AI-এর জন্য নতুন Agilex। এদের tool **Quartus Prime** শক্তিশালী, কিন্তু নতুনদের কাছে একটু জটিল মনে হতে পারে — তাই table-এ এদের learning curve "Hard" লেখা।
+
 ### Lattice Semiconductor:
 
 ```
@@ -959,6 +965,8 @@ Pros: Cheap, low power, open source friendly
 Cons: Smaller devices, less resources
 ```
 
+**Lattice** হলো "ছোট কিন্তু তেজি" — বড় দুজনের মতো বিশাল চিপ এরা বানায় না, কিন্তু সস্তা আর অসম্ভব কম-power চিপে এরা ওস্তাদ (iCE40 মাত্র $2 থেকে শুরু!)। hobbyist দুনিয়ায় Lattice-এর একটা বিশেষ জায়গা আছে একটা কারণে: **Project IceStorm** — একটা open-source toolchain যা দিয়ে কোনো proprietary software ছাড়াই Lattice চিপ program করা যায়। যারা open-source হার্ডওয়্যার ভালোবাসে, তাদের কাছে এটা স্বর্গ।
+
 ### Gowin Semiconductor:
 
 ```
@@ -977,63 +985,107 @@ Pros: Very cheap, beginner friendly, good docs
 Cons: Newer, smaller ecosystem
 ```
 
+আর এই হলো আমাদের নায়ক — **Gowin**। চীনের তুলনামূলক নতুন একটা কোম্পানি (২০১৪), কিন্তু দ্রুত বেড়ে উঠছে। কেন আমরা এদেরই বেছেছি? কারণ এরা **অসম্ভব সস্তা, নতুনদের-বান্ধব, আর tool (Gowin EDA) সম্পূর্ণ ফ্রি ও সহজ।** আমাদের পুরো বইয়ের সঙ্গী **Tang Nano 9K** board-এ এদেরই একটা চিপ বসানো — সেটাই তুমি Chapter 10 থেকে হাতে নিয়ে কাজ করবে। দুর্বলতা একটাই: নতুন কোম্পানি বলে ecosystem (tutorial, community) এখনো Xilinx-এর মতো বিশাল নয়। কিন্তু শেখার জন্য এর দাম-আর-সরলতার সমন্বয় অপ্রতিদ্বন্দ্বী।
+
+> ⚠️ **ছোট অসঙ্গতি (FLAG — যাচাই করার জন্য, আমি বদলাইনি):** এখানে চিপটাকে **GW1N-9** বলা হয়েছে, কিন্তু Tang Nano 9K-তে আসলে বসানো আছে **GW1NR-9** (একই family-এর R-variant, integrated PSRAM সহ)। বইয়ের `CLAUDE.md`-এ চিপটিকে **GW1NR-9** হিসেবেই উল্লেখ করা আছে। লেখক চাইলে এখানে **GW1NR-9** লিখলে পুরো বইয়ের সাথে সামঞ্জস্যপূর্ণ হবে।
+
 ### Comparison for Beginners:
 
-```
-┌────────┬─────────┬──────────┬──────────┬─────────┐
-│ Vendor │ Price   │ Learning │ Tools    │ Recommend│
-├────────┼─────────┼──────────┼──────────┼─────────┤
-│ Xilinx │ $$$     │ Medium   │ Vivado   │ Industry│
-│ Intel  │ $$$     │ Hard     │ Quartus  │ Advanced│
-│ Lattice│ $       │ Easy     │ Open src │ Hobby   │
-│ Gowin  │ $       │ Easy     │ Simple   │ Learn   │
-└────────┴─────────┴──────────┴──────────┴─────────┘
+চারজনকে আলাদা আলাদা দেখলে। এবার একনজরে পাশাপাশি — বিশেষ করে একজন **নতুন শিক্ষার্থীর** চোখে:
 
-For this book: Gowin (Tang Nano 9K)
-Why? Cheap ($12), easy tools, perfect for learning!
+| Vendor | Price | Learning | Tools | কাদের জন্য |
+|---|---|---|---|---|
+| **Xilinx** | $$$ | Medium | Vivado | Industry standard |
+| **Intel** | $$$ | Hard | Quartus | Advanced users |
+| **Lattice** | $ | Easy | Open source | Hobbyist |
+| **Gowin** | $ | Easy | Simple (Gowin EDA) | **শেখার জন্য (আমরা) ✅** |
+
+সিদ্ধান্ত পরিষ্কার — তিনটে কারণের সমন্বয়ে আমরা শেখার জন্য **Gowin (Tang Nano 9K)** বেছেছি: (১) দাম সস্তা, (২) tool সহজ ও ফ্রি, আর (৩) নতুনদের জন্য আদর্শ। তোমার বানানো RISC-V processor পর্যন্ত এই ছোট্ট board অনায়াসে সামলাতে পারবে।
+
 ```
+For this book: Gowin (Tang Nano 9K)
+Why? Cheap, easy tools, perfect for learning!
+```
+
+> ⚠️ **দাম সংক্রান্ত অসঙ্গতি (FLAG — আমি সংখ্যা বদলাইনি):** মূল draft-এ এখানে Tang Nano 9K-এর দাম **"$12"** লেখা ছিল, কিন্তু বইয়ের `README.md` এবং `CLAUDE.md`-এ এটি ধারাবাচকভাবে **~২,০০০ টাকা / $25** বলা হয়েছে। সামঞ্জস্য রাখতে আমি উপরের line থেকে নির্দিষ্ট দামটি সরিয়ে রেখেছি; লেখক একটি সঠিক সংখ্যা (সম্ভবত **~$25 / ২,০০০ টাকা**) বসিয়ে নিশ্চিত করতে পারেন।
+
+---
+
+## ৯.১১.৫ আমাদের চিপ — Tang Nano 9K / Gowin GW1NR-9
+
+এতক্ষণ আমরা LUT, CLB, routing, BRAM, DSP নিয়ে কথা বললাম বিমূর্তভাবে। এবার এই সবকিছুকে **একটা সত্যিকারের চিপে** নামিয়ে আনি — যেটা তুমি Chapter 10 থেকে হাতে নিয়ে কাজ করবে। তাহলে সংখ্যাগুলো আর কেবল তত্ত্ব থাকবে না, তোমার নিজের board-এর বাস্তবতা হয়ে উঠবে।
+
+Tang Nano 9K board-এর হৃৎপিণ্ডে আছে **Gowin GW1NR-9** নামের একটা FPGA। চলো দেখি এর ভেতরে ঠিক কতটা সম্পদ আছে — মনে রেখো, এই প্রতিটা সংখ্যা মানেই এই chapter-এ শেখা একেকটা উপাদানের গোনা পরিমাণ:
+
+| সম্পদ (Resource) | পরিমাণ | এই chapter-এর কোন ধারণা |
+|---|---|---|
+| **LUT (Look-Up Table)** | ৮,৬৪০টি | ৯.৩ — programmable truth table |
+| **Flip-Flop (FF)** | ৬,৪৮০টি | ৯.৪ — CLB-এর ভেতরের memory element |
+| **Block RAM (BRAM)** | ৪৬৮ Kb | ৯.৬ — embedded memory |
+| **On-board clock** | ২৭ MHz | ৯.১২ — timing-এর reference frequency |
+
+এই সংখ্যাগুলোকে নিজের ভাষায় বুঝে নাও:
+
+- **৮,৬৪০টি LUT** — মনে আছে, প্রতিটা LUT একটা ছোট programmable truth table, আর তুমি Verilog-এ যা logic লেখো তা এই LUT-গুলোতেই map হয়? অর্থাৎ তোমার হাতে ৮,৬৪০টি "যেকোনো-গেট-হতে-পারা" ব্লক আছে। একটা সম্পূর্ণ single-cycle RISC-V CPU এর বেশ বড় অংশ খরচ করবে, কিন্তু এতে অনায়াসে এঁটে যায় — তুমি Part 4-এ নিজেই দেখবে!
+- **৬,৪৮০টি FF** — এগুলোই তোমার সব register, counter আর pipeline stage-এর memory। লক্ষ্য করো FF-এর সংখ্যা LUT-এর চেয়ে কম (প্রতি LUT-এর সাথে ১টা FF নয়); এটাই স্বাভাবিক, কারণ সব logic-এর জন্য register লাগে না।
+- **৪৬৮ Kb BRAM** — এই dedicated memory দিয়েই তুমি তোমার CPU-এর instruction ও data memory বানাবে, LUT অপচয় না করেই (মনে আছে ৯.৬-এর সেই গুদামের গল্প?)।
+- **২৭ MHz clock** — board-এ আগে থেকেই একটা 27 MHz crystal বসানো, যেটা তোমার design-কে প্রতি সেকেন্ডে ২ কোটি ৭০ লক্ষ বার "tick" দেয়। ৯.১২-এর timing constraint-এ এই সংখ্যাটাই তোমার শুরুর reference হবে।
+
+> 💡 **চিন্তার খোরাক:** ৮,৬৪০টি LUT শুনতে কম মনে হতে পারে যখন high-end FPGA-তে কয়েক মিলিয়ন থাকে। কিন্তু ভেবে দেখো — ১৯৮৪ সালের প্রথম FPGA-তে ছিল মাত্র ৬৪টা logic block, আর সেই যুগেও মানুষ দারুণ সব circuit বানিয়েছে। এই ছোট্ট ২,০০০ টাকার board-এ তুমি একটা গোটা working processor বানাবে — যা কিছুদিন আগেও কল্পনাতীত ছিল। সম্পদ সীমিত হলে বরং ভালো: এটা তোমাকে দক্ষ, পরিচ্ছন্ন design করতে শেখায়।
+
+> ⚠️ **স্পেক যাচাই (এই সংখ্যাগুলো আমি বদলাইনি):** উপরের সব মান — ৮,৬৪০ LUT, ৬,৪৮০ FF, ৪৬৮ Kb BRAM, ২৭ MHz — বইয়ের `CLAUDE.md`-এ verified-correct হিসেবে চিহ্নিত GW1NR-9 spec থেকে নেওয়া। আমি এগুলো হুবহু রেখেছি। (এই section-টি আমি নতুন যোগ করেছি যাতে chapter-এর title ও শেখার-তালিকায় উল্লেখ করা Tang Nano 9K / GW1NR-9-এর concrete spec অন্তত একবার মূল লেখায় থাকে — মূল draft-এ এই সংখ্যাগুলো ছিল না। লেখক চাইলে section-টি রাখতে/সরাতে পারেন।)
 
 ---
 
 ## ৯.১২ FPGA Design Flow
 
+এই chapter-এ আমরা FPGA-এর প্রতিটা অঙ্গ আলাদা করে দেখলাম। এবার পুরো ছবিটা জুড়ে নেওয়ার সময়: তোমার লেখা একটা Verilog ফাইল কীভাবে শেষমেশ একটা চলন্ত চিপে পরিণত হয়? এই পুরো যাত্রার নাম **FPGA design flow** — কয়েকটা স্বয়ংক্রিয় ধাপের শৃঙ্খল, যেটা Chapter 10-এ তুমি Gowin IDE-তে নিজের হাতে চালাবে।
+
 ### From Verilog to FPGA:
 
-```
-Step 1: Design (Verilog/VHDL)
-   │
-   ▼
-Step 2: Synthesis
-   - Convert HDL to logic gates
-   - Optimize logic
-   │
-   ▼
-Step 3: Place
-   - Assign logic to CLBs
-   - Optimize placement
-   │
-   ▼
-Step 4: Route
-   - Connect CLBs via routing
-   - Meet timing constraints
-   │
-   ▼
-Step 5: Generate Bitstream
-   - Create configuration file
-   │
-   ▼
-Step 6: Program FPGA
-   - Load bitstream
-   - Test on hardware!
+ভাবো এটা যেন তোমার design-কে hardware-এ "compile" করার প্রক্রিয়া। software-এ যেমন source code → compiler → executable, এখানে তেমনি Verilog → toolchain → bitstream। ধাপগুলো:
+
+```mermaid
+flowchart TD
+    S1["1️⃣ Design<br/>(Verilog / VHDL)"] --> S2
+    S2["2️⃣ Synthesis<br/>HDL → logic gates → LUT-এ map<br/>+ optimize"] --> S3
+    S3["3️⃣ Place<br/>কোন logic কোন CLB-তে বসবে"] --> S4
+    S4["4️⃣ Route<br/>CLB-গুলো জোড়া দাও<br/>timing মেলাও"] --> S5
+    S5["5️⃣ Generate Bitstream<br/>configuration file বানাও"] --> S6
+    S6["6️⃣ Program FPGA<br/>bitstream load → hardware-এ test!"]
+
+    style S1 fill:#1e3a5f,stroke:#4a90d9,color:#fff
+    style S2 fill:#2d5016,stroke:#7cb342,color:#fff
+    style S3 fill:#5f4a1e,stroke:#d9a94a,color:#fff
+    style S4 fill:#5f1e3a,stroke:#d94a90,color:#fff
+    style S5 fill:#3a1e5f,stroke:#904ad9,color:#fff
+    style S6 fill:#1e5f5a,stroke:#4ad9c8,color:#fff
 ```
 
+প্রতিটা ধাপ এখন তোমার কাছে পরিচিত মনে হওয়া উচিত, কারণ এগুলো এই chapter-এরই ধারণাগুলোকে কাজে লাগায়:
+
+- **Synthesis** তোমার Verilog পড়ে এবং প্রতিটা logic-কে truth table-এ রূপ দিয়ে **LUT**-এ map করে (মনে আছে, ৯.৩-এ আমরা দেখেছিলাম Verilog আসলে LUT ভরাটের বর্ণনা?)।
+- **Place** ঠিক করে কোন LUT/logic কোন physical **CLB**-তে বসবে — কাছের জিনিস কাছে বসানোর সেই শিল্প (৯.৫-এ বলা placement)।
+- **Route** সেই বসানো CLB-গুলোকে **programmable switch** দিয়ে জোড়া দেয় এবং নিশ্চিত করে signal সময়মতো পৌঁছায়।
+- **Bitstream generate** সব সিদ্ধান্তকে সেই একটা configuration ফাইলে গোটায় (৯.৯), আর শেষে **program** ধাপে সেটা চিপে লোড হয়ে তোমার circuit জীবন্ত হয়।
+
+চমৎকার ব্যাপার — এই পুরো শৃঙ্খলটা tool স্বয়ংক্রিয়ভাবে চালায়। তুমি শুধু Verilog লেখো আর "build" চাপো; বাকি ম্যাজিকটা ভেতরে ভেতরে ঘটে।
+
 ### Timing Analysis:
+
+flow-এর মধ্যে একটা ধাপ আলাদা করে বোঝা দরকার, কারণ এটাই প্রায়ই তোমার design "কত দ্রুত চলবে" তা ঠিক করবে — **timing analysis**। মূল ধারণা তিনটে:
 
 ```
 Critical Path = Slowest path in design
 Setup Time = Data stable before clock
 Hold Time = Data stable after clock
+```
 
+এগুলোর intuition একটা analogy দিয়ে ধরো। কল্পনা করো একদল মানুষ হাত ধরাধরি করে দাঁড়িয়ে, আর প্রতি clock tick-এ একজন থেকে পরের জনে একটা বল চালাচালি করছে (data এক flip-flop থেকে পরের flip-flop-এ যাচ্ছে)। পরের tick আসার **আগেই** বলটাকে গন্তব্যে পৌঁছাতে হবে এবং থিতু হতে হবে (**setup time** — clock আসার আগে data stable থাকা চাই)।
+
+এখন প্রশ্ন: পুরো শৃঙ্খলে সবচেয়ে ধীর জোড়াটা (যেখানে দূরত্ব সবচেয়ে বেশি, বা মাঝে সবচেয়ে বেশি logic) কে? সেটাই **critical path** — তোমার design-এর সবচেয়ে ধীর পথ। আর এই critical path-ই তোমার সর্বোচ্চ clock speed ঠিক করে দেয়, কারণ clock-কে এত ধীর রাখতেই হবে যাতে এমনকি সবচেয়ে ধীর পথটাও সময়মতো শেষ হয়। (এটা পরে Chapter 16-এ pipelining বোঝার ভিত্তি — লম্বা পথকে ছোট টুকরোয় ভাগ করে দ্রুত clock চালানো।)
+
+```
 Timing Constraints:
 - Define clock frequency
 - Input/output delays
@@ -1048,9 +1100,13 @@ If timing fails:
 - Better placement
 ```
 
+তুমি tool-কে একটা লক্ষ্য বেঁধে দাও **timing constraint**-এর মাধ্যমে — যেমন "আমার design 27 MHz-এ চলতে হবে" (ঠিক Tang Nano 9K-এর on-board clock-এর মতো!)। tool তখন critical path মেপে দেখে লক্ষ্যটা সম্ভব কিনা। যদি **timing fail** করে (critical path খুব ধীর), তোমার হাতে কয়েকটা অস্ত্র আছে: কোড optimize করা, **pipeline stage যোগ করে লম্বা পথ ভাগ করা** (সবচেয়ে শক্তিশালী উপায়), clock ধীর করা, বা placement উন্নত করা। এই ভারসাম্য খোঁজাই — গতি বনাম সময়-মেলানো — একজন hardware designer-এর আসল দক্ষতা, আর তুমি Part 4-এ processor বানানোর সময় বারবার এই খেলা খেলবে।
+
 ---
 
 ## ৯.১৩ Chapter 9 Mission Complete!
+
+বাহ, তুমি একটা বড় দেয়াল পার করলে! এই chapter শুরু হয়েছিল একটা ধাঁধা দিয়ে — "একটা chip কীভাবে কেনার পরে যেকোনো circuit হতে পারে?" এখন তুমি উত্তরটা গভীরভাবে জানো: কারণ এর logic আসলে **programmable truth table (LUT)**, এর তার আসলে **programmable switch (routing)**, আর এর পুরো ব্যক্তিত্ব আসলে একটা **bitstream** যা power-on-এ লোড হয়। আগে FPGA ছিল একটা রহস্যময় শব্দ; এখন এটা তোমার কাছে চেনা একটা যন্ত্র, যার ভেতরের প্রতিটা অংশের কাজ তুমি বোঝো।
 
 ### তুমি এখন জানো:
 
@@ -1118,6 +1174,12 @@ FPGA is special because:
    - Change and retry quickly
    - Low risk, high speed!
 ```
+
+এই চারটে পয়েন্টের মধ্যে **২ নম্বরটা (Parallel Execution)** নিয়ে একটু আলাদা করে ভাবো, কারণ এটাই হার্ডওয়্যার-চিন্তা আর সফটওয়্যার-চিন্তার আসল পার্থক্য — আর নতুনরা এখানেই সবচেয়ে বেশি ধাক্কা খায়।
+
+একটা CPU-তে তুমি যখন প্রোগ্রাম চালাও, instruction-গুলো **একটার পর একটা** চলে — যত দ্রুতই হোক, মূলত sequential, একটা সময়ে একটাই কাজ (বা কয়েকটা)। কিন্তু FPGA-তে তোমার লেখা প্রতিটা LUT, প্রতিটা CLB **একই সাথে, প্রতি মুহূর্তে** কাজ করছে। তুমি যদি ১০০০টা আলাদা circuit বানাও, ১০০০টাই একসাথে সমান্তরালে চলবে — কেউ কারো জন্য অপেক্ষা করে না। এটাই FPGA-এর গোপন পরাশক্তি: software যেখানে "ধাপে ধাপে" ভাবে, hardware সেখানে "সব একসাথে" ভাবে।
+
+এই উপলব্ধিটা তোমার Verilog লেখার ধরন বদলে দেবে। Verilog হলো প্রকৃতিগতভাবেই **concurrent** — তোমার প্রতিটা `assign` আর `always` ব্লক একসাথে, সমান্তরালে বাস্তব hardware হয়ে চলে, কোনো নির্দিষ্ট ক্রমে নয়। তুমি C-এর মতো "এই line, তারপর ওই line" ভাবলে ভুল করবে; বরং ভাবতে হবে "এই সব টুকরো একসাথে শ্বাস নিচ্ছে।" এই মানসিকতা একবার রপ্ত হলে, তুমি কেবল FPGA নয়, পরের অধ্যায়ের processor design-ও অনেক স্বচ্ছভাবে বুঝবে — কারণ একটা CPU আসলে অসংখ্য সমান্তরাল অংশের (ALU, register file, control) সুসমন্বিত নাচ।
 
 ---
 
