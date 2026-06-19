@@ -16,7 +16,7 @@
 ✅ Shift Register - SISO, SIPO
 ✅ Finite State Machine - traffic light controller
 ✅ Blocking vs Non-blocking - THE difference! ⚠️
-✅ তোমার processor এর registers - in code! 🎉
+✅ তোমার processor-এর registers - in code! 🎉
 ```
 
 **Time Required:** 1 week (4-5 hours/day)  
@@ -1357,7 +1357,7 @@ Q3: Swap! x and y exchange values
 ✅ Design shift registers
 ✅ Create finite state machines
 ✅ Avoid common mistakes
-✅ তোমার processor এর sequential parts code করা!
+✅ তোমার processor-এর sequential parts code করা!
 ```
 
 ### তুমি বানিয়েছো:

@@ -21,7 +21,7 @@ design করেছ।** এই অধ্যায়টা পুরোটা�
 
 ```
 ✅ Chip Arrival - প্যাকেজ খোলো! 📦
-✅ PCB Setup - তোমার chip board এ লাগাও
+✅ PCB Setup - তোমার chip board-এ লাগাও
 ✅ Power-Up - প্রথম power on!
 ✅ Basic Testing - কাজ করছে কি না
 ✅ Programming - code load করো

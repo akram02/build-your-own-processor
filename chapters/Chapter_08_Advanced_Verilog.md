@@ -25,7 +25,7 @@
 ✅ Compiler directives - conditional compilation
 ✅ Memory arrays - RAM/ROM modeling
 ✅ Advanced synthesis concepts
-✅ তোমার processor এর reusable components! 🎉
+✅ তোমার processor-এর reusable components! 🎉
 ```
 
 **Time Required:** 1 week (4-5 hours/day)  
@@ -428,7 +428,7 @@ flowchart LR
     CLK["clk"] --> RF
     subgraph RF["register_file: registers[0 .. NUM_REGS-1]"]
         direction TB
-        NOTE["Read = combinational (তাৎক্ষণিক)<br/>Write = sequential (clock edge এ)"]
+        NOTE["Read = combinational (তাৎক্ষণিক)<br/>Write = sequential (clock edge-এ)"]
     end
     RF --> RD1["read_data1"]
     RF --> RD2["read_data2"]

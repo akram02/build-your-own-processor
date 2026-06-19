@@ -17,7 +17,7 @@
 ✅ Submit & Track - পাঠাও এবং track করো
 ✅ Payment - কত খরচ
 ✅ Waiting Period - এরপর কী হবে
-✅ তোমার chip fab এ যাচ্ছে! 🎉
+✅ তোমার chip fab-এ যাচ্ছে! 🎉
 ```
 
 **Time Required:** 1 week (preparation + submission)  

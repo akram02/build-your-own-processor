@@ -17,7 +17,7 @@
 ✅ Simple CPU Design - 8-bit processor
 ✅ Register File - fast storage
 ✅ ALU Integration - arithmetic unit
-✅ তোমার নিজের processor এর architecture! 🎉
+✅ তোমার নিজের processor-এর architecture! 🎉
 ```
 
 **Time Required:** 1 week (5-6 hours/day)  

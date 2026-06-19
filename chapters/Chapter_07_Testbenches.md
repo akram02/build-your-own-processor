@@ -24,7 +24,7 @@
 ✅ Clock generators - realistic timing
 ✅ File I/O tests - test vectors from files
 ✅ Coverage reports - ensure complete testing
-✅ তোমার processor এর complete verification! 🎉
+✅ তোমার processor-এর complete verification! 🎉
 ```
 
 **Time Required:** 1 week (3-4 hours/day)  
@@ -130,7 +130,7 @@ flowchart LR
         STIM -- "reg → input ports" --> DUTBOX
         DUTBOX -- "output ports → wire" --> MON
     end
-    TB --> VCD["waveform.vcd<br/>(GTKWave এ দেখা)"]
+    TB --> VCD["waveform.vcd<br/>(GTKWave-এ দেখা)"]
     TB --> LOG["Console log<br/>PASS / FAIL"]
 ```
 
@@ -708,14 +708,14 @@ endmodule
 clk     │   │   │   │   │   │   │   │
      ───┘   └───┘   └───┘   └───┘   └───
         ↑       ↑       ↑       ↑
-     posedge গুলো — এখানে flip-flop data ধরে
+     posedge-গুলো — এখানে flip-flop data ধরে
 
         ┌───────────────┐
 d    ───┘               └───────────────
                 ┌───────────────┐
 q    ───────────┘               └───────
         ↑
-     d বদলেছে, কিন্তু q পরের posedge এ গিয়ে বদলায় (এক cycle দেরি)
+     d বদলেছে, কিন্তু q পরের posedge-এ গিয়ে বদলায় (এক cycle দেরি)
 ```
 
 এই ছবিটা একবার দেখলেই বোঝা যায় flip-flop কীভাবে এক clock cycle দেরিতে input কে output-এ পাঠায় — অথচ এটাই text-এ বোঝাতে গেলে অনেক কথা লাগত। এই কারণেই professional রা debug করতে waveform-এ ফেরে।
@@ -767,11 +767,11 @@ gtkwave waveform.vcd
 GTKWave প্রথমবার দেখলে একটু ভয় লাগতে পারে, কিন্তু আসলে খুব সহজ। বাঁ দিকে তোমার সব signal-এর তালিকা, মাঝখানে সেগুলো টেনে এনে ছবি দেখা — ব্যস। নিচের গাইডটা হাতের কাছে রাখো:
 
 ```
-১. বাঁ Panel: Signal hierarchy (signal এর গাছ)
+১. বাঁ Panel: Signal hierarchy (signal-এর গাছ)
    - কোন signal দেখতে চাও, এখান থেকে বেছে নাও
 
 ২. মাঝখানে: Signal যোগ করা
-   - signal টেনে এনে waveform view তে ছাড়ো
+   - signal টেনে এনে waveform view-তে ছাড়ো
    - অথবা "Append" বোতামে ক্লিক করো
 
 ৩. Waveform View (আসল ছবি):
@@ -781,7 +781,7 @@ GTKWave প্রথমবার দেখলে একটু ভয় লা�
 
 ৪. Time Cursor (সময়ের কাঁটা):
    - হলুদ রেখাটা বর্তমান সময় দেখায়
-   - কাঁটার জায়গায় প্রতিটা signal এর value দেখা যায়
+   - কাঁটার জায়গায় প্রতিটা signal-এর value দেখা যায়
 
 ৫. Search (খোঁজা):
    - Ctrl+F: signal খোঁজো
@@ -1323,10 +1323,10 @@ bug খোঁজার একটা গোছানো পদ্ধতি আছ
 flowchart TD
     A["১. Test fail — কোথায় ভুল চিহ্নিত করো"] --> B["২. GTKWave খোলো"]
     B --> C["৩. যে সময়ে fail হলো সেই বিন্দু খুঁজে বের করো"]
-    C --> D["৪. সম্পর্কিত signal গুলো যোগ করো"]
+    C --> D["৪. সম্পর্কিত signal-গুলো যোগ করো"]
     D --> E["৫. Output থেকে পেছন দিকে trace করো"]
     E --> F["৬. কোথায় signal ভুল হলো খুঁজে বের করো"]
-    F --> G["৭. সেই module এর input গুলো যাচাই করো"]
+    F --> G["৭. সেই module-এর input-গুলো যাচাই করো"]
     G --> H{"root cause<br/>পেয়েছ?"}
     H -- "না, input-ও ভুল" --> E
     H -- "হ্যাঁ" --> I["✅ bug fix করো"]

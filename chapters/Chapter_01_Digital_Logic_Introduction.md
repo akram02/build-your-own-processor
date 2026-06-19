@@ -668,7 +668,7 @@ half adder দুর্দান্ত, কিন্তু এর একটা �
 ```
 Problem: 
 Half adder শুধু 2 bits add করে
-কিন্তু multi-bit addition এ carry আসে!
+কিন্তু multi-bit addition-এ carry আসে!
 
 Example: 1011 + 0101
 Bit 0: 1+1 = 10 (carry 1)
@@ -691,7 +691,7 @@ Solution: Full Adder (3 inputs!)
 
 2 Outputs:
 - Sum: যোগফল
-- Cout (Carry Out): পরের bit এ যাবে carry
+- Cout (Carry Out): পরের bit-এ যাবে carry
 ```
 
 full adder বানানোর দুটো পথ আছে, আর দুটো জানাই দরকার — একটা শেখায় কীভাবে ছোট block জোড়া দিয়ে বড় block বানাতে হয়, আরেকটা শেখায় সরাসরি Boolean সূত্র থেকে circuit গড়তে।

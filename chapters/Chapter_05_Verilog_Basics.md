@@ -23,7 +23,7 @@
 ✅ 4-bit Adder - in 5 lines!
 ✅ MUX/Decoder - with case statements
 ✅ Testbench - circuit testing in code
-✅ তোমার processor এর প্রথম Verilog module! 🎉
+✅ তোমার processor-এর প্রথম Verilog module! 🎉
 ```
 
 **Time Required:** 1 week (3-4 hours/day)  

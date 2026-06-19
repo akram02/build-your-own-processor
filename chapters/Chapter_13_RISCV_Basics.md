@@ -17,7 +17,7 @@
 ✅ Instruction Set - 47 instructions
 ✅ Addressing Modes - memory access
 ✅ Calling Convention - function calls
-✅ তোমার RISC-V processor এর specification! 🎉
+✅ তোমার RISC-V processor-এর specification! 🎉
 ```
 
 **Time Required:** 1 week (5-6 hours/day)  
@@ -851,11 +851,11 @@ sequenceDiagram
     participant Stack as Stack (memory)
     participant Callee as Callee (add_func)
     Caller->>Stack: ra সংরক্ষণ (sp কমিয়ে sw)
-    Caller->>Callee: a0, a1 তে argument বসিয়ে JAL
-    Note over Callee: হিসাব করে ফল a0 তে রাখে
+    Caller->>Callee: a0, a1-তে argument বসিয়ে JAL
+    Note over Callee: হিসাব করে ফল a0-তে রাখে
     Callee-->>Caller: ret (ra ঠিকানায় ফেরে)
     Stack-->>Caller: ra পুনরুদ্ধার (lw, sp বাড়িয়ে)
-    Note over Caller: ফল a0 তে প্রস্তুত
+    Note over Caller: ফল a0-তে প্রস্তুত
 ```
 
 ### Function Call Example:

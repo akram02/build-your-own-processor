@@ -20,7 +20,7 @@
 ✅ 4-bit Register - data storage
 ✅ Shift Register - data mover
 ✅ Counter - number generator
-✅ Finite State Machine - তোমার processor এর control! 🎉
+✅ Finite State Machine - তোমার processor-এর control! 🎉
 ```
 
 **Time Required:** 2 weeks (3-4 hours/day)  
@@ -102,10 +102,10 @@ flowchart LR
 প্রশ্ন আসতেই পারে — "শুধু হিসাব করতে পারলেই তো হতো, মনে রাখার দরকার কী?" উত্তরটা হলো: মনে রাখতে না পারলে **কোনো processor-ই বানানো যায় না**। ভেবে দেখো —
 
 ```
-Processor এ দরকার:
+Processor-এ দরকার:
 ✅ Registers - data store করতে
 ✅ Program Counter - next instruction track করতে
-✅ State machines - control logic এর জন্য
+✅ State machines - control logic-এর জন্য
 ✅ Memory - data remember করতে
 
 Without Sequential = No Processor!
@@ -1162,7 +1162,7 @@ FSM = Finite State Machine
 - Transitions based on inputs
 - Outputs based on state
 
-তোমার processor এর control unit = FSM!
+তোমার processor-এর control unit = FSM!
 ```
 
 তিনটে শব্দ গেঁথে নাও — **states** (সীমিত কয়েকটা অবস্থা), **transitions** (input অনুযায়ী এক অবস্থা থেকে আরেকটায় যাওয়া), আর **outputs** (অবস্থা অনুযায়ী কী ঘটবে)। আর সবচেয়ে বড় কথাটা ওই শেষ লাইনে — **তোমার processor-এর control unit একটা FSM**। CPU যখন instruction চালায়, সে fetch → decode → execute — এই states-এর মধ্যে ঘোরে, ঠিক একটা FSM-এর মতো। তাই FSM শেখা মানে তুমি কার্যত তোমার future CPU-র মস্তিষ্কটা শিখছ।
@@ -1569,7 +1569,7 @@ Fmax = 1/(20ns) = 50 MHz
 ✅ Design counters (up, down, BCD)
 ✅ Create finite state machines
 ✅ Understand timing parameters
-✅ তোমার processor এ memory এবং control logic যোগ করা!
+✅ তোমার processor-এ memory এবং control logic যোগ করা!
 ```
 
 ### তুমি বানিয়েছো:

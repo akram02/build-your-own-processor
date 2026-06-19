@@ -211,8 +211,8 @@ Address breakdown (32-bit):
 ```mermaid
 flowchart LR
     A["32-bit Address"] --> T["Tag (20b)<br/>আমি কে?<br/>(নম্বরপ্লেট)"]
-    A --> I["Index (10b)<br/>কোন line এ বসব?<br/>(পার্কিং স্লট)"]
-    A --> O["Offset (2b)<br/>line এর কোন byte?"]
+    A --> I["Index (10b)<br/>কোন line-এ বসব?<br/>(পার্কিং স্লট)"]
+    A --> O["Offset (2b)<br/>line-এর কোন byte?"]
     style T fill:#1565c0,color:#fff
     style I fill:#2e7d32,color:#fff
     style O fill:#6a1b9a,color:#fff
@@ -234,7 +234,7 @@ Cache line:
 
 ```mermaid
 flowchart LR
-    V["Valid (1b)<br/>এই line এ আদৌ<br/>আসল data আছে?"]
+    V["Valid (1b)<br/>এই line-এ আদৌ<br/>আসল data আছে?"]
     TG["Tag (20b)<br/>কোন address<br/>এর data?"]
     D["Data (32b)<br/>আসল মালপত্র"]
     V --- TG --- D
@@ -424,7 +424,7 @@ stateDiagram-v2
     COMPARE --> IDLE : HIT ✅<br/>read হলে data দাও, write হলে dirty=1
     COMPARE --> WRITE_BACK : MISS ও পুরোনো line DIRTY<br/>(আগে save করতে হবে)
     COMPARE --> FETCH : MISS ও line CLEAN<br/>(সরাসরি আনা যাবে)
-    WRITE_BACK --> FETCH : dirty line memory তে লেখা শেষ<br/>(mem_ready)
+    WRITE_BACK --> FETCH : dirty line memory-তে লেখা শেষ<br/>(mem_ready)
     FETCH --> IDLE : নতুন line এসে গেছে ✅<br/>(mem_ready) cpu_ready=1
     note right of COMPARE
         এক compare-এ ঠিক হয়

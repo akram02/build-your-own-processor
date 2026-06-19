@@ -17,7 +17,7 @@
 ✅ I2C Controller - multiple devices
 ✅ Button Debouncing - proper input
 ✅ Seven-Segment Display - number display
-✅ তোমার processor এর complete I/O system! 🎉
+✅ তোমার processor-এর complete I/O system! 🎉
 ```
 
 **Time Required:** 2 weeks (4-5 hours/day)  
@@ -385,7 +385,7 @@ endmodule
          └───0───┴──b0─┴──b1─┴──b2─┴────┴──b7─┘   1
              ↑       ↑     ↑     ↑          ↑
           আধা bit  পুরো  পুরো  পুরো       পুরো   ← প্রতিটা ↑ এ rx পড়া হয়
-          পরে শুরু  bit   bit   bit        bit      (bit এর ঠিক মাঝখানে)
+          পরে শুরু  bit   bit   bit        bit      (bit-এর ঠিক মাঝখানে)
 ```
 
 আরেকটা সূক্ষ্ম রক্ষাকবচ আছে `START` state-এ — আধা bit অপেক্ষার পরে আবার `if (rx == 0)` দিয়ে যাচাই করা হয় line-টা এখনো LOW আছে কিনা। যদি না থাকে, তার মানে ওটা আসল START bit ছিল না, কেবল একটা ক্ষণিকের noise বা glitch (false start) — তখন module আবার `IDLE` এ ফিরে যায়। এভাবে একটা ভুল pulse গোটা byte কে নষ্ট করতে পারে না। কাজ শেষে `rx_valid` এক cycle HIGH হয়ে বাকি system কে জানায় "একটা byte তৈরি, পড়ে নাও"।

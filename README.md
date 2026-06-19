@@ -24,10 +24,10 @@
 ```
 Week 1-2:   ✅ তোমার প্রথম Digital Circuit
 Week 3-4:   ✅ Logic Gates এবং Adders
-Month 2:    ✅ Verilog এ Code করা Circuits
-Month 3:    ✅ FPGA তে চলমান Projects
+Month 2:    ✅ Verilog-এ Code করা Circuits
+Month 3:    ✅ FPGA-তে চলমান Projects
 Month 4-5:  ✅ তোমার নিজের RISC-V Processor
-Month 6:    ✅ Silicon Chip এ যাওয়ার জন্য Design
+Month 6:    ✅ Silicon Chip-এ যাওয়ার জন্য Design
 Month 12:   ✅ তোমার হাতে আসল Chip! 🎉
 ```
 

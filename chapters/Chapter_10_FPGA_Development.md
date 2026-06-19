@@ -23,7 +23,7 @@
 ✅ Synthesis & implementation - place & route
 ✅ Programming - load to FPGA
 ✅ Debug techniques - real hardware
-✅ তোমার processor component FPGA তে deploy! 🎉
+✅ তোমার processor component FPGA-তে deploy! 🎉
 ```
 
 **Time Required:** 1 week (4-5 hours/day)  
@@ -129,7 +129,7 @@ Synthesize → Place & Route → Bitstream → USB দিয়ে board-এ প
               ║ ●                      ● ║
               └──────────────────────────┘
                   Size: ~21mm × 72mm
-                  (লম্বা-সরু — breadboard এ দিব্যি বসে যায়)
+                  (লম্বা-সরু — breadboard-এ দিব্যি বসে যায়)
 ```
 
 আকারটা খেয়াল করো—একটা চুইংগামের প্যাকেটের চেয়েও ছোট। অথচ এর ভেতরে যত logic আঁটে, ১৯৭০-৮০ এর দশকের আস্ত একটা minicomputer বানানো যেত। প্রযুক্তি কোথায় পৌঁছেছে, একবার ভাবো!
@@ -170,11 +170,11 @@ Synthesize → Place & Route → Bitstream → USB দিয়ে board-এ প
 FPGA chip-এর I/O pin-গুলো board-এর দুপাশের header-এ বের করে আনা আছে। এগুলোকে ভাবো তোমার design-এর হাত-পা—এর মাধ্যমেই সে বাইরের জিনিসপত্র ছোঁয়:
 
 ```
-সব FPGA pin → দুপাশের header এ:
+সব FPGA pin → দুপাশের header-এ:
 - দুই পাশেই সারি সারি pin
-- 2.54mm spacing → breadboard এ হুবহু খাপ খায়
+- 2.54mm spacing → breadboard-এ হুবহু খাপ খায়
 - সরাসরি FPGA GPIO — মাঝে কোনো বাধা নেই
-- বাইরের circuit এ জুড়ে দাও!
+- বাইরের circuit-এ জুড়ে দাও!
 ```
 
 এই pin-গুলো কেন এত গুরুত্বপূর্ণ? কারণ এগুলোই তোমার design কে onboard ৬টা LED-র সীমার বাইরে নিয়ে যায়। চাইলে জুড়তে পারো—
@@ -374,11 +374,11 @@ endmodule
 **সমাধান: একটা binary counter।** ভাবো একটা গাড়ির odometer (মাইলেজ মিটার)। সবচেয়ে ডানের অঙ্কটা মুহূর্তে মুহূর্তে বদলায়, কিন্তু বাঁ দিকের অঙ্ক বদলাতে অনেক সময় লাগে। Binary counter ঠিক তাই—কিন্তু base-2-তে:
 
 ```
-counter[0]  → প্রতি clock এ flip       (সবচেয়ে দ্রুত)
-counter[1]  → প্রতি 2 clock এ flip
-counter[2]  → প্রতি 4 clock এ flip
+counter[0]  → প্রতি clock-এ flip       (সবচেয়ে দ্রুত)
+counter[1]  → প্রতি 2 clock-এ flip
+counter[2]  → প্রতি 4 clock-এ flip
 ...
-counter[24] → প্রতি 2^24 clock এ flip  (অনেক ধীর!)
+counter[24] → প্রতি 2^24 clock-এ flip  (অনেক ধীর!)
 ```
 
 প্রতিটা উঁচু bit নিচের bit-এর ঠিক **অর্ধেক** গতিতে বদলায়। অর্থাৎ counter-টা আসলে clock-কে একের পর এক ২ দিয়ে ভাগ করে যাচ্ছে—একে বলে **clock divider**। আমরা শুধু এমন একটা bit বেছে নেব, যেটা চোখে দেখার মতো ধীরে বদলায়। সেটাই `counter[24]`।
@@ -488,8 +488,8 @@ IO_PORT "led" PULL_MODE=UP DRIVE=8;
 **`IO_LOC` — কোন signal কোন pin-এ।** এটাই মূল অনুবাদ:
 
 ```
-IO_LOC "clk" 52;   →  "clk" signal টা pin 52 এ বসাও
-IO_LOC "led" 10;   →  "led" signal টা pin 10 এ বসাও
+IO_LOC "clk" 52;   →  "clk" signal-টা pin 52-এ বসাও
+IO_LOC "led" 10;   →  "led" signal-টা pin 10-এ বসাও
 ```
 
 ভেতরের quote-এর নামটা (`"clk"`, `"led"`) তোমার Verilog-এর port-এর নামের সাথে **হুবহু** মিলতে হবে—একটা অক্ষর এদিক-ওদিক হলে toolchain signal টাই খুঁজে পাবে না। আর pin নম্বরগুলো আসে Tang Nano 9K-এর schematic থেকে (নিচে reference টেবিল দিচ্ছি)।
@@ -537,9 +537,9 @@ Code লেখা, pin জোড়া—দুটোই হলো। এবা�
 ```mermaid
 flowchart TD
     A["📝 Verilog + .cst<br/>(তোমার design + pin map)"] --> B["⚙️ Synthesis<br/>code → logic gates"]
-    B --> C["🧩 Place & Route<br/>gates → আসল LUT/pin এ বসানো"]
+    B --> C["🧩 Place & Route<br/>gates → আসল LUT/pin-এ বসানো"]
     C --> D["📦 Generate Bitstream<br/>layout → .fs ফাইল"]
-    D --> E["🔌 Program<br/>USB দিয়ে chip এ পাঠানো"]
+    D --> E["🔌 Program<br/>USB দিয়ে chip-এ পাঠানো"]
     E --> F["💡 FPGA configured!<br/>LED জ্বলছে!"]
 
     B -. "❌ syntax error?" .-> A
