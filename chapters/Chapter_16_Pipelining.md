@@ -318,7 +318,7 @@ We'll use 5 stages: Classic RISC!
 
 ### Between Each Stage: প্রতিটা station-এর মাঝে দেয়াল
 
-এবার সবচেয়ে গুরুত্বপূর্ণ প্রশ্ন — পাঁচটা instruction যদি একসাথে চলন্ত থাকে,
+এবার সবচেয়ে গুরুত্বপূর্ণ প্রশ্ন — পাঁচটা instruction যদি একসাথে চলতে থাকে,
 তাহলে তাদের তথ্য একটার সঙ্গে আরেকটার মিশে যায় না কেন? Inst1-এর ALU result আর
 Inst2-এর register-পড়া মান তো একই তারের উপর দিয়েই যাচ্ছে — গোলমাল হবে না?
 
@@ -761,8 +761,8 @@ register file থেকে `rs1`, `rs2`-এর মান পড়া হয়;
 দুটো জিনিস খেয়াল রাখো। এক — register file-এর **write port** আসলে WB stage থেকে
 আসা সিগন্যালে চলছে (`wb_rd_addr`, `wb_rd_data`), অর্থাৎ এক instruction এখানে
 register পড়ছে আর পাঁচ cycle আগের আরেকটা instruction একই সময়ে register-এ লিখছে।
-দুই — control unit-এর দেওয়া `alu_op`-কে `alu_control` module পরিণত করে চূড়ান্ত
-৪-বিট ALU control-এ, যেটা instruction-এর সঙ্গে EX stage পর্যন্ত ভ্রমণ করবে।
+দুই — control unit-এর দেওয়া `alu_op`-কে `alu_control` module চূড়ান্ত
+৪-বিট ALU control-এ পরিণত করে, যেটা instruction-এর সঙ্গে EX stage পর্যন্ত ভ্রমণ করবে।
 
 ```verilog
 module id_stage(
@@ -1346,8 +1346,8 @@ XOR                  IF  ID  EX  MEM WB
   বোঝা যায় hardware utilization।
 
 কলাম বরাবর উল্টো করে পড়লে আরেকটা দরকারি ছবি পাওয়া যায় — **প্রতিটা stage কখন
-কোন instruction নিয়ে ব্যস্ত।** নিচে table-এ দেখো cycle 4 (সংখ্যায় 0-থেকে-গোনা)
-নাগাদ পাঁচটা stage-ই একসঙ্গে কাজ করছে — কোনো খালি নেই, পূর্ণ utilization:
+কোন instruction নিয়ে ব্যস্ত।** নিচে table-এ দেখো cycle 4-এ (সংখ্যায় 0-থেকে-গোনা)
+পাঁচটা stage-ই একসঙ্গে কাজ করছে — কোনো খালি নেই, পূর্ণ utilization:
 
 | Stage | C0 | C1 | C2 | C3 | C4 | C5 | C6 | C7 | C8 |
 |:------|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
@@ -1456,7 +1456,7 @@ stage) আলাদা করে testbench দিয়ে যাচাই ক�
 
 - **Latency ≠ Throughput।** একটা instruction-এর latency এখনও ৫ cycle, কিন্তু
   throughput প্রতি cycle-এ একটা — pipeline একটা কাজকে দ্রুত করে না, একসাথে অনেক
-  কাজ চালিয়ে ঘণ্টায় বেশি কাজ শেষ করে।
+  কাজ চালিয়ে একই সময়ে বেশি কাজ শেষ করে।
 - **Pipeline register-ই জাদুকর।** চারটা register পাঁচটা stage-কে আলাদা রাখে,
   যেন পাঁচটা instruction একে অপরের সঙ্গে না মিশে একসাথে চলতে পারে — data আর
   control signal দুটোই তারা বহন করে।
