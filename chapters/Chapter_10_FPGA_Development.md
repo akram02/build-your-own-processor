@@ -125,7 +125,7 @@ Synthesize → Place & Route → Bitstream → USB দিয়ে board-এ প
               ║   [S1]          [S2]     ║   ← 2 push buttons
               ║                          ║
               ║   [ HDMI ]   [TF card]   ║   ← video out + SD slot
-              ║   [   32 MB PSRAM   ]    ║   ← external memory
+              ║   [   8 MB PSRAM    ]    ║   ← external memory
               ║ ●                      ● ║
               └──────────────────────────┘
                   Size: ~21mm × 72mm
