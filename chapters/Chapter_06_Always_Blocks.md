@@ -380,7 +380,7 @@ module d_ff_enable(
 endmodule
 ```
 
-একটা গুরুত্বপূর্ণ সূক্ষ্মতা: combinational logic-এ (`@(*)`) `else` বাদ দিলে অনাকাঙ্ক্ষিত **latch** তৈরি হয় — সে এক বিপদ, একটু পরে ৬.৫ এ দেখব। কিন্তু sequential logic-এ (`@(posedge clk)`) `else` বাদ দেওয়া একদম ঠিক — এটাই hardware-কে বলে "নতুন মান না পেলে আগেরটা ধরে রাখো"। তাই enable flip-flop-এ `else`-এর অনুপস্থিতি bug নয়, বরং feature! এই দুটো পরিস্থিতি গুলিয়ে ফেলো না — sensitivity list-ই এখানে আসল পার্থক্য।
+একটা গুরুত্বপূর্ণ সূক্ষ্মতা: combinational logic-এ (`@(*)`) `else` বাদ দিলে অনাকাঙ্ক্ষিত **latch** তৈরি হয় — সে এক বিপদ, একটু পরে ৬.৫-এ দেখব। কিন্তু sequential logic-এ (`@(posedge clk)`) `else` বাদ দেওয়া একদম ঠিক — এটাই hardware-কে বলে "নতুন মান না পেলে আগেরটা ধরে রাখো"। তাই enable flip-flop-এ `else`-এর অনুপস্থিতি bug নয়, বরং feature! এই দুটো পরিস্থিতি গুলিয়ে ফেলো না — sensitivity list-ই এখানে আসল পার্থক্য।
 
 ---
 

@@ -132,7 +132,7 @@ Synthesize → Place & Route → Bitstream → USB দিয়ে board-এ প
                   (লম্বা-সরু — breadboard-এ দিব্যি বসে যায়)
 ```
 
-আকারটা খেয়াল করো—একটা চুইংগামের প্যাকেটের চেয়েও ছোট। অথচ এর ভেতরে যত logic আঁটে, ১৯৭০-৮০ এর দশকের আস্ত একটা minicomputer বানানো যেত। প্রযুক্তি কোথায় পৌঁছেছে, একবার ভাবো!
+আকারটা খেয়াল করো—একটা চুইংগামের প্যাকেটের চেয়েও ছোট। অথচ এর ভেতরে যত logic আঁটে, ১৯৭০-৮০-এর দশকের আস্ত একটা minicomputer বানানো যেত। প্রযুক্তি কোথায় পৌঁছেছে, একবার ভাবো!
 
 ### Key Features:
 
@@ -163,7 +163,7 @@ Synthesize → Place & Route → Bitstream → USB দিয়ে board-এ প
 | **TF card slot** | SD card—file/data storage |
 | **USB-C** | একটাই তারে বিদ্যুৎ + programming, দুটোই |
 
-**Power:** USB-C দিয়ে 5V ঢোকে, board-এর onboard regulator সেটাকে FPGA-র পছন্দের 3.3V-এ নামায়। সাধারণ ব্যবহারে টানে মাত্র ~100-200mA—অর্থাৎ তোমার laptop-এর USB port ই যথেষ্ট, আলাদা power adapter লাগে না। এটাই এই board-টাকে এত সহজ করে তোলে: একটা তার, ব্যস।
+**Power:** USB-C দিয়ে 5V ঢোকে, board-এর onboard regulator সেটাকে FPGA-র পছন্দের 3.3V-এ নামায়। সাধারণ ব্যবহারে টানে মাত্র ~100-200mA—অর্থাৎ তোমার laptop-এর USB port-ই যথেষ্ট, আলাদা power adapter লাগে না। এটাই এই board-টাকে এত সহজ করে তোলে: একটা তার, ব্যস।
 
 ### Pin Access — বাইরের দুনিয়ার দরজা:
 
@@ -524,7 +524,7 @@ IO_LOC "led" 10;   →  "led" signal-টা pin 10-এ বসাও
 | **Button S2** | 4 | active low (টিপলে 0) |
 | **HDMI** | 69–77, 79–83 | video output |
 
-> 💡 **পুরো pinout কোথায়?** এই টেবিলে শুধু আমাদের দরকারি pin আছে। চাইলে 174টা pin এরই সম্পূর্ণ তালিকা পাবে Tang Nano 9K-এর official schematic বা board documentation-এ (online সহজলভ্য)। যখন নিজের sensor/peripheral জুড়বে, তখন ওটা খুলে দরকারি pin খুঁজে নেবে।
+> 💡 **পুরো pinout কোথায়?** এই টেবিলে শুধু আমাদের দরকারি pin আছে। চাইলে 174টা pin-এরই সম্পূর্ণ তালিকা পাবে Tang Nano 9K-এর official schematic বা board documentation-এ (online সহজলভ্য)। যখন নিজের sensor/peripheral জুড়বে, তখন ওটা খুলে দরকারি pin খুঁজে নেবে।
 
 ---
 

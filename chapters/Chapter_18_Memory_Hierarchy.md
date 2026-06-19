@@ -29,7 +29,7 @@
 
 আগের কয়েকটা chapter-এ তুমি pipeline বানিয়েছো, hazard সামলেছো, forwarding দিয়ে প্রতি cycle-এ একটা করে instruction বের করার চেষ্টা করেছো। কিন্তু একটা নোংরা সত্য এতক্ষণ আমরা লুকিয়ে রেখেছিলাম: **memory ভয়ংকর slow।** তোমার ঝকঝকে pipeline প্রতিবার একটা `LW` বা `SW` instruction-এ থমকে যায়, কারণ যেখান থেকে data আনতে হবে — সেই DRAM — CPU-এর তুলনায় কচ্ছপের গতিতে চলে।
 
-এই সমস্যাটার একটা নাম আছে — **the memory wall** (মেমরি দেয়াল)। প্রসেসর প্রতি বছর দ্রুততর হয়েছে, কিন্তু DRAM সেই গতিতে দ্রুত হয়নি। ফলে দুটোর মাঝখানে একটা বিশাল গতি-পার্থক্যের দেয়াল গড়ে উঠেছে। CPU যত দ্রুতই হোক, সে memory র জন্য বসে থাকে — অনেকটা Ferrari নিয়ে ঢাকার জ্যামে আটকে থাকার মতো। এই chapter-এর পুরো লড়াইটাই এই দেয়াল ভাঙা নিয়ে।
+এই সমস্যাটার একটা নাম আছে — **the memory wall** (মেমরি দেয়াল)। প্রসেসর প্রতি বছর দ্রুততর হয়েছে, কিন্তু DRAM সেই গতিতে দ্রুত হয়নি। ফলে দুটোর মাঝখানে একটা বিশাল গতি-পার্থক্যের দেয়াল গড়ে উঠেছে। CPU যত দ্রুতই হোক, সে memory-র জন্য বসে থাকে — অনেকটা Ferrari নিয়ে ঢাকার জ্যামে আটকে থাকার মতো। এই chapter-এর পুরো লড়াইটাই এই দেয়াল ভাঙা নিয়ে।
 
 ### The Problem - সংখ্যায় দেখো:
 
@@ -52,7 +52,7 @@ Average CPI: 20-30!
 Pipeline useless!
 ```
 
-খেয়াল করো ব্যাপারটা কত নিষ্ঠুর। `ADD` এক cycle-এ শেষ — register-এ-register হিসাব, কোনো memory লাগে না। কিন্তু পরের লাইনের `LW` (load word) DRAM থেকে data আনতে গিয়ে **১০০ cycle** খেয়ে ফেলল! এই একটা instruction তোমার আগের ৯৯টা instruction-এর সব লাভ গিলে খায়। গড় CPI (cycles per instruction) তখন ১ এর কাছাকাছি থাকে না — লাফিয়ে ২০-৩০ এ চলে যায়। মানে তোমার ৫-stage pipeline, forwarding, branch prediction — সব পরিশ্রম জলে। **Memory ই এখন bottleneck।**
+খেয়াল করো ব্যাপারটা কত নিষ্ঠুর। `ADD` এক cycle-এ শেষ — register-এ-register হিসাব, কোনো memory লাগে না। কিন্তু পরের লাইনের `LW` (load word) DRAM থেকে data আনতে গিয়ে **১০০ cycle** খেয়ে ফেলল! এই একটা instruction তোমার আগের ৯৯টা instruction-এর সব লাভ গিলে খায়। গড় CPI (cycles per instruction) তখন ১-এর কাছাকাছি থাকে না — লাফিয়ে ২০-৩০-এ চলে যায়। মানে তোমার ৫-stage pipeline, forwarding, branch prediction — সব পরিশ্রম জলে। **Memory-ই এখন bottleneck।**
 
 ### The Solution: Cache!
 
@@ -101,13 +101,13 @@ flowchart TB
 
 উপরের দিকে উঠতে থাকলে — দ্রুত, ছোট, দামি। নিচের দিকে নামতে থাকলে — ধীর, বিশাল, সস্তা। এই chapter-এ আমরা বানাবো **L1 Cache** — যে স্তরটা সরাসরি CPU-এর সাথে কথা বলে এবং সবচেয়ে বেশি কাজে লাগে।
 
-🎉 **Cache = দ্রুত memory র গতি + slow memory র আকার!** দুটোর সেরাটা একসাথে — এটাই memory hierarchy র পুরো জাদু।
+🎉 **Cache = দ্রুত memory-র গতি + slow memory-র আকার!** দুটোর সেরাটা একসাথে — এটাই memory hierarchy-র পুরো জাদু।
 
 ---
 
 ## ১৮.১ Cache Fundamentals
 
-### কেন cache আদৌ কাজ করে? — Locality র গল্প
+### কেন cache আদৌ কাজ করে? — Locality-র গল্প
 
 এখানে একটা গভীর প্রশ্ন আসে। Cache তো ছোট — সে তো পুরো 8 GB DRAM ধরে রাখতে পারে না। তাহলে মাত্র 32 KB জায়গায় কী এমন রাখবে যাতে বেশিরভাগ সময় কাজ চলে যায়? উত্তরটা প্রোগ্রামের একটা চমৎকার স্বভাবে লুকিয়ে — **locality (স্থানীয়তা)**। প্রোগ্রাম memory-কে এলোমেলোভাবে ছোঁয় না; সে একটা গোছানো, অনুমান-যোগ্য প্যাটার্নে ছোঁয়। এই প্যাটার্ন দুই রকম:
 
@@ -144,9 +144,9 @@ Locality principles:
 Cache exploits locality!
 ```
 
-পুরো খেলাটা দুটো শব্দে — **HIT আর MISS**। CPU যে address চাইল, সেটা যদি cache-এ থাকে — **hit**, ১ cycle-এ data হাতে। না থাকলে — **miss**, DRAM থেকে ১০০ cycle খরচ করে আনতে হবে, তারপর cache-এ বসিয়ে রাখতে হবে। মজাটা হলো: প্রথমবার miss হলেও, locality র কারণে **পরের বার সেটা hit হবে।** তাই একবারের ১০০ cycle খরচ পরের অনেকবারের ১ cycle দিয়ে পুষিয়ে যায়। Cache-এর পুরো লাভ এই বাজি থেকেই আসে — আর locality থাকার কারণে এই বাজিতে আমরা প্রায় সবসময় জিতি।
+পুরো খেলাটা দুটো শব্দে — **HIT আর MISS**। CPU যে address চাইল, সেটা যদি cache-এ থাকে — **hit**, ১ cycle-এ data হাতে। না থাকলে — **miss**, DRAM থেকে ১০০ cycle খরচ করে আনতে হবে, তারপর cache-এ বসিয়ে রাখতে হবে। মজাটা হলো: প্রথমবার miss হলেও, locality-র কারণে **পরের বার সেটা hit হবে।** তাই একবারের ১০০ cycle খরচ পরের অনেকবারের ১ cycle দিয়ে পুষিয়ে যায়। Cache-এর পুরো লাভ এই বাজি থেকেই আসে — আর locality থাকার কারণে এই বাজিতে আমরা প্রায় সবসময় জিতি।
 
-### Cache Organization - cache ভেতরে কেমন সাজানো?
+### Cache Organization - cache-এর ভেতরে কেমন সাজানো?
 
 Cache-কে আমরা ছোট ছোট খোপে ভাগ করি। শব্দ তিনটা মনে রাখো:
 
@@ -254,7 +254,7 @@ Total: 1024 lines × (1 + 20 + 32) = 53 Kb
 Cache size: 4 KB (data only)
 ```
 
-মানে গোটা cache-এর হিসাবি storage প্রায় ৫৩ Kb, কিন্তু এর মধ্যে কেবল **data** অংশ ১০২৪ × ৪ byte = **৪ KB**। বাকিটা (valid + tag) হলো "overhead" — hit/miss চেনার জন্য যে ছোট দাম দিতে হয়। এই ৪ KB ই আমরা এখন Verilog-এ বানাব।
+মানে গোটা cache-এর মোট storage প্রায় ৫৩ Kb, কিন্তু এর মধ্যে কেবল **data** অংশ ১০২৪ × ৪ byte = **৪ KB**। বাকিটা (valid + tag) হলো "overhead" — hit/miss চেনার জন্য যে ছোট দাম দিতে হয়। এই ৪ KB-ই আমরা এখন Verilog-এ বানাব।
 
 ---
 
@@ -267,7 +267,7 @@ Cache size: 4 KB (data only)
 - **Cache storage:** তিনটা আলাদা array — `valid`, `tag`, আর `data` — প্রতিটায় `NUM_LINES` (১০২৪)-টা ঘর। মনে আছে cache line-এর তিনটা ক্ষেত্র? এখানে সেগুলো তিনটা সমান্তরাল array হয়ে গেছে, যাদের `index` দিয়ে একসাথে ঠিকানা দেওয়া হয়।
 - **Address decomposition:** `offset`, `index`, `addr_tag` — হুবহু আমাদের bit-split। লক্ষ করো `index = address[11:2]` (১০ bit) আর `addr_tag = address[31:12]` (২০ bit); নিচের ২ bit offset, যেটা word-access-এ আমরা ফেলে দিই।
 - **Hit/Miss logic:** `cache_hit = valid[index] && (tag[index] == addr_tag)` — ঠিক সেই দুই-শর্তের নিয়ম, এক লাইনে। valid হতে হবে **এবং** tag মিলতে হবে।
-- **State machine:** `IDLE` এ বসে অপেক্ষা; miss হলে `FETCH` এ গিয়ে memory র `mem_ready` এর জন্য বসে থাকে, data এলে cache-এ বসিয়ে আবার `IDLE` এ ফেরে। (এই version-টা write-এ **write-through** করে — write হলে cache এবং memory দুটোতেই একসাথে লেখে; write policy নিয়ে বিস্তারিত একটু পরে।)
+- **State machine:** `IDLE` এ বসে অপেক্ষা; miss হলে `FETCH` এ গিয়ে memory-র `mem_ready` এর জন্য বসে থাকে, data এলে cache-এ বসিয়ে আবার `IDLE` এ ফেরে। (এই version-টা write-এ **write-through** করে — write হলে cache এবং memory দুটোতেই একসাথে লেখে; write policy নিয়ে বিস্তারিত একটু পরে।)
 
 ### Cache Module:
 
@@ -406,7 +406,7 @@ endmodule
 
 ## ১৮.৩ Cache Controller
 
-আগের module-টা hit/miss বুঝিয়েছে, কিন্তু একটা জায়গায় সে অপচয়ী — write-through-এ **প্রতিটা** write সরাসরি DRAM-এ যায়। ভাবো একটা loop যা একই variable-এ হাজারবার লেখে — তাহলে হাজারবার DRAM-এ ১০০-cycle যাত্রা! এটা locality র অপমান। আরও বুদ্ধিমান উপায় হলো **write-back**: write-গুলো শুধু cache-এ জমা রাখো, আর সেই line-টা যখন cache থেকে বিদায় নিতে যাবে তখন একবারে memory-তে ফেরত পাঠাও।
+আগের module-টা hit/miss বুঝিয়েছে, কিন্তু একটা জায়গায় সে অপচয়ী — write-through-এ **প্রতিটা** write সরাসরি DRAM-এ যায়। ভাবো একটা loop যা একই variable-এ হাজারবার লেখে — তাহলে হাজারবার DRAM-এ ১০০-cycle যাত্রা! এটা locality-র অপমান। আরও বুদ্ধিমান উপায় হলো **write-back**: write-গুলো শুধু cache-এ জমা রাখো, আর সেই line-টা যখন cache থেকে বিদায় নিতে যাবে তখন একবারে memory-তে ফেরত পাঠাও।
 
 এই আরও পরিণত controller-টায় তাই দুটো নতুন জিনিস:
 
@@ -609,9 +609,9 @@ endmodule
 | **Memory traffic** | বেশি (প্রতি write-এ DRAM যাত্রা) | কম (একই line-এ বহু write মিলে একবারে যায়) |
 | **জটিলতা** | সরল | জটিল (eviction-এ writeback সামলাতে হয়) |
 | **Memory সবসময় up-to-date?** | হ্যাঁ | না (cache-এ সবচেয়ে নতুন copy থাকতে পারে) |
-| **কে ব্যবহার করে** | ১৮.২ এর সরল cache | এই controller, আর বেশিরভাগ আসল CPU |
+| **কে ব্যবহার করে** | ১৮.২-এর সরল cache | এই controller, আর বেশিরভাগ আসল CPU |
 
-মূল অন্তর্দৃষ্টি: write-through সরল আর memory সবসময় সঠিক রাখে, কিন্তু locality র সুযোগ নষ্ট করে — একই জায়গায় বারবার লিখলেও প্রতিবার DRAM-এ যায়। Write-back সেই অপচয় বন্ধ করে দেয়: একটা line-এ যতবার খুশি লেখো, DRAM-এ যাত্রা মাত্র একবার — যখন line-টা সত্যিই বিদায় নেয়। বিনিময়ে দাম দিতে হয় জটিলতায় (dirty bit, eviction-এর সময় writeback) এবং একটা ঝুঁকিতে — power চলে গেলে dirty line-এর সর্বশেষ লেখা হারিয়ে যেতে পারে, কারণ সেটা তখনো শুধু cache-এ ছিল। এই কারণেই বেশিরভাগ আসল উচ্চ-কর্মক্ষমতার CPU write-back ব্যবহার করে।
+মূল অন্তর্দৃষ্টি: write-through সরল আর memory সবসময় সঠিক রাখে, কিন্তু locality-র সুযোগ নষ্ট করে — একই জায়গায় বারবার লিখলেও প্রতিবার DRAM-এ যায়। Write-back সেই অপচয় বন্ধ করে দেয়: একটা line-এ যতবার খুশি লেখো, DRAM-এ যাত্রা মাত্র একবার — যখন line-টা সত্যিই বিদায় নেয়। বিনিময়ে দাম দিতে হয় জটিলতায় (dirty bit, eviction-এর সময় writeback) এবং একটা ঝুঁকিতে — power চলে গেলে dirty line-এর সর্বশেষ লেখা হারিয়ে যেতে পারে, কারণ সেটা তখনো শুধু cache-এ ছিল। এই কারণেই বেশিরভাগ আসল উচ্চ-কর্মক্ষমতার CPU write-back ব্যবহার করে।
 
 ---
 
@@ -621,9 +621,9 @@ endmodule
 
 তাই আমরা বানাই **দুটো cache** — একটা instruction cache (I$), একটা data cache (D$) — দুটোই আমাদের সেই write-back `cache_controller` এর instance। কিন্তু পেছনে DRAM তো একটাই, আর তার port ও একটাই। দুটো cache একসাথে DRAM চাইলে কে আগে পাবে? এই দ্বন্দ্ব মেটায় একটা **memory arbiter (সালিশকারী)**।
 
-এই arbiter-এর নিয়মটা সরল কিন্তু সূক্ষ্ম: **data-কে অগ্রাধিকার দাও।** কেন? কারণ data access (LW/SW) প্রায়ই pipeline-এর সেই instruction যেটা সামনে এগোতে আটকে আছে; তাকে আগে ছেড়ে দিলে pipeline দ্রুত খোলে। Data যখন memory চায় (পড়া বা লেখা), তখন সে port পায়; বাকি সময় instruction fetch পায়। কোডে আছে `dmem_access = dmem_read || dmem_write` — এই এক লাইনই সিদ্ধান্তটা নেয়।
+এই arbiter-এর নিয়মটা সরল কিন্তু সূক্ষ্ম: **data-কে অগ্রাধিকার দাও।** কেন? কারণ data access (LW/SW) মানে প্রায়ই এমন একটা instruction, যেটা সামনে এগোতে গিয়ে আটকে আছে; তাকে আগে ছেড়ে দিলে pipeline দ্রুত খোলে। Data যখন memory চায় (পড়া বা লেখা), তখন সে port পায়; বাকি সময় instruction fetch পায়। কোডে আছে `dmem_access = dmem_read || dmem_write` — এই এক লাইনই সিদ্ধান্তটা নেয়।
 
-> ⚠️ একটা সূক্ষ্ম bug-ফাঁদ এখানে আছে, যা কোডের comment-এ বিশেষভাবে সাবধান করা: instruction fetch যখন data র কাছে port হারায়, তখন তাকে অবশ্যই **stall** করতে হবে — `mem_write` সংকেত যেন কখনো ভুল করে instruction address-এ গিয়ে না পড়ে। নিচের arbiter-এ তাই write সবসময় data র দিকে steer করা হয়েছে।
+> ⚠️ একটা সূক্ষ্ম bug-ফাঁদ এখানে আছে, যা কোডের comment-এ বিশেষভাবে সাবধান করা: instruction fetch যখন data-র কাছে port হারায়, তখন তাকে অবশ্যই **stall** করতে হবে — `mem_write` সংকেত যেন কখনো ভুল করে instruction address-এ গিয়ে না পড়ে। নিচের arbiter-এ তাই write সবসময় data-র দিকে steer করা হয়েছে।
 
 ### Complete Memory Subsystem:
 
@@ -757,7 +757,7 @@ flowchart TB
 
 খেয়াল করো দুটো cache দুজনেই DRAM থেকে আসা **একই** `mem_read_data` আর `mem_ready` তার শোনে — কারণ একসময় শুধু একজনই DRAM ব্যবহার করছে (arbiter সেটাই নিশ্চিত করে)। আর হিসাবের সুবিধার জন্য প্রতিটা cache নিজের `hit_count`/`miss_count` আলাদা করে বের করে দেয়, যাতে আমরা I$ আর D$ এর কর্মক্ষমতা আলাদা করে মাপতে পারি।
 
-> 📝 মনে রাখো এখানে I$ আর D$ উভয়েরই `NUM_LINES = 512` — মানে এই system-এ প্রতিটা cache ৫১২ line, ১৮.১ এর উদাহরণের ১০২৪ line নয়। আকারটা parameter দিয়ে সহজে বদলানো যায়, আর শেষের build plan-এ ঠিক এটাই tune করে দেখার কথা বলা আছে।
+> 📝 মনে রাখো এখানে I$ আর D$ উভয়েরই `NUM_LINES = 512` — মানে এই system-এ প্রতিটা cache ৫১২ line, ১৮.১-এর উদাহরণের ১০২৪ line নয়। আকারটা parameter দিয়ে সহজে বদলানো যায়, আর শেষের build plan-এ ঠিক এটাই tune করে দেখার কথা বলা আছে।
 
 ---
 
@@ -813,7 +813,7 @@ Hit rate is CRITICAL!
 
 ### Improving Hit Rate - hit rate বাড়ানোর পাঁচটা অস্ত্র
 
-যেহেতু hit rate ই সব, প্রকৌশলীরা এটা বাড়াতে নানা কৌশল খাটান। প্রতিটার পেছনে একই সুর — হয় cache-এ বেশি data ধরাও, নয় conflict কমাও, নয় ভবিষ্যৎ আন্দাজ করো। কিন্তু প্রতিটারই একটা দাম আছে (জায়গা, logic, বা জটিলতা):
+যেহেতু hit rate-ই সব, প্রকৌশলীরা এটা বাড়াতে নানা কৌশল খাটান। প্রতিটার পেছনে একই সুর — হয় cache-এ বেশি data ধরাও, নয় conflict কমাও, নয় ভবিষ্যৎ আন্দাজ করো। কিন্তু প্রতিটারই একটা দাম আছে (জায়গা, logic, বা জটিলতা):
 
 ```
 1. Larger Cache
@@ -846,7 +846,7 @@ Hit rate is CRITICAL!
 
 1. **বড় cache:** সহজতম উপায় — বেশি line, বেশি data ধরে রাখা যায়, তাই miss কম। কিন্তু cache দামি (দ্রুত SRAM), আর বড় হলে hit time-ও একটু বাড়ে। তাই অসীম বড় করা যায় না — এটা একটা ভারসাম্য।
 2. **Associativity:** মনে আছে direct-mapped-এর পার্কিং সমস্যা? দুটো জনপ্রিয় address একই index চাইলে তারা একে অপরকে বারবার লাথি মেরে বের করে (conflict miss)। ২-way বা ৪-way করলে একই index-এ একাধিক জায়গা থাকে, তাই দুজনেই একসাথে থাকতে পারে — conflict কমে। দাম: tag মেলাতে এখন একাধিক তুলনা লাগে, logic জটিল।
-3. **ভালো Replacement নীতি:** associative cache-এ যখন জায়গা ভরে যায়, কোন line ফেলব? **LRU (Least Recently Used)** — যেটা সবচেয়ে বেশিদিন ব্যবহার হয়নি সেটা ফেলো। এটা temporal locality র সাথে দারুণ খাপ খায় (সদ্য ব্যবহৃত জিনিস আবার লাগবে, তাই সেটা রাখো)। এলোমেলো (random) ফেলার চেয়ে ভালো, কিন্তু "কে কখন শেষ ব্যবহৃত" তা মনে রাখতে বাড়তি logic লাগে।
+3. **ভালো Replacement নীতি:** associative cache-এ যখন জায়গা ভরে যায়, কোন line ফেলব? **LRU (Least Recently Used)** — যেটা সবচেয়ে বেশিদিন ব্যবহার হয়নি সেটা ফেলো। এটা temporal locality-র সাথে দারুণ খাপ খায় (সদ্য ব্যবহৃত জিনিস আবার লাগবে, তাই সেটা রাখো)। এলোমেলো (random) ফেলার চেয়ে ভালো, কিন্তু "কে কখন শেষ ব্যবহৃত" তা মনে রাখতে বাড়তি logic লাগে।
 4. **Prefetching:** ভবিষ্যৎ আন্দাজ করে data **আগেভাগে** এনে রাখা। যেমন তুমি `a[0]` চাইলে cache আন্দাজ করতে পারে পরেরবার `a[1]`, `a[2]` লাগবে (spatial locality!) — তাই সেগুলো আগেই টেনে আনে। ঠিক আন্দাজ হলে miss সরাসরি hit-এ পরিণত হয়; ভুল আন্দাজ হলে অযথা bandwidth নষ্ট। জটিল কিন্তু শক্তিশালী।
 5. **Software optimization:** সবচেয়ে কম মনে রাখা অথচ সবচেয়ে শক্তিশালী অস্ত্র — hardware নয়, **code টাই** cache-বান্ধব করে লেখা। Compiler optimization, data structure-কে memory-তে গোছানোভাবে সাজানো, array পরপর পড়া (locality বাড়ে) — এগুলো hardware না বদলেও hit rate নাটকীয়ভাবে বাড়ায়। একটা matrix-কে সারি-ক্রমে নাকি কলাম-ক্রমে পড়ছ, এই ছোট পছন্দই কখনো কখনো কয়েকগুণ গতির পার্থক্য গড়ে দেয়।
 
@@ -854,11 +854,11 @@ Hit rate is CRITICAL!
 
 ## ১৮.৬ Main Memory Model
 
-Cache-কে test করতে গেলে একটা "slow" memory লাগবে — যেটা আসল DRAM-এর মতো ১০০ cycle দেরি করে। নিচের module-টা সেই DRAM-কে নকল করে। আসল DRAM-এর জটিল ভেতরকার কারিগরি (refresh, row/column) আমরা বাদ দিই; শুধু যে আচরণটা cache-এর কাছে গুরুত্বপূর্ণ সেটাই রাখি — **request পেলে ১০০ cycle গোনে, তারপর data দিয়ে `ready` তোলে।**
+Cache-কে test করতে গেলে একটা "slow" memory লাগবে — যেটা আসল DRAM-এর মতো ১০০ cycle দেরি করে। নিচের module-টা সেই DRAM-কে নকল করে। আসল DRAM-এর জটিল ভেতরের কারিগরি (refresh, row/column) আমরা বাদ দিই; শুধু যে আচরণটা cache-এর কাছে গুরুত্বপূর্ণ সেটাই রাখি — **request পেলে ১০০ cycle গোনে, তারপর data দিয়ে `ready` তোলে।**
 
 কোডে তিনটা জিনিস খেয়াল করো:
 
-- **`ACCESS_CYCLES = 100`:** এই counter ই সেই memory wall-কে নকল করে। `BUSY` state-এ `access_counter` ১০০ পর্যন্ত গোনে — এটাই আমাদের miss penalty।
+- **`ACCESS_CYCLES = 100`:** এই counter-ই সেই memory wall-কে নকল করে। `BUSY` state-এ `access_counter` ১০০ পর্যন্ত গোনে — এটাই আমাদের miss penalty।
 - **byte-wise storage:** `memory` array-টা `[7:0]` অর্থাৎ byte-এর array। একটা ৩২-bit word পড়তে/লিখতে পরপর চারটা byte জোড়া লাগে (little-endian — সবচেয়ে নিচের byte সবচেয়ে নিচের address-এ)।
 - **latching:** request আসামাত্র `op_is_write`, `addr_latched`, `wdata_latched` এ সব latch করা হয় — কারণ ১০০ cycle অপেক্ষার মধ্যে CPU/cache-এর দেওয়া strobe সংকেত নেমে যেতে পারে, কিন্তু memory-কে মূল অনুরোধটা মনে রাখতেই হবে।
 
@@ -938,7 +938,7 @@ module main_memory #(
 endmodule
 ```
 
-এই module-টার গোটা চরিত্র দুটো state-এ — `IDLE` এ অপেক্ষা, `BUSY` এ ১০০ cycle গোনা। লক্ষ করো read-এর সময় চারটা byte-কে `{memory[addr+3], memory[addr+2], memory[addr+1], memory[addr]}` ক্রমে জোড়া হচ্ছে — সবচেয়ে উপরের byte (bit 31:24) সবচেয়ে বড় address থেকে। এটাই little-endian বিন্যাস, যা RISC-V মেনে চলে। আর latch করা `addr_latched`/`op_is_write` ব্যবহারের কারণ কোডের comment-এ স্পষ্ট: strobe drop হলেও যেন সঠিক জায়গায় সঠিক কাজটা হয়। এই একটা module-ই আমাদের পুরো "memory wall" — cache-এর প্রতিটা miss এখানে এসে ১০০ cycle জরিমানা দিয়ে যায়, ঠিক যেমনটা আমরা মাপতে চেয়েছিলাম।
+এই module-টার গোটা চরিত্র দুটো state-এ — `IDLE` এ অপেক্ষা, `BUSY` এ ১০০ cycle গোনা। লক্ষ করো read-এর সময় চারটা byte-কে `{memory[addr+3], memory[addr+2], memory[addr+1], memory[addr]}` ক্রমে জোড়া হচ্ছে — সবচেয়ে উপরের byte (bit 31:24) আসে সবচেয়ে বড় address থেকে। এটাই little-endian বিন্যাস, যা RISC-V মেনে চলে। আর latch করা `addr_latched`/`op_is_write` ব্যবহারের কারণ কোডের comment-এ স্পষ্ট: strobe drop হলেও যেন সঠিক জায়গায় সঠিক কাজটা হয়। এই একটা module-ই আমাদের পুরো "memory wall" — cache-এর প্রতিটা miss এখানে এসে ১০০ cycle জরিমানা দিয়ে যায়, ঠিক যেমনটা আমরা মাপতে চেয়েছিলাম।
 
 ---
 
@@ -1031,7 +1031,7 @@ module riscv_with_cache(
 endmodule
 ```
 
-দুটো জিনিস খেয়াল করো। প্রথমত, `cache_stall` সংকেতটা pipeline-এ পাঠানো হচ্ছে — যাতে miss-এর সময় সে নিজেকে জমিয়ে রাখে। দ্বিতীয়ত, debug output হিসেবে মোট hit (`instr_hits + data_hits`), মোট miss, আর মোট cycle বের করা হচ্ছে — ঠিক সেই সংখ্যাগুলো যা দিয়ে পরের section-এ আমরা hit rate আর AMAT মাপব। এই module টাই তোমার "cache সহ সম্পূর্ণ প্রসেসর" — Chapter 14-17-এর CPU, এখন একটা আসল memory hierarchy পরে।
+দুটো জিনিস খেয়াল করো। প্রথমত, `cache_stall` সংকেতটা pipeline-এ পাঠানো হচ্ছে — যাতে miss-এর সময় সে নিজেকে জমিয়ে রাখে। দ্বিতীয়ত, debug output হিসেবে মোট hit (`instr_hits + data_hits`), মোট miss, আর মোট cycle বের করা হচ্ছে — ঠিক সেই সংখ্যাগুলো যা দিয়ে পরের section-এ আমরা hit rate আর AMAT মাপব। এই module টাই তোমার "cache সহ সম্পূর্ণ প্রসেসর" — Chapter 14-17-এর CPU, এখন একটা আসল memory hierarchy পরেছে।
 
 ---
 
@@ -1039,7 +1039,7 @@ endmodule
 
 বানানো শেষ — এবার প্রমাণ করি cache সত্যিই কাজ করছে। নিচের testbench-টা প্রসেসরটা কিছুক্ষণ চালায়, hit/miss গোনে, তারপর নিজে থেকেই hit rate, miss rate, AMAT, আর speedup হিসাব করে ছাপিয়ে দেয়। মনে রাখো — এগুলো আর কাগজের হিসাব নয়, তোমার নিজের বানানো hardware-এর আসল সংখ্যা।
 
-লক্ষ করো testbench-এর শেষ কয়েক লাইন ঠিক আমাদের ১৮.৫ এর সূত্রগুলোই কোডে রূপ নিয়েছে — `hit_rate = hits / (hits + misses)`, তারপর `amat = 1.0 + (miss_rate * 100.0)`, আর `speedup = 100.0 / amat`। অর্থাৎ তত্ত্ব আর পরীক্ষা এখানে হাত মেলায়।
+লক্ষ করো testbench-এর শেষ কয়েক লাইন ঠিক আমাদের ১৮.৫-এর সূত্রগুলোই কোডে রূপ নিয়েছে — `hit_rate = hits / (hits + misses)`, তারপর `amat = 1.0 + (miss_rate * 100.0)`, আর `speedup = 100.0 / amat`। অর্থাৎ তত্ত্ব আর পরীক্ষা এখানে হাত মেলায়।
 
 > 💡 `real hit_rate, miss_rate, amat;` declaration-গুলো module-এর একদম উপরে কেন? কোডের comment-ই বলে দিচ্ছে — Verilog block-এর মাঝখানে নতুন declaration করতে দেয় না, তাই floating-point হিসাবের variable-গুলো শুরুতেই ঘোষণা করা হয়েছে।
 
