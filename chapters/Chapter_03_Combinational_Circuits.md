@@ -260,19 +260,9 @@ Full Adder: A + B + Cin = Sum + Cout
 ```
 Circuit: 2 Half Adders + 1 OR
 
-        A ──┐
-            ├─[HA1]── S1
-        B ──┘          |
-                      C1
-                       |
-       Cin ────────────┤
-                       ├─[HA2]── Sum
-                       |
-                      C2
-                       |
-           C1 ─────────┤
-                       ├─[OR]── Cout
-           C2 ─────────┘
+   Step 1:  A,  B    ──►  [ HA1 ]  ──►  S1, C1
+   Step 2:  S1, Cin  ──►  [ HA2 ]  ──►  Sum, C2
+   Step 3:  C1, C2   ──►  [ OR  ]  ──►  Cout
 
 Logic:
 S1, C1 = HalfAdder(A, B)
@@ -904,13 +894,12 @@ flowchart LR
 একই ভাবনাটা তার-পর্যায়ে আঁকলে:
 
 ```
-        A ──┬──[AND]──┐
-            │         │
-        B ──┤         ├──[MUX 4:1]── Result
-            │         │     S1 S0
-            ├──[OR]───┤
-            │         │
-            └──[ADD]──┘
+        A,B ─┬──[AND]──┐
+             │         │
+             ├──[OR]───┤
+             │         ├──[MUX 4:1]── Result
+             │         │     S1 S0
+             └──[ADD]──┘
 ```
 
 দেখলে তো — ALU আসলে কোনো নতুন জাদু নয়, বরং তোমার আগের বানানো সব block-এর (logic gate + adder/subtractor + MUX) একটা সুন্দর সমাবেশ মাত্র।
@@ -972,7 +961,8 @@ flowchart LR
     LOGIC --> MUX
     ARITH --> MUX
     MUX --> RESULT["Result (4-bit)"]
-    RESULT --> FLAGS["Flags<br/>(Z, C, N, V)"]
+    RESULT -->|Z, N| FLAGS["Flags<br/>(Z, C, N, V)"]
+    ARITH -->|C, V| FLAGS
 ```
 
 ALU শুধু উত্তরই দেয় না, উত্তর সম্পর্কে কিছু গুরুত্বপূর্ণ **flag**-ও দেয় — এক-bit সংকেত যা processor-কে অতিরিক্ত তথ্য জানায়। এগুলো পরে if-condition, loop ইত্যাদিতে কাজে লাগবে:
