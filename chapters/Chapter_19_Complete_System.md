@@ -77,19 +77,19 @@ memory, আরেকটা চিপে I/O controller। সেগুলোক�
 ```
 এক চিপের ভেতরে সব কিছু:
 ┌──────────────────────────────────────┐
-│            RISC-V SoC                 │
+│  RISC-V SoC
 ├──────────────────────────────────────┤
-│  CPU Core (Pipelined + Cache)        │
+│  CPU Core (Pipelined + Cache)
 ├──────────────────────────────────────┤
-│  Memory (ROM + RAM)                  │
+│  Memory (ROM + RAM)
 ├──────────────────────────────────────┤
-│  Peripherals:                        │
-│    - UART (Serial)                   │
-│    - GPIO (I/O pins)                 │
-│    - Timer                           │
-│    - Interrupt Controller            │
+│  Peripherals:
+│    - UART (Serial)
+│    - GPIO (I/O pins)
+│    - Timer
+│    - Interrupt Controller
 ├──────────────────────────────────────┤
-│  Bus (সব কিছু জুড়ে রাখে)             │
+│  Bus (সব কিছু জুড়ে রাখে)
 └──────────────────────────────────────┘
 
 Raspberry Pi, Arduino — সব এভাবেই বানানো!

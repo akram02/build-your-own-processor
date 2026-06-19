@@ -254,17 +254,17 @@ Pi Pico-র সেই চিপ!) তোমার প্রসেসরের "�
 
 ```
 TinyTapeout PCB features:
-┌──────────────────────────────────────┐
-│   USB         [Your Chip]      Power  │
-│    ↓              ↓              ↓     │
-│ [USB-C]       [QFN-64]      [Power LED]│
-│                                        │
-│ [RP2040]    [Level          [Pin       │
-│   MCU        Shifters]       Headers]  │
-│                                        │
-│ [Design     [Test           [GPIO      │
-│   Select]    Points]         Pins]     │
-└──────────────────────────────────────┘
+┌──────────────────────────────────────────┐
+│ USB            Your Chip    Power        │
+│   ↓                 ↓          ↓         │
+│ [USB-C]        [QFN-64]     [Power LED]  │
+│                                          │
+│ [RP2040]       [Level       [Pin         │
+│   MCU            Shifters]    Headers]   │
+│                                          │
+│ [Design        [Test        [GPIO        │
+│   Select]        Points]      Pins]      │
+└──────────────────────────────────────────┘
 
 RP2040 controls your chip:
 - Sends clock
@@ -1211,27 +1211,27 @@ Your turn to inspire! ✨
 
 ```
 ╔══════════════════════════════════════╗
-║  🏆 LEGENDARY CHIP DESIGNER 🏆      ║
+║  🏆 LEGENDARY CHIP DESIGNER 🏆
 ╠══════════════════════════════════════╣
-║  Level 25: ✅ COMPLETE - MASTER!    ║
-║  Progress: [████████████████] 100%  ║
-║                                      ║
-║  XP Gained: +5000 (MAX LEVEL!)      ║
-║  Skills: ALL UNLOCKED! ⭐⭐⭐⭐⭐    ║
-║                                      ║
-║  Badges Earned:                      ║
-║  🥉 Digital Logic Master             ║
-║  🥈 Verilog Ninja                    ║
-║  🥇 FPGA Wizard                      ║
-║  🏅 CPU Architect                    ║
-║  🎖️  VLSI Engineer                   ║
-║  👑 CHIP MASTER! 👑                  ║
-║                                      ║
-║  Special Achievement:                ║
-║  🌟 REAL SILICON CHIP! 🌟            ║
-║                                      ║
-║  Status: LEGENDARY                   ║
-║  Rank: TOP 0.001% 🚀                 ║
+║  Level 25: ✅ COMPLETE - MASTER!
+║  Progress: [████████████████] 100%
+║
+║  XP Gained: +5000 (MAX LEVEL!)
+║  Skills: ALL UNLOCKED! ⭐⭐⭐⭐⭐
+║
+║  Badges Earned:
+║  🥉 Digital Logic Master
+║  🥈 Verilog Ninja
+║  🥇 FPGA Wizard
+║  🏅 CPU Architect
+║  🎖️  VLSI Engineer
+║  👑 CHIP MASTER! 👑
+║
+║  Special Achievement:
+║  🌟 REAL SILICON CHIP! 🌟
+║
+║  Status: LEGENDARY
+║  Rank: TOP 0.001% 🚀
 ╚══════════════════════════════════════╝
 
 YOU DID IT! CONGRATULATIONS! 🎊🎉🎊
