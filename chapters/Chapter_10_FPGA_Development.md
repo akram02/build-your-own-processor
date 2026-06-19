@@ -49,7 +49,7 @@ Tang Nano 9K Board:
   ✅ 6 LEDs onboard
   ✅ 2 Buttons
   ✅ HDMI output
-  ✅ 32MB PSRAM
+  ✅ 8 MB PSRAM
   ✅ USB-C (power + programming)
   ✅ Breadboard friendly!
 
@@ -125,7 +125,7 @@ Synthesize → Place & Route → Bitstream → USB দিয়ে board-এ প
               ║   [S1]          [S2]     ║   ← 2 push buttons
               ║                          ║
               ║   [ HDMI ]   [TF card]   ║   ← video out + SD slot
-              ║   [   32 MB PSRAM   ]    ║   ← external memory
+              ║   [   8 MB PSRAM    ]    ║   ← external memory
               ║ ●                      ● ║
               └──────────────────────────┘
                   Size: ~21mm × 72mm
@@ -159,7 +159,7 @@ Synthesize → Place & Route → Bitstream → USB দিয়ে board-এ প
 | **6 × LEDs** | তোমার প্রথম output (RGB × 2, single color × 3) |
 | **2 × Push buttons** (S1, S2) | তোমার প্রথম input |
 | **HDMI output** | video project—monitor-এ ছবি পাঠানো যায়! |
-| **32 MB PSRAM** | বড় external memory (chip-এর ভেতরের RAM ছোট) |
+| **8 MB PSRAM** | বড় external memory (chip-এর ভেতরের RAM ছোট) |
 | **TF card slot** | SD card—file/data storage |
 | **USB-C** | একটাই তারে বিদ্যুৎ + programming, দুটোই |
 

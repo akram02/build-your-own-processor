@@ -379,7 +379,7 @@ Circuit Symbol:
 **Real-World Example:**
 ```
 Safety interlock:
-- Door closed? (Input A)
+- Door open? (Input A)
 → Machine runs? (Output Y)
 
 Door OPEN → Machine STOPS

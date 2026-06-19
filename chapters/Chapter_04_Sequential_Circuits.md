@@ -308,11 +308,11 @@ When E=0: Q holds previous value
      ┌───────┐       ┌───────
 E ───┘       └───────┘
 
-   ┌───┐       ┌─────┐
-D ─┘   └───────┘     └────
+   ┌─────┐       ┌────
+D ─┘     └───────┘
 
-       ┌───────────┐     ┌──
-Q ─────┘           └─────┘
+     ┌───┐           ┌──
+Q ───┘   └───────────┘
 
 When E=1: Q follows D (transparent)
 When E=0: Q freezes
@@ -375,15 +375,14 @@ edge ছাড়া বাকি পুরোটা সময় flip-flop inpu
 
 **Circuit:**
 ```
-           ┌──────────┐  ┌──────────┐
-D ─────────┤  Master  ├──┤  Slave   ├──── Q
-           │ D Latch  │  │ D Latch  │
-CLK ───┬───┤ E        │  │ E        │
-       │   └──────────┘  └──────────┘
-       │        ↑             ↑
-       │        │             │
-       │       CLK           CLK'
-       └─[NOT]──┘
+           ┌──────────┐     ┌──────────┐
+D ─────────┤  Master  ├─────┤  Slave   ├──── Q
+           │ D Latch  │     │ D Latch  │
+           └────┬─────┘     └────┬─────┘
+                │ E=CLK          │ E=CLK'
+CLK ────┬───────┘                │
+        │                        │
+        └────────[NOT]───────────┘
 
 Master active when CLK=1
 Slave active when CLK=0
@@ -432,14 +431,14 @@ CLK-এর পাশে ওই ছোট্ট ত্রিভুজ চিহ�
 ```
 CLK  ───┐   ┌───┐   ┌───┐
         └───┘   └───┘   └───
-        ↑       ↑       ↑  (Trigger points)
+            ↑       ↑   (Trigger points = rising edges)
 
 D    ──┐   ┌───────┐
        └───┘       └───────
 
-Q    ────┐       ┌─────────
-         └───────┘
-         ↑       ↑  (Changes at rising edges)
+            ┌───────┐
+Q    ───────┘       └──────
+            ↑       ↑   (Q changes on rising edges)
 ```
 
 D latch-এর timing diagram-টার সাথে এটা মিলিয়ে দেখো — পার্থক্যটা স্পষ্ট। সেখানে Q ছিল D-র ছায়া, সারাক্ষণ নকল করত। এখানে Q শৃঙ্খলাবদ্ধ — ঘড়ির কাঁটার তালে, ঠিক ঠিক সময়ে, একবার করে মান নেয়। এই শৃঙ্খলাই synchronous design-কে নির্ভরযোগ্য করে।
@@ -647,8 +646,8 @@ CLK ────┘ └─┘ └─┘ └─┘ └─
 
 T=1 (always toggle)
 
-Output: ┌───────┐         (2 cycles)
-Q ──────┘       └──────
+Output: ┌───┐   ┌───┐     (2 cycles)
+Q ──────┘   └───┘   └──
 
 Divides frequency by 2!
 ```
@@ -844,7 +843,7 @@ Serial In ─[D FF]─[D FF]─[D FF]─[D FF]─ Serial Out
 ধরো শুরুতে সব 0, আর আমরা একটা মাত্র `1` ঢোকালাম। দেখো সেই `1`-টা প্রতি clock-এ কীভাবে এক ঘর করে ডানে হেঁটে যায় — যেন একটা ছোট আলো লাইন ধরে হেঁটে চলেছে:
 
 ```
-Initial: Q3 Q2 Q1 Q0 = 0000
+Initial: Q0 Q1 Q2 Q3 = 0000
 Input: 1
 
 Clock 1: 1000 (1 enters Q0)
@@ -885,13 +884,14 @@ Serial In ─[D FF]─[D FF]─[D FF]─[D FF]
 
 **Circuit:**
 ```
-D3 ─[MUX]─[D FF]─[MUX]─[D FF]─[MUX]─[D FF]─[MUX]─[D FF]─ Serial Out
-     ↑            ↑            ↑            ↑
-     │            │            │            │
-    LOAD/SHIFT control
+        D3           D2           D1           D0    ← parallel data in
+         ↓            ↓            ↓            ↓
+  '0' ─[MUX]─[D FF]─[MUX]─[D FF]─[MUX]─[D FF]─[MUX]─[D FF]─ Serial Out
+           └──── each MUX's other input = the previous FF's output ────┘
+                 (when shifting, bits march left → right to Serial Out)
 
-LOAD=1: Parallel data loaded
-LOAD=0: Shift right
+LOAD=1: every MUX picks its Di    → parallel data loaded
+LOAD=0: every MUX picks prev FF   → shift right
 ```
 
 MUX-গুলোর LOAD/SHIFT control-এর কাজটা বুঝে নাও: LOAD=1 হলে চারটে bit একসাথে ঢুকে পড়ে; তারপর LOAD=0 করে দিলে প্রতি clock-এ একটা করে bit Serial Out দিয়ে বেরিয়ে যায়।
