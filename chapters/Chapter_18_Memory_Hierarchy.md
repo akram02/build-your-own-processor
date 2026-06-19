@@ -109,11 +109,11 @@ flowchart TB
 
 ### কেন cache আদৌ কাজ করে? — Locality র গল্প
 
-এখানে একটা গভীর প্রশ্ন আসে। Cache তো ছোট — সে তো পুরো 8 GB DRAM ধরে রাখতে পারে না। তাহলে মাত্র 32 KB জায়গায় কী এমন রাখবে যাতে বেশিরভাগ সময় কাজ চলে যায়? উত্তরটা প্রোগ্রামের একটা চমৎকার স্বভাবে লুকিয়ে — **locality (স্থানীয়তা)**। প্রোগ্রাম memory কে এলোমেলোভাবে ছোঁয় না; সে একটা গোছানো, অনুমান-যোগ্য প্যাটার্নে ছোঁয়। এই প্যাটার্ন দুই রকম:
+এখানে একটা গভীর প্রশ্ন আসে। Cache তো ছোট — সে তো পুরো 8 GB DRAM ধরে রাখতে পারে না। তাহলে মাত্র 32 KB জায়গায় কী এমন রাখবে যাতে বেশিরভাগ সময় কাজ চলে যায়? উত্তরটা প্রোগ্রামের একটা চমৎকার স্বভাবে লুকিয়ে — **locality (স্থানীয়তা)**। প্রোগ্রাম memory-কে এলোমেলোভাবে ছোঁয় না; সে একটা গোছানো, অনুমান-যোগ্য প্যাটার্নে ছোঁয়। এই প্যাটার্ন দুই রকম:
 
 **Temporal locality (সময়গত স্থানীয়তা):** এইমাত্র যে data ব্যবহার করেছো, সেটা আবার শিগগিরই লাগার সম্ভাবনা বেশি। ভাবো একটা `for` loop-এর কথা — loop variable `i` প্রতি iteration-এ পড়া হয়, লেখা হয়, আবার পড়া হয়। একবার ব্যবহার মানে আরও বহুবার ব্যবহার।
 
-**Spatial locality (স্থানগত স্থানীয়তা):** এইমাত্র যে address ছুঁয়েছো, তার ঠিক পাশের address গুলোও শিগগিরই লাগার সম্ভাবনা বেশি। একটা array-এর উপর দিয়ে হাঁটো — `a[0]`, তারপর `a[1]`, তারপর `a[2]`... পরপর সাজানো। অথবা instruction-গুলো — সাধারণত একটার পর একটা execute হয়।
+**Spatial locality (স্থানগত স্থানীয়তা):** এইমাত্র যে address ছুঁয়েছো, তার ঠিক পাশের address-গুলোও শিগগিরই লাগার সম্ভাবনা বেশি। একটা array-এর উপর দিয়ে হাঁটো — `a[0]`, তারপর `a[1]`, তারপর `a[2]`... পরপর সাজানো। অথবা instruction-গুলো — সাধারণত একটার পর একটা execute হয়।
 
 #### একটা everyday analogy — তোমার পড়ার টেবিল
 
@@ -148,7 +148,7 @@ Cache exploits locality!
 
 ### Cache Organization - cache ভেতরে কেমন সাজানো?
 
-Cache কে আমরা ছোট ছোট খোপে ভাগ করি। শব্দ তিনটা মনে রাখো:
+Cache-কে আমরা ছোট ছোট খোপে ভাগ করি। শব্দ তিনটা মনে রাখো:
 
 - **Line / Block:** storage-এর সবচেয়ে ছোট একক। Cache একবারে একটা গোটা line আনে বা ফেলে — একটা একলা byte নিয়ে কারবার করে না (মনে আছে spatial locality? পাশের data ও সাথে আনাই বুদ্ধিমানের কাজ)।
 - **Set:** কয়েকটা line-এর একটা দল।
@@ -185,7 +185,7 @@ We'll implement Direct-Mapped!
 
 এটা পুরো chapter-এর সবচেয়ে গুরুত্বপূর্ণ ধারণা, তাই ধীরে ধীরে বুঝি। CPU একটা ৩২-bit address দেয়। আমাদের cache-এর line আছে মাত্র ১০২৪টা — অথচ address দিয়ে ঠিকানা দেওয়া যায় ৪ গিগাবাইট। তাহলে এই বিশাল address space-টা মাত্র ১০২৪টা খোপে কীভাবে ঢোকাই, আর পরে কী করে চিনি কোন data কোন খোপে আছে?
 
-কৌশলটা হলো — **৩২টা bit কে তিন টুকরোয় কাটো**, প্রতি টুকরোর আলাদা কাজ:
+কৌশলটা হলো — **৩২টা bit-কে তিন টুকরোয় কাটো**, প্রতি টুকরোর আলাদা কাজ:
 
 ```
 Address breakdown (32-bit):
@@ -200,13 +200,13 @@ Address breakdown (32-bit):
 
 ডান দিক থেকে বাঁ দিকে পড়লে এটা সবচেয়ে সহজ মনে হয়:
 
-- **Offset (নিচের ২ bit):** line-এর ভেতর কোন byte? আমাদের line ৪ byte, আর ৪টা byte কে আলাদা করতে লাগে ঠিক ২ bit (২² = ৪)। অর্থাৎ একদম ছোট, line-এর-ভেতরের ঠিকানা।
-- **Index (পরের ১০ bit):** কোন cache line-এ যাব? ১০২৪টা line কে আলাদা করতে লাগে ঠিক ১০ bit (২¹⁰ = ১০২৪)। এটাই সেই "নির্দিষ্ট পার্কিং স্লট" — direct-mapped-এ index সরাসরি বলে দেয় গাড়ি কোথায় বসবে। **কোনো খোঁজাখুঁজি নেই**, index দেখো আর সোজা সেই line-এ যাও।
+- **Offset (নিচের ২ bit):** line-এর ভেতর কোন byte? আমাদের line ৪ byte, আর ৪টা byte-কে আলাদা করতে লাগে ঠিক ২ bit (২² = ৪)। অর্থাৎ একদম ছোট, line-এর-ভেতরের ঠিকানা।
+- **Index (পরের ১০ bit):** কোন cache line-এ যাব? ১০২৪টা line-কে আলাদা করতে লাগে ঠিক ১০ bit (২¹⁰ = ১০২৪)। এটাই সেই "নির্দিষ্ট পার্কিং স্লট" — direct-mapped-এ index সরাসরি বলে দেয় গাড়ি কোথায় বসবে। **কোনো খোঁজাখুঁজি নেই**, index দেখো আর সোজা সেই line-এ যাও।
 - **Tag (উপরের ২০ bit):** বাকি ২০ bit। এটা কেন লাগে? কারণ একই index অনেক ভিন্ন address-এর হতে পারে! ভাবো — index-এর ১০ bit একই রেখে উপরের ২০ bit বদলালে অসংখ্য আলাদা address পাওয়া যায়, অথচ সবগুলো **একই line** এ map করে। তাহলে এই মুহূর্তে সেই line-এ আসলে কোন address-টা বসে আছে, সেটা চেনার জন্যই tag — এটাই গাড়ির "নম্বরপ্লেট"।
 
 #### একটা mental model — তিন প্রশ্ন
 
-প্রতিটা address কে তিনটা প্রশ্নের উত্তর হিসেবে ভাবো:
+প্রতিটা address-কে তিনটা প্রশ্নের উত্তর হিসেবে ভাবো:
 
 ```mermaid
 flowchart LR
@@ -218,7 +218,7 @@ flowchart LR
     style O fill:#6a1b9a,color:#fff
 ```
 
-Hit/miss সিদ্ধান্ত এখন একদম পরিষ্কার দুই-ধাপের নাচ: (১) **index** দিয়ে সোজা line টায় যাও, (২) সেই line-এ লেখা **tag** তোমার address-এর tag-এর সাথে মিলিয়ে দেখো। মিললে — **hit!** না মিললে — **miss।** (আর line-টা আগে কখনো ভরা না হলে? সেটা চেনার জন্যই valid bit, একটু পরেই আসছে।)
+Hit/miss সিদ্ধান্ত এখন একদম পরিষ্কার দুই-ধাপের নাচ: (১) **index** দিয়ে সোজা line-টায় যাও, (২) সেই line-এ লেখা **tag** তোমার address-এর tag-এর সাথে মিলিয়ে দেখো। মিললে — **hit!** না মিললে — **miss।** (আর line-টা আগে কখনো ভরা না হলে? সেটা চেনার জন্যই valid bit, একটু পরেই আসছে।)
 
 #### একটা cache line-এর ভেতরে কী থাকে?
 
@@ -243,7 +243,7 @@ flowchart LR
     style D fill:#37474f,color:#fff
 ```
 
-- **Valid bit:** reset-এর পর cache খালি — তখন প্রতিটা line-এ এলোমেলো আবর্জনা থাকতে পারে, যেটা ভুলে data ভেবে ফেললে বিপর্যয়। Valid bit = 0 মানে "এই খোপ এখনো ব্যবহার হয়নি, এর tag/data কে বিশ্বাস করো না"। তাই hit হতে গেলে দুটো শর্ত একসাথে লাগে: valid bit ১ **এবং** tag মিলেছে।
+- **Valid bit:** reset-এর পর cache খালি — তখন প্রতিটা line-এ এলোমেলো আবর্জনা থাকতে পারে, যেটা ভুলে data ভেবে ফেললে বিপর্যয়। Valid bit = 0 মানে "এই খোপ এখনো ব্যবহার হয়নি, এর tag/data-কে বিশ্বাস করো না"। তাই hit হতে গেলে দুটো শর্ত একসাথে লাগে: valid bit ১ **এবং** tag মিলেছে।
 - **Tag:** উপরে যে নম্বরপ্লেট বললাম — চিনতে সাহায্য করে এই data-টা কোন address-এর।
 - **Data:** আসল ৩২-bit মালপত্র, যেটা CPU আসলে চায়।
 
@@ -260,7 +260,7 @@ Cache size: 4 KB (data only)
 
 ## ১৮.২ Direct-Mapped Cache Implementation
 
-তত্ত্ব শেষ — এবার silicon-এর ভাষায় লিখি। নিচের module-টা ঠিক যা যা উপরে আলোচনা করলাম, তাই করে: address কে tag/index/offset-এ ভাঙে, একটা তুলনায় hit/miss ঠিক করে, আর miss হলে একটা ছোট state machine দিয়ে DRAM থেকে data টেনে এনে cache-এ বসায়।
+তত্ত্ব শেষ — এবার silicon-এর ভাষায় লিখি। নিচের module-টা ঠিক যা যা উপরে আলোচনা করলাম, তাই করে: address-কে tag/index/offset-এ ভাঙে, একটা তুলনায় hit/miss ঠিক করে, আর miss হলে একটা ছোট state machine দিয়ে DRAM থেকে data টেনে এনে cache-এ বসায়।
 
 পড়ার আগে কোডের কয়েকটা মূল অংশ চিনে নাও, তাহলে পুরোটা সহজে ধরা পড়বে:
 
@@ -400,7 +400,7 @@ endmodule
 
 কোডটা ছোট, কিন্তু এর মধ্যে পুরো cache-দর্শন লুকিয়ে। হিসাবের কেন্দ্রবিন্দু সেই একটা লাইন — `cache_hit = valid[index] && (tag[index] == addr_tag)`। এই combinational তুলনাটা প্রতি cycle-এ নিজে নিজে হয়ে যায়; state machine শুধু তখনই কষ্ট করে যখন miss হয় এবং DRAM-এ যেতে হয়। Read hit হলে `read_data <= data[index]` — এক cycle, ব্যস। কিন্তু miss হলে `FETCH` state-এ গিয়ে `mem_ready` এর জন্য বসে থাকা — সেই ১০০ cycle-এর শাস্তি এখানেই। এই version-এ write hit হলে cache এবং memory দুটোতেই একসাথে লেখা হয় (write-through), তাই এখানে কোনো dirty bit নেই।
 
-> 💡 **খেয়াল করো:** এই সরল cache-এ miss হলেই আমরা সরাসরি নতুন data বসিয়ে দিই — পুরোনো line-এ যা ছিল তা নিয়ে আলাদা করে ভাবি না, কারণ write-through নীতিতে cache-এর সব কিছুর একটা copy memory তেও থাকে। পরের section-এ যখন **write-back** এ যাব, তখন এই "পুরোনো line-টা কি memory-তে লিখে রেখে আসতে হবে?" প্রশ্নটাই FSM কে জটিল করে তুলবে।
+> 💡 **খেয়াল করো:** এই সরল cache-এ miss হলেই আমরা সরাসরি নতুন data বসিয়ে দিই — পুরোনো line-এ যা ছিল তা নিয়ে আলাদা করে ভাবি না, কারণ write-through নীতিতে cache-এর সব কিছুর একটা copy memory তেও থাকে। পরের section-এ যখন **write-back** এ যাব, তখন এই "পুরোনো line-টা কি memory-তে লিখে রেখে আসতে হবে?" প্রশ্নটাই FSM-কে জটিল করে তুলবে।
 
 ---
 
@@ -408,9 +408,9 @@ endmodule
 
 আগের module-টা hit/miss বুঝিয়েছে, কিন্তু একটা জায়গায় সে অপচয়ী — write-through-এ **প্রতিটা** write সরাসরি DRAM-এ যায়। ভাবো একটা loop যা একই variable-এ হাজারবার লেখে — তাহলে হাজারবার DRAM-এ ১০০-cycle যাত্রা! এটা locality র অপমান। আরও বুদ্ধিমান উপায় হলো **write-back**: write-গুলো শুধু cache-এ জমা রাখো, আর সেই line-টা যখন cache থেকে বিদায় নিতে যাবে তখন একবারে memory-তে ফেরত পাঠাও।
 
-এই আরও পরিণত controller টায় তাই দুটো নতুন জিনিস:
+এই আরও পরিণত controller-টায় তাই দুটো নতুন জিনিস:
 
-- **`dirty` bit:** প্রতিটা line-এর জন্য একটা পতাকা। Cache-এ data লেখা হয়েছে কিন্তু এখনো memory-তে ফেরত যায়নি — এমন line কে "dirty" বলি। Dirty না হলে (clean) line-টা ফেলে দেওয়া নিরাপদ, কারণ memory-তে এর হুবহু copy আছে। Dirty হলে ফেলার আগে অবশ্যই memory-তে লিখে আসতে হবে, নইলে তোমার লেখা চিরতরে হারিয়ে যাবে।
+- **`dirty` bit:** প্রতিটা line-এর জন্য একটা পতাকা। Cache-এ data লেখা হয়েছে কিন্তু এখনো memory-তে ফেরত যায়নি — এমন line-কে "dirty" বলি। Dirty না হলে (clean) line-টা ফেলে দেওয়া নিরাপদ, কারণ memory-তে এর হুবহু copy আছে। Dirty হলে ফেলার আগে অবশ্যই memory-তে লিখে আসতে হবে, নইলে তোমার লেখা চিরতরে হারিয়ে যাবে।
 - **Statistics counters:** `hit_count`, `miss_count`, `access_count` — কতবার hit, কতবার miss, মোট কতবার access। এগুলো দিয়েই পরে আমরা hit rate আর AMAT হিসাব করব। (পরিমাপ না করলে optimize করবে কী?)
 
 #### Controller-এর FSM — পাঁচটা state
@@ -432,7 +432,7 @@ stateDiagram-v2
     end note
 ```
 
-পথটা গল্পের মতো পড়ো: CPU কিছু চাইল → `COMPARE` এ tag মিলিয়ে দেখি। মিললে (hit) সাথে সাথে কাজ সেরে `IDLE` এ ফিরি। না মিললে (miss) — এখন একটা কাঁটা: যে line-টা সরিয়ে নতুন data বসাব, সেটা কি dirty? Dirty হলে আগে `WRITE_BACK` এ গিয়ে পুরোনো data memory-তে নিরাপদে রেখে আসি, তারপর `FETCH`। Clean হলে সোজা `FETCH` — সেখানে নতুন line টেনে এনে বসাই, CPU কে `cpu_ready` সংকেত দিই, আর `IDLE` এ ফিরি। এই "dirty হলে আগে লিখে এসো" শাখাটাই write-back কে write-through-এর চেয়ে চালাক বানায়।
+পথটা গল্পের মতো পড়ো: CPU কিছু চাইল → `COMPARE` এ tag মিলিয়ে দেখি। মিললে (hit) সাথে সাথে কাজ সেরে `IDLE` এ ফিরি। না মিললে (miss) — এখন একটা কাঁটা: যে line-টা সরিয়ে নতুন data বসাব, সেটা কি dirty? Dirty হলে আগে `WRITE_BACK` এ গিয়ে পুরোনো data memory-তে নিরাপদে রেখে আসি, তারপর `FETCH`। Clean হলে সোজা `FETCH` — সেখানে নতুন line টেনে এনে বসাই, CPU-কে `cpu_ready` সংকেত দিই, আর `IDLE` এ ফিরি। এই "dirty হলে আগে লিখে এসো" শাখাটাই write-back-কে write-through-এর চেয়ে চালাক বানায়।
 
 ### Advanced Cache with Write-Back:
 
@@ -617,11 +617,11 @@ endmodule
 
 ## ১৮.৪ Memory System Integration
 
-এতক্ষণ একটা একলা cache বানিয়েছি। কিন্তু একটা আসল প্রসেসর memory কে **দুই ভিন্ন কারণে** ছোঁয়: (১) instruction আনতে (fetch), আর (২) data পড়তে-লিখতে (load/store)। মনে আছে Harvard architecture? এই দুটো কাজের প্যাটার্ন আলাদা — instruction সাধারণত পরপর সাজানো (শক্তিশালী spatial locality), data এদিক-সেদিক ছড়ানো। তাই দুটোকে আলাদা cache দিলে দুজনেই নিজের মতো ভালো কাজ করে, আর একে অপরের জায়গা দখল করে না।
+এতক্ষণ একটা একলা cache বানিয়েছি। কিন্তু একটা আসল প্রসেসর memory-কে **দুই ভিন্ন কারণে** ছোঁয়: (১) instruction আনতে (fetch), আর (২) data পড়তে-লিখতে (load/store)। মনে আছে Harvard architecture? এই দুটো কাজের প্যাটার্ন আলাদা — instruction সাধারণত পরপর সাজানো (শক্তিশালী spatial locality), data এদিক-সেদিক ছড়ানো। তাই দুটোকে আলাদা cache দিলে দুজনেই নিজের মতো ভালো কাজ করে, আর একে অপরের জায়গা দখল করে না।
 
 তাই আমরা বানাই **দুটো cache** — একটা instruction cache (I$), একটা data cache (D$) — দুটোই আমাদের সেই write-back `cache_controller` এর instance। কিন্তু পেছনে DRAM তো একটাই, আর তার port ও একটাই। দুটো cache একসাথে DRAM চাইলে কে আগে পাবে? এই দ্বন্দ্ব মেটায় একটা **memory arbiter (সালিশকারী)**।
 
-এই arbiter-এর নিয়মটা সরল কিন্তু সূক্ষ্ম: **data কে অগ্রাধিকার দাও।** কেন? কারণ data access (LW/SW) প্রায়ই pipeline-এর সেই instruction যেটা সামনে এগোতে আটকে আছে; তাকে আগে ছেড়ে দিলে pipeline দ্রুত খোলে। Data যখন memory চায় (পড়া বা লেখা), তখন সে port পায়; বাকি সময় instruction fetch পায়। কোডে আছে `dmem_access = dmem_read || dmem_write` — এই এক লাইনই সিদ্ধান্তটা নেয়।
+এই arbiter-এর নিয়মটা সরল কিন্তু সূক্ষ্ম: **data-কে অগ্রাধিকার দাও।** কেন? কারণ data access (LW/SW) প্রায়ই pipeline-এর সেই instruction যেটা সামনে এগোতে আটকে আছে; তাকে আগে ছেড়ে দিলে pipeline দ্রুত খোলে। Data যখন memory চায় (পড়া বা লেখা), তখন সে port পায়; বাকি সময় instruction fetch পায়। কোডে আছে `dmem_access = dmem_read || dmem_write` — এই এক লাইনই সিদ্ধান্তটা নেয়।
 
 > ⚠️ একটা সূক্ষ্ম bug-ফাঁদ এখানে আছে, যা কোডের comment-এ বিশেষভাবে সাবধান করা: instruction fetch যখন data র কাছে port হারায়, তখন তাকে অবশ্যই **stall** করতে হবে — `mem_write` সংকেত যেন কখনো ভুল করে instruction address-এ গিয়ে না পড়ে। নিচের arbiter-এ তাই write সবসময় data র দিকে steer করা হয়েছে।
 
@@ -741,7 +741,7 @@ flowchart TB
     IF -->|fetch| IC["Instruction Cache (I$)<br/>NUM_LINES = 512"]
     LS -->|load/store| DC["Data Cache (D$)<br/>NUM_LINES = 512"]
 
-    IC -->|imem_*| ARB{"Memory Arbiter<br/>data কে অগ্রাধিকার<br/>dmem_access?"}
+    IC -->|imem_*| ARB{"Memory Arbiter<br/>data-কে অগ্রাধিকার<br/>dmem_access?"}
     DC -->|dmem_*| ARB
 
     ARB -->|mem_*| MM["Main Memory (DRAM)<br/>একটাই port · 100 cycle"]
@@ -848,19 +848,19 @@ Hit rate is CRITICAL!
 2. **Associativity:** মনে আছে direct-mapped-এর পার্কিং সমস্যা? দুটো জনপ্রিয় address একই index চাইলে তারা একে অপরকে বারবার লাথি মেরে বের করে (conflict miss)। ২-way বা ৪-way করলে একই index-এ একাধিক জায়গা থাকে, তাই দুজনেই একসাথে থাকতে পারে — conflict কমে। দাম: tag মেলাতে এখন একাধিক তুলনা লাগে, logic জটিল।
 3. **ভালো Replacement নীতি:** associative cache-এ যখন জায়গা ভরে যায়, কোন line ফেলব? **LRU (Least Recently Used)** — যেটা সবচেয়ে বেশিদিন ব্যবহার হয়নি সেটা ফেলো। এটা temporal locality র সাথে দারুণ খাপ খায় (সদ্য ব্যবহৃত জিনিস আবার লাগবে, তাই সেটা রাখো)। এলোমেলো (random) ফেলার চেয়ে ভালো, কিন্তু "কে কখন শেষ ব্যবহৃত" তা মনে রাখতে বাড়তি logic লাগে।
 4. **Prefetching:** ভবিষ্যৎ আন্দাজ করে data **আগেভাগে** এনে রাখা। যেমন তুমি `a[0]` চাইলে cache আন্দাজ করতে পারে পরেরবার `a[1]`, `a[2]` লাগবে (spatial locality!) — তাই সেগুলো আগেই টেনে আনে। ঠিক আন্দাজ হলে miss সরাসরি hit-এ পরিণত হয়; ভুল আন্দাজ হলে অযথা bandwidth নষ্ট। জটিল কিন্তু শক্তিশালী।
-5. **Software optimization:** সবচেয়ে কম মনে রাখা অথচ সবচেয়ে শক্তিশালী অস্ত্র — hardware নয়, **code টাই** cache-বান্ধব করে লেখা। Compiler optimization, data structure কে memory-তে গোছানোভাবে সাজানো, array পরপর পড়া (locality বাড়ে) — এগুলো hardware না বদলেও hit rate নাটকীয়ভাবে বাড়ায়। একটা matrix কে সারি-ক্রমে নাকি কলাম-ক্রমে পড়ছ, এই ছোট পছন্দই কখনো কখনো কয়েকগুণ গতির পার্থক্য গড়ে দেয়।
+5. **Software optimization:** সবচেয়ে কম মনে রাখা অথচ সবচেয়ে শক্তিশালী অস্ত্র — hardware নয়, **code টাই** cache-বান্ধব করে লেখা। Compiler optimization, data structure-কে memory-তে গোছানোভাবে সাজানো, array পরপর পড়া (locality বাড়ে) — এগুলো hardware না বদলেও hit rate নাটকীয়ভাবে বাড়ায়। একটা matrix-কে সারি-ক্রমে নাকি কলাম-ক্রমে পড়ছ, এই ছোট পছন্দই কখনো কখনো কয়েকগুণ গতির পার্থক্য গড়ে দেয়।
 
 ---
 
 ## ১৮.৬ Main Memory Model
 
-Cache কে test করতে গেলে একটা "slow" memory লাগবে — যেটা আসল DRAM-এর মতো ১০০ cycle দেরি করে। নিচের module-টা সেই DRAM কে নকল করে। আসল DRAM-এর জটিল ভেতরকার কারিগরি (refresh, row/column) আমরা বাদ দিই; শুধু যে আচরণটা cache-এর কাছে গুরুত্বপূর্ণ সেটাই রাখি — **request পেলে ১০০ cycle গোনে, তারপর data দিয়ে `ready` তোলে।**
+Cache-কে test করতে গেলে একটা "slow" memory লাগবে — যেটা আসল DRAM-এর মতো ১০০ cycle দেরি করে। নিচের module-টা সেই DRAM-কে নকল করে। আসল DRAM-এর জটিল ভেতরকার কারিগরি (refresh, row/column) আমরা বাদ দিই; শুধু যে আচরণটা cache-এর কাছে গুরুত্বপূর্ণ সেটাই রাখি — **request পেলে ১০০ cycle গোনে, তারপর data দিয়ে `ready` তোলে।**
 
 কোডে তিনটা জিনিস খেয়াল করো:
 
-- **`ACCESS_CYCLES = 100`:** এই counter ই সেই memory wall কে নকল করে। `BUSY` state-এ `access_counter` ১০০ পর্যন্ত গোনে — এটাই আমাদের miss penalty।
+- **`ACCESS_CYCLES = 100`:** এই counter ই সেই memory wall-কে নকল করে। `BUSY` state-এ `access_counter` ১০০ পর্যন্ত গোনে — এটাই আমাদের miss penalty।
 - **byte-wise storage:** `memory` array-টা `[7:0]` অর্থাৎ byte-এর array। একটা ৩২-bit word পড়তে/লিখতে পরপর চারটা byte জোড়া লাগে (little-endian — সবচেয়ে নিচের byte সবচেয়ে নিচের address-এ)।
-- **latching:** request আসামাত্র `op_is_write`, `addr_latched`, `wdata_latched` এ সব latch করা হয় — কারণ ১০০ cycle অপেক্ষার মধ্যে CPU/cache-এর দেওয়া strobe সংকেত নেমে যেতে পারে, কিন্তু memory কে মূল অনুরোধটা মনে রাখতেই হবে।
+- **latching:** request আসামাত্র `op_is_write`, `addr_latched`, `wdata_latched` এ সব latch করা হয় — কারণ ১০০ cycle অপেক্ষার মধ্যে CPU/cache-এর দেওয়া strobe সংকেত নেমে যেতে পারে, কিন্তু memory-কে মূল অনুরোধটা মনে রাখতেই হবে।
 
 ### Simple DRAM Model:
 
@@ -938,7 +938,7 @@ module main_memory #(
 endmodule
 ```
 
-এই module-টার গোটা চরিত্র দুটো state-এ — `IDLE` এ অপেক্ষা, `BUSY` এ ১০০ cycle গোনা। লক্ষ করো read-এর সময় চারটা byte কে `{memory[addr+3], memory[addr+2], memory[addr+1], memory[addr]}` ক্রমে জোড়া হচ্ছে — সবচেয়ে উপরের byte (bit 31:24) সবচেয়ে বড় address থেকে। এটাই little-endian বিন্যাস, যা RISC-V মেনে চলে। আর latch করা `addr_latched`/`op_is_write` ব্যবহারের কারণ কোডের comment-এ স্পষ্ট: strobe drop হলেও যেন সঠিক জায়গায় সঠিক কাজটা হয়। এই একটা module-ই আমাদের পুরো "memory wall" — cache-এর প্রতিটা miss এখানে এসে ১০০ cycle জরিমানা দিয়ে যায়, ঠিক যেমনটা আমরা মাপতে চেয়েছিলাম।
+এই module-টার গোটা চরিত্র দুটো state-এ — `IDLE` এ অপেক্ষা, `BUSY` এ ১০০ cycle গোনা। লক্ষ করো read-এর সময় চারটা byte-কে `{memory[addr+3], memory[addr+2], memory[addr+1], memory[addr]}` ক্রমে জোড়া হচ্ছে — সবচেয়ে উপরের byte (bit 31:24) সবচেয়ে বড় address থেকে। এটাই little-endian বিন্যাস, যা RISC-V মেনে চলে। আর latch করা `addr_latched`/`op_is_write` ব্যবহারের কারণ কোডের comment-এ স্পষ্ট: strobe drop হলেও যেন সঠিক জায়গায় সঠিক কাজটা হয়। এই একটা module-ই আমাদের পুরো "memory wall" — cache-এর প্রতিটা miss এখানে এসে ১০০ cycle জরিমানা দিয়ে যায়, ঠিক যেমনটা আমরা মাপতে চেয়েছিলাম।
 
 ---
 
@@ -1099,13 +1099,13 @@ module cache_benchmark;
 endmodule
 ```
 
-Simulation চালালে তুমি একটা পরিষ্কার রিপোর্ট পাবে — মোট cycle, hit/miss সংখ্যা, hit rate শতাংশে, AMAT cycle-এ, আর সবচেয়ে তৃপ্তিদায়ক লাইনটা: cache ছাড়ার তুলনায় কত গুণ speedup। `$dumpfile`/`$dumpvars` দিয়ে একটা VCD ও তৈরি হবে, যেটা GTKWave-এ খুলে তুমি cycle-by-cycle দেখতে পারবে কখন cache hit দিচ্ছে আর কখন miss-এ DRAM-এ যাচ্ছে। এটাই তোমার cache কে চোখে দেখার সুযোগ।
+Simulation চালালে তুমি একটা পরিষ্কার রিপোর্ট পাবে — মোট cycle, hit/miss সংখ্যা, hit rate শতাংশে, AMAT cycle-এ, আর সবচেয়ে তৃপ্তিদায়ক লাইনটা: cache ছাড়ার তুলনায় কত গুণ speedup। `$dumpfile`/`$dumpvars` দিয়ে একটা VCD ও তৈরি হবে, যেটা GTKWave-এ খুলে তুমি cycle-by-cycle দেখতে পারবে কখন cache hit দিচ্ছে আর কখন miss-এ DRAM-এ যাচ্ছে। এটাই তোমার cache-কে চোখে দেখার সুযোগ।
 
 ---
 
 ## ১৮.৯ Your 2-Week Build Plan
 
-পুরো chapter একসাথে দেখলে অনেক মনে হতে পারে, তাই দুই সপ্তাহে ভেঙে নাও। প্রথম সপ্তাহ — একটা cache কে একলা দাঁড় করানো এবং test করা; দ্বিতীয় সপ্তাহ — সেটাকে প্রসেসরে জুড়ে পুরো system বানানো ও tune করা। প্রতিদিন ছোট, অর্জনযোগ্য লক্ষ্য — তাড়াহুড়ো নয়, প্রতিটা ধাপ বুঝে এগোও।
+পুরো chapter একসাথে দেখলে অনেক মনে হতে পারে, তাই দুই সপ্তাহে ভেঙে নাও। প্রথম সপ্তাহ — একটা cache-কে একলা দাঁড় করানো এবং test করা; দ্বিতীয় সপ্তাহ — সেটাকে প্রসেসরে জুড়ে পুরো system বানানো ও tune করা। প্রতিদিন ছোট, অর্জনযোগ্য লক্ষ্য — তাড়াহুড়ো নয়, প্রতিটা ধাপ বুঝে এগোও।
 
 ### Week 1: Cache Implementation
 

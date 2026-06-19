@@ -49,7 +49,7 @@ Components (Left panel):
                AND output → Y
 ```
 
-**Step 4:** Test করো (switch গুলোতে click করে দেখো!):
+**Step 4:** Test করো (switch-গুলোতে click করে দেখো!):
 ```
 A=OFF, B=OFF → LED OFF ✓
 A=OFF, B=ON  → LED OFF ✓

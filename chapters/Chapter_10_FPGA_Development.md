@@ -29,7 +29,7 @@
 **Time Required:** 1 week (4-5 hours/day)  
 **Hardware Needed:** Tang Nano 9K board ($12), USB-C cable
 
-> 💡 **Chapter 9 vs Chapter 10:** Chapter 9-এ তুমি শিখেছ FPGA-র *ভেতরে* কী আছে—LUT, Flip-Flop, Block RAM, routing fabric। এই chapter সেই জ্ঞানকে *কাজে* লাগায়: কীভাবে toolchain দিয়ে তোমার design কে সেই LUT-গুলোতে বসিয়ে দেবে আর board-টা program করবে। Theory থেকে আঙুলের ডগায়।
+> 💡 **Chapter 9 vs Chapter 10:** Chapter 9-এ তুমি শিখেছ FPGA-র *ভেতরে* কী আছে—LUT, Flip-Flop, Block RAM, routing fabric। এই chapter সেই জ্ঞানকে *কাজে* লাগায়: কীভাবে toolchain দিয়ে তোমার design-কে সেই LUT-গুলোতে বসিয়ে দেবে আর board-টা program করবে। Theory থেকে আঙুলের ডগায়।
 
 ---
 
@@ -105,7 +105,7 @@ Synthesize → Place & Route → Bitstream → USB দিয়ে board-এ প
 
 ### Board Layout:
 
-নিচের ছবিটা board টাকে ওপর থেকে দেখাচ্ছে। USB-C connector-টা সবার ওপরে—এটাই একসাথে বিদ্যুৎ আর তোমার code, দুটোই ভেতরে পাঠায়:
+নিচের ছবিটা board-টাকে ওপর থেকে দেখাচ্ছে। USB-C connector-টা সবার ওপরে—এটাই একসাথে বিদ্যুৎ আর তোমার code, দুটোই ভেতরে পাঠায়:
 
 ```
                  Tang Nano 9K (top view)
@@ -163,7 +163,7 @@ Synthesize → Place & Route → Bitstream → USB দিয়ে board-এ প
 | **TF card slot** | SD card—file/data storage |
 | **USB-C** | একটাই তারে বিদ্যুৎ + programming, দুটোই |
 
-**Power:** USB-C দিয়ে 5V ঢোকে, board-এর onboard regulator সেটাকে FPGA-র পছন্দের 3.3V-এ নামায়। সাধারণ ব্যবহারে টানে মাত্র ~100-200mA—অর্থাৎ তোমার laptop-এর USB port ই যথেষ্ট, আলাদা power adapter লাগে না। এটাই এই board টাকে এত সহজ করে তোলে: একটা তার, ব্যস।
+**Power:** USB-C দিয়ে 5V ঢোকে, board-এর onboard regulator সেটাকে FPGA-র পছন্দের 3.3V-এ নামায়। সাধারণ ব্যবহারে টানে মাত্র ~100-200mA—অর্থাৎ তোমার laptop-এর USB port ই যথেষ্ট, আলাদা power adapter লাগে না। এটাই এই board-টাকে এত সহজ করে তোলে: একটা তার, ব্যস।
 
 ### Pin Access — বাইরের দুনিয়ার দরজা:
 
@@ -177,7 +177,7 @@ FPGA chip-এর I/O pin-গুলো board-এর দুপাশের header-
 - বাইরের circuit-এ জুড়ে দাও!
 ```
 
-এই pin-গুলো কেন এত গুরুত্বপূর্ণ? কারণ এগুলোই তোমার design কে onboard ৬টা LED-র সীমার বাইরে নিয়ে যায়। চাইলে জুড়তে পারো—
+এই pin-গুলো কেন এত গুরুত্বপূর্ণ? কারণ এগুলোই তোমার design-কে onboard ৬টা LED-র সীমার বাইরে নিয়ে যায়। চাইলে জুড়তে পারো—
 
 - LED strip (অনেকগুলো LED একসাথে)
 - নানা sensor (তাপমাত্রা, আলো, দূরত্ব)
@@ -185,13 +185,13 @@ FPGA chip-এর I/O pin-গুলো board-এর দুপাশের header-
 - অন্য chip—SPI, I2C protocol দিয়ে (Chapter 11-এ শিখবে)
 - তোমার নিজের বানানো custom peripheral
 
-আপাতত আমরা onboard জিনিস দিয়েই শুরু করব। কিন্তু জেনে রাখো—এই header-গুলোই তোমার playground কে অসীম করে দেয়।
+আপাতত আমরা onboard জিনিস দিয়েই শুরু করব। কিন্তু জেনে রাখো—এই header-গুলোই তোমার playground-কে অসীম করে দেয়।
 
 ---
 
 ## ১০.২ Gowin EDA Installation
 
-Verilog-এর জন্য তুমি ব্যবহার করেছ Icarus Verilog—কিন্তু সেটা শুধু *simulate* করত, অর্থাৎ কম্পিউটারে নকল করে দেখাত। FPGA-র জন্য দরকার অন্য একটা জিনিস: একটা toolchain যেটা তোমার Verilog কে আসল chip-এর জন্য *compile* করে। প্রতিটা FPGA নির্মাতার নিজস্ব toolchain থাকে, কারণ প্রতিটা chip-এর ভেতরের গঠন আলাদা—কোন LUT কোথায়, routing কীভাবে, সেটা একমাত্র নির্মাতাই জানে।
+Verilog-এর জন্য তুমি ব্যবহার করেছ Icarus Verilog—কিন্তু সেটা শুধু *simulate* করত, অর্থাৎ কম্পিউটারে নকল করে দেখাত। FPGA-র জন্য দরকার অন্য একটা জিনিস: একটা toolchain যেটা তোমার Verilog-কে আসল chip-এর জন্য *compile* করে। প্রতিটা FPGA নির্মাতার নিজস্ব toolchain থাকে, কারণ প্রতিটা chip-এর ভেতরের গঠন আলাদা—কোন LUT কোথায়, routing কীভাবে, সেটা একমাত্র নির্মাতাই জানে।
 
 Tang Nano 9K-এর chip বানায় **Gowin**, তাই আমাদের toolchain ও Gowin এর—নাম **Gowin EDA** (EDA = Electronic Design Automation)। ভাবো এটাকে FPGA জগতের "GCC + linker" হিসেবে: তোমার source (Verilog) নেয়, আর শেষে এমন একটা ফাইল বানায় (bitstream) যেটা chip সরাসরি বুঝতে পারে।
 
@@ -530,7 +530,7 @@ IO_LOC "led" 10;   →  "led" signal-টা pin 10-এ বসাও
 
 ## ১০.৫ Synthesis and Implementation
 
-Code লেখা, pin জোড়া—দুটোই হলো। এবার সেই code কে chip-এর ভাষায় অনুবাদ করার পালা। কিন্তু এক লাফে Verilog থেকে চলন্ত chip-এ পৌঁছানো যায় না; মাঝে কয়েকটা ধাপ আছে, যেমন রান্নায় কাটা → ভাজা → সেদ্ধ → পরিবেশন। চলো পুরো পথটা আগে একনজরে দেখি, তারপর প্রতিটা ধাপ আলাদা করে।
+Code লেখা, pin জোড়া—দুটোই হলো। এবার সেই code-কে chip-এর ভাষায় অনুবাদ করার পালা। কিন্তু এক লাফে Verilog থেকে চলন্ত chip-এ পৌঁছানো যায় না; মাঝে কয়েকটা ধাপ আছে, যেমন রান্নায় কাটা → ভাজা → সেদ্ধ → পরিবেশন। চলো পুরো পথটা আগে একনজরে দেখি, তারপর প্রতিটা ধাপ আলাদা করে।
 
 ### Design Flow Overview:
 
@@ -641,7 +641,7 @@ File size: ~1-3 MB
 
 ### Connecting the Board:
 
-প্রথমে board টাকে কম্পিউটারের সাথে পরিচয় করিয়ে দিতে হবে। সুবিধা হলো, USB-C তারটাই একসাথে দুটো কাজ করে—বিদ্যুৎ দেয় আর data পাঠায়। তাই আলাদা power লাগে না, একটা তারই যথেষ্ট:
+প্রথমে board-টাকে কম্পিউটারের সাথে পরিচয় করিয়ে দিতে হবে। সুবিধা হলো, USB-C তারটাই একসাথে দুটো কাজ করে—বিদ্যুৎ দেয় আর data পাঠায়। তাই আলাদা power লাগে না, একটা তারই যথেষ্ট:
 
 ```
 Step 1: Connect USB
@@ -932,7 +932,7 @@ endmodule
 | `2'b10` | পরপর LED পালা করে জ্বলে | `101010` আর `010101`-এর মধ্যে পালটাপালটি |
 | `2'b11` | LED-তে binary গোনা দেখা | counter-এর কয়েকটা উপরের bit সরাসরি LED-তে দেখানো |
 
-কয়েকটা সূক্ষ্ম জিনিস খেয়াল করো, যেগুলো এই project কে আগের blink থেকে আলাদা করে:
+কয়েকটা সূক্ষ্ম জিনিস খেয়াল করো, যেগুলো এই project-কে আগের blink থেকে আলাদা করে:
 
 - **Reset কীভাবে কাজ করছে?** দুটো আলাদা `always` block—একটা counter-এর, একটা pattern selector এর—দুটোই শুরুতে `if (!btn2)` দেখছে। S2 টিপলে (active low, তাই `!btn2`) দুটোই 0-তে ফিরে যায়। এটাই synchronous reset: reset-টা clock edge-এর সাথে তাল মিলিয়ে ঘটে, এলোমেলোভাবে নয়।
 - **Pattern বদল "একবারই" কেন?** `else if (!btn1 && counter[20:0] == 0)`—এই `counter[20:0] == 0` শর্তটা একটা সহজ-সরল debounce-এর কাজ করছে: S1 টেপা থাকলেও pattern শুধু তখনই বাড়ে যখন counter-এর নিচের ২১টা bit ঠিক 0 হয়, অর্থাৎ অনেকক্ষণ পরপর একবার। নইলে একবার টিপলেই pattern গুনে গুনে কয়েকশো বার বদলে যেত!

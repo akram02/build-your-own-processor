@@ -1,5 +1,5 @@
 # ⚡ Chapter 6: Build Your Own Sequential Logic - In Code!
-## Always Blocks থেকে Registers - তোমার Processor কে Memory দাও Code-এ!
+## Always Blocks থেকে Registers - তোমার Processor-কে Memory দাও Code-এ!
 
 > **"assign is great for wires. always is great for memory. Time to add state!"**
 >
@@ -30,13 +30,13 @@ Chapter 5-এ তুমি `assign` দিয়ে wire বানিয়ে�
 
 কিন্তু একটা processor মানেই তো memory। Register-এ value জমা থাকে, program counter পরের instruction-এর address মনে রাখে, counter গুনতে গুনতে এগোয়। এই "মনে রাখা" ক্ষমতাটাই **sequential logic** — আর Verilog-এ এটা আসে `always` block দিয়ে।
 
-এই chapter-এ আমরা প্রথমবার তোমার circuit কে **time** আর **state** দেবো। Clock-এর প্রতিটা tick-এ কী হবে, value কীভাবে এক cycle থেকে পরের cycle-এ যাবে — সব তুমি নিজে control করবে। আর হ্যাঁ, এই chapter-এর প্রাণভোমরা হলো **blocking (=) vs non-blocking (<=)** — এই একটা জিনিস ভুল করলে তোমার শখের shift register এক cycle এই সব value পার করে দেবে, FSM এলোমেলো হয়ে যাবে। তাই ধীরে পড়ো, intuition-টা গাঁথো। একবার বুঝে গেলে আর কখনো ভুল হবে না। চলো শুরু করি! 🚀
+এই chapter-এ আমরা প্রথমবার তোমার circuit-কে **time** আর **state** দেবো। Clock-এর প্রতিটা tick-এ কী হবে, value কীভাবে এক cycle থেকে পরের cycle-এ যাবে — সব তুমি নিজে control করবে। আর হ্যাঁ, এই chapter-এর প্রাণভোমরা হলো **blocking (=) vs non-blocking (<=)** — এই একটা জিনিস ভুল করলে তোমার শখের shift register এক cycle এই সব value পার করে দেবে, FSM এলোমেলো হয়ে যাবে। তাই ধীরে পড়ো, intuition-টা গাঁথো। একবার বুঝে গেলে আর কখনো ভুল হবে না। চলো শুরু করি! 🚀
 
 ---
 
 ## 🚀 Quick Win - 5 মিনিটে তোমার First Sequential Code!
 
-কথা অনেক হলো — এবার হাতে কলমে। নিচের ৮ লাইন লিখলেই তুমি জীবনে প্রথমবার **hardware memory** code করে ফেলবে। একটা D Flip-Flop — যেটা clock-এর প্রতিটা edge-এ input কে ধরে রাখে। এটাই সব register, সব counter, সব processor state-এর সবচেয়ে ছোট building block।
+কথা অনেক হলো — এবার হাতে কলমে। নিচের ৮ লাইন লিখলেই তুমি জীবনে প্রথমবার **hardware memory** code করে ফেলবে। একটা D Flip-Flop — যেটা clock-এর প্রতিটা edge-এ input-কে ধরে রাখে। এটাই সব register, সব counter, সব processor state-এর সবচেয়ে ছোট building block।
 
 ### এখনই লেখো - D Flip-Flop in Verilog:
 
@@ -63,7 +63,7 @@ endmodule
 লক্ষ্য করো তিনটা নতুন জিনিস, যেগুলো এই পুরো chapter জুড়ে বারবার ফিরে আসবে:
 
 - **`output reg q`** — Chapter 5-এ output ছিল শুধু `wire`। কিন্তু always block-এর ভেতরে যাকে value দেবে, তাকে `reg` declare করতে হয়। `reg` মানে "এই signal-এর value আমি always block-এ procedurally set করব"। (নাম শুনে ঘাবড়িও না — `reg` সবসময় physical register বানায় না, এটা শুধু Verilog-এর একটা variable type।)
-- **`always @(posedge clk)`** — "clock-এর rising edge-এ (0 থেকে 1-এ যাওয়ার মুহূর্তে) এই block-টা চালাও"। এটাই circuit কে time-এর সাথে বাঁধে।
+- **`always @(posedge clk)`** — "clock-এর rising edge-এ (0 থেকে 1-এ যাওয়ার মুহূর্তে) এই block-টা চালাও"। এটাই circuit-কে time-এর সাথে বাঁধে।
 - **`q <= d`** — এটা non-blocking assignment (`<=`)। এটাই flip-flop বানানোর সঠিক নিয়ম। কেন `<=` আর `=` নয়, সেটাই এই chapter-এর সবচেয়ে বড় গল্প — একটু পরেই আসছি।
 
 এখন প্রতিটা টুকরো ভেঙে ভেঙে বুঝি।
@@ -332,7 +332,7 @@ endmodule
 
 ### D Flip-Flop with Synchronous Reset:
 
-Asynchronous reset যেকোনো মুহূর্তে আঘাত হানে। কিন্তু কখনো কখনো আমরা চাই reset টাও clock-এর শৃঙ্খলা মেনে চলুক — শুধু clock edge এলেই reset কার্যকর হোক। একে বলে **synchronous reset**। পার্থক্য কোথায় দেখো: এবার sensitivity list-এ `reset` নেই, শুধু `posedge clk`। reset-এর চেক block-এর ভেতরে আছে ঠিকই, কিন্তু সেটা পড়া হয় তখনই যখন clock edge আসে: 
+Asynchronous reset যেকোনো মুহূর্তে আঘাত হানে। কিন্তু কখনো কখনো আমরা চাই reset-টাও clock-এর শৃঙ্খলা মেনে চলুক — শুধু clock edge এলেই reset কার্যকর হোক। একে বলে **synchronous reset**। পার্থক্য কোথায় দেখো: এবার sensitivity list-এ `reset` নেই, শুধু `posedge clk`। reset-এর চেক block-এর ভেতরে আছে ঠিকই, কিন্তু সেটা পড়া হয় তখনই যখন clock edge আসে: 
 
 ```verilog
 module d_ff_sync_reset(
@@ -380,7 +380,7 @@ module d_ff_enable(
 endmodule
 ```
 
-একটা গুরুত্বপূর্ণ সূক্ষ্মতা: combinational logic-এ (`@(*)`) `else` বাদ দিলে অনাকাঙ্ক্ষিত **latch** তৈরি হয় — সে এক বিপদ, একটু পরে ৬.৫ এ দেখব। কিন্তু sequential logic-এ (`@(posedge clk)`) `else` বাদ দেওয়া একদম ঠিক — এটাই hardware কে বলে "নতুন মান না পেলে আগেরটা ধরে রাখো"। তাই enable flip-flop-এ `else`-এর অনুপস্থিতি bug নয়, বরং feature! এই দুটো পরিস্থিতি গুলিয়ে ফেলো না — sensitivity list-ই এখানে আসল পার্থক্য।
+একটা গুরুত্বপূর্ণ সূক্ষ্মতা: combinational logic-এ (`@(*)`) `else` বাদ দিলে অনাকাঙ্ক্ষিত **latch** তৈরি হয় — সে এক বিপদ, একটু পরে ৬.৫ এ দেখব। কিন্তু sequential logic-এ (`@(posedge clk)`) `else` বাদ দেওয়া একদম ঠিক — এটাই hardware-কে বলে "নতুন মান না পেলে আগেরটা ধরে রাখো"। তাই enable flip-flop-এ `else`-এর অনুপস্থিতি bug নয়, বরং feature! এই দুটো পরিস্থিতি গুলিয়ে ফেলো না — sensitivity list-ই এখানে আসল পার্থক্য।
 
 ---
 
@@ -432,7 +432,7 @@ endmodule
 
 ### Parameterized Register (Any width!):
 
-এতক্ষণ আমরা 8-bit লিখলাম। কিন্তু processor-এ কখনো 16-bit, কখনো 32-bit register লাগবে। প্রতিবার নতুন করে module লিখব? না! Verilog-এর `parameter` দিয়ে একটাই module বানাও যেটা যেকোনো width-এ কাজ করে — এটাই professional রা করে। `WIDTH` হলো একটা knob; instantiate করার সময় ঘুরিয়ে দিলেই register-এর আকার বদলে যায়: 
+এতক্ষণ আমরা 8-bit লিখলাম। কিন্তু processor-এ কখনো 16-bit, কখনো 32-bit register লাগবে। প্রতিবার নতুন করে module লিখব? না! Verilog-এর `parameter` দিয়ে একটাই module বানাও যেটা যেকোনো width-এ কাজ করে — এটাই professional-রা করে। `WIDTH` হলো একটা knob; instantiate করার সময় ঘুরিয়ে দিলেই register-এর আকার বদলে যায়: 
 
 ```verilog
 module register_param #(
@@ -522,7 +522,7 @@ end
 
 ### if without else → Latch! ⚠️
 
-এবার একটা ফাঁদ, যেটায় প্রায় সব নতুন designer একবার না একবার পা দেয়। মনে রাখার মূল কথাটা আগে বলি: **combinational block (`@(*)`)-এ তুমি যে signal কে assign করছ, প্রতিটা সম্ভাব্য পথে তাকে একটা মান দিতেই হবে।** কোনো পথ বাদ পড়লে synthesis tool ভাবে "এই ক্ষেত্রে output-টা আগের মান ধরে রাখতে হবে" — আর মান ধরে রাখা মানেই memory, মানেই একটা **latch** তৈরি! অথচ তুমি তো combinational logic চেয়েছিলে, memory নয়। এই অনিচ্ছাকৃত latch glitch, timing সমস্যা আর অদ্ভুত bug-এর কারখানা।
+এবার একটা ফাঁদ, যেটায় প্রায় সব নতুন designer একবার না একবার পা দেয়। মনে রাখার মূল কথাটা আগে বলি: **combinational block (`@(*)`)-এ তুমি যে signal-কে assign করছ, প্রতিটা সম্ভাব্য পথে তাকে একটা মান দিতেই হবে।** কোনো পথ বাদ পড়লে synthesis tool ভাবে "এই ক্ষেত্রে output-টা আগের মান ধরে রাখতে হবে" — আর মান ধরে রাখা মানেই memory, মানেই একটা **latch** তৈরি! অথচ তুমি তো combinational logic চেয়েছিলে, memory নয়। এই অনিচ্ছাকৃত latch glitch, timing সমস্যা আর অদ্ভুত bug-এর কারখানা।
 
 কেন এমন হয় ভাবো: `@(*)` block বলছে "এটা শুধু তার"। কিন্তু `if (sel) y = a;` লিখে `sel == 0` এর ক্ষেত্রে `y`-এর কী হবে বলোনি। tool বাধ্য হয়ে ধরে নেয় তখন `y` যা ছিল তাই থাকবে — আর সেই "তাই থাকা"-ই latch। তিনটা রূপ দেখো — একটা ভুল, দুটো ঠিক: 
 
@@ -551,7 +551,7 @@ always @(*) begin
 end
 ```
 
-শেষের কৌশলটা (default assignment) সবচেয়ে কাজের অভ্যাস: block-এর একদম শুরুতে output কে একটা default মান দিয়ে দাও, তারপর শর্ত মিললে override করো। এতে কোনো পথই কখনো signal কে "মানহীন" রেখে যায় না, তাই latch তৈরির প্রশ্নই ওঠে না। এই অভ্যাসটা গড়ে নাও — FSM-এর output logic-এ এটাই তোমাকে বাঁচাবে।
+শেষের কৌশলটা (default assignment) সবচেয়ে কাজের অভ্যাস: block-এর একদম শুরুতে output-কে একটা default মান দিয়ে দাও, তারপর শর্ত মিললে override করো। এতে কোনো পথই কখনো signal-কে "মানহীন" রেখে যায় না, তাই latch তৈরির প্রশ্নই ওঠে না। এই অভ্যাসটা গড়ে নাও — FSM-এর output logic-এ এটাই তোমাকে বাঁচাবে।
 
 ---
 
@@ -696,7 +696,7 @@ endmodule
 
 ### ⚠️ Important: Loops in Synthesis
 
-এবার একটা সতর্কতা, যেটা software থেকে আসা সবাইকে চমকে দেয়। যেহেতু hardware-এ loop **unroll** হয়ে যায়, synthesis tool কে compile-time-এই জানতে হবে loop ঠিক কতবার ঘুরবে — নইলে সে কয়টা কপি বানাবে বুঝবে না। তাই loop-এর সীমা অবশ্যই **constant** হতে হবে। variable সীমা বা `while` loop সাধারণত synthesizable নয়: 
+এবার একটা সতর্কতা, যেটা software থেকে আসা সবাইকে চমকে দেয়। যেহেতু hardware-এ loop **unroll** হয়ে যায়, synthesis tool-কে compile-time-এই জানতে হবে loop ঠিক কতবার ঘুরবে — নইলে সে কয়টা কপি বানাবে বুঝবে না। তাই loop-এর সীমা অবশ্যই **constant** হতে হবে। variable সীমা বা `while` loop সাধারণত synthesizable নয়: 
 
 ```verilog
 // ✅ SYNTHESIZABLE - Fixed iterations
@@ -822,7 +822,7 @@ endmodule
 
 ## ৬.৯ Build Shift Registers
 
-মনে আছে chapter-এর শুরুতে shift register দিয়েই blocking vs non-blocking-এর পার্থক্য দেখিয়েছিলাম? এবার সেটাকে সত্যিকারের module-এ রূপ দেবো। Shift register প্রতি clock-এ data কে এক ঘর সরিয়ে দেয় — ঠিক যেন বালতি-ব্রিগেডে এক হাত থেকে আরেক হাতে পানি যাওয়া। এটা serial আর parallel data-র মধ্যে সেতু গড়ে, তাই UART, SPI-র মতো communication protocol-এর প্রাণভোমরা। নাম তিনটে অক্ষরে বোঝা যায়: S = Serial, P = Parallel, I = In, O = Out।
+মনে আছে chapter-এর শুরুতে shift register দিয়েই blocking vs non-blocking-এর পার্থক্য দেখিয়েছিলাম? এবার সেটাকে সত্যিকারের module-এ রূপ দেবো। Shift register প্রতি clock-এ data-কে এক ঘর সরিয়ে দেয় — ঠিক যেন বালতি-ব্রিগেডে এক হাত থেকে আরেক হাতে পানি যাওয়া। এটা serial আর parallel data-র মধ্যে সেতু গড়ে, তাই UART, SPI-র মতো communication protocol-এর প্রাণভোমরা। নাম তিনটে অক্ষরে বোঝা যায়: S = Serial, P = Parallel, I = In, O = Out।
 
 ### SISO - Serial In Serial Out:
 
@@ -908,7 +908,7 @@ endmodule
 
 ### FSM Structure:
 
-FSM-এর তিনটে কাজ, আর professional রা সাধারণত এই তিনটেকে আলাদা আলাদা always block-এ ভাগ করে লেখে — তাতে code পড়া আর debug করা দুটোই সহজ হয়: 
+FSM-এর তিনটে কাজ, আর professional-রা সাধারণত এই তিনটেকে আলাদা আলাদা always block-এ ভাগ করে লেখে — তাতে code পড়া আর debug করা দুটোই সহজ হয়: 
 
 ```verilog
 // Three always blocks (recommended):

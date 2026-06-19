@@ -11,7 +11,7 @@
 
 এখানেই আসল প্রকৌশলী আর শিক্ষানবিশের পার্থক্য। আসল engineer একই জিনিস দুবার লেখে না। সে এমন code লেখে যেটা **নিজেকে নিজে বানায়** — একটা parameter বদলালেই ৮-bit থেকে ৩২-bit, ৩২-bit থেকে ৬৪-bit হয়ে যায়। এই chapter-টা ঠিক সেই জাদু শেখাবে। এতদিন তুমি ছিলে একজন রাজমিস্ত্রি যে এক-একটা ইট হাতে গাঁথে; এই chapter-এর পর তুমি হবে একজন স্থপতি যে একটা নকশা আঁকে আর সেই নকশা থেকে হাজারটা ইট নিজে নিজে বসে যায়।
 
-আর এটা শুধু "সুবিধার" ব্যাপার না। সামনে Chapter 14-19-তে তুমি যখন আসল RISC-V processor বানাবে, তখন তোমার লাগবে parameterized register file, configurable ALU, memory model, reusable building block। সেই সব ছাড়া একটা processor লেখা মানে কয়েক হাজার লাইন copy-paste — যেটা কেউ debug করতে পারবে না। তাই এই chapter কে "আরেকটা Verilog topic" ভেবো না; এটা তোমার processor বানানোর আসল হাতিয়ারের বাক্স। চলো খুলি।
+আর এটা শুধু "সুবিধার" ব্যাপার না। সামনে Chapter 14-19-তে তুমি যখন আসল RISC-V processor বানাবে, তখন তোমার লাগবে parameterized register file, configurable ALU, memory model, reusable building block। সেই সব ছাড়া একটা processor লেখা মানে কয়েক হাজার লাইন copy-paste — যেটা কেউ debug করতে পারবে না। তাই এই chapter-কে "আরেকটা Verilog topic" ভেবো না; এটা তোমার processor বানানোর আসল হাতিয়ারের বাক্স। চলো খুলি।
 
 ---
 
@@ -60,7 +60,7 @@ module parity_checker(
 endmodule
 ```
 
-একটু ভেঙে দেখি কী হলো। `function automatic parity_calc;` দিয়ে একটা function ঘোষণা করলাম — `parity_calc` নামটাই হলো return করা মান (Verilog-এ function-এর নামটাই তার ফেরত মূল্যের ভেরিয়েবল, C-এর `return` লাগে না)। ভেতরে একটা `for` loop সব bit কে XOR করছে — XOR-এর জাদু হলো, জোড়সংখ্যক ১ থাকলে ফল ০, বিজোড় হলে ১। তারপর module-এর শেষে `assign parity = parity_calc(data);` দিয়ে function টাকে ঠিক C-function-এর মতোই ডাকলাম।
+একটু ভেঙে দেখি কী হলো। `function automatic parity_calc;` দিয়ে একটা function ঘোষণা করলাম — `parity_calc` নামটাই হলো return করা মান (Verilog-এ function-এর নামটাই তার ফেরত মূল্যের ভেরিয়েবল, C-এর `return` লাগে না)। ভেতরে একটা `for` loop সব bit-কে XOR করছে — XOR-এর জাদু হলো, জোড়সংখ্যক ১ থাকলে ফল ০, বিজোড় হলে ১। তারপর module-এর শেষে `assign parity = parity_calc(data);` দিয়ে function-টাকে ঠিক C-function-এর মতোই ডাকলাম।
 
 কিন্তু এখানে একটা জিনিস গভীরভাবে বুঝে নাও, কারণ পুরো chapter-এর ভিত্তি এটাই: **এই function কোনো software loop চালাচ্ছে না।** তোমার মনে হতে পারে loop-টা runtime-এ ৮ বার ঘুরছে — না। Synthesis-এর সময় এই function-টা পুরো খুলে গিয়ে (unroll হয়ে) **৭টা XOR gate** এর একটা গাছ হয়ে যায়, যারা সব একসাথে, একই মুহূর্তে কাজ করে। Function এখানে শুধু তোমার লেখাকে গুছিয়ে রাখার একটা টেমপ্লেট — হার্ডওয়্যার সেই টেমপ্লেট থেকে ছাঁচে ঢালা একগুচ্ছ gate। এই "code হলো নকশা, loop হলো gate বানানোর নির্দেশ" — এই মানসিকতাটাই তোমাকে এই chapter জুড়ে বারবার মনে করিয়ে দেব।
 
@@ -72,7 +72,7 @@ vvp sim
 
 🎉 **Congratulations! তুমি reusable function লিখেছো!**
 
-মাত্র কয়েক মিনিটে তুমি এমন একটা জিনিস বানালে যেটা professional রা প্রতিদিন ব্যবহার করেন। এবার চলো একটা একটা করে advanced feature ভেতর থেকে বুঝি — কারণ এগুলো জানলে তোমার processor-এর code হবে ছোট, পরিষ্কার, আর সহজে বদলানো যায় এমন।
+মাত্র কয়েক মিনিটে তুমি এমন একটা জিনিস বানালে যেটা professional-রা প্রতিদিন ব্যবহার করেন। এবার চলো একটা একটা করে advanced feature ভেতর থেকে বুঝি — কারণ এগুলো জানলে তোমার processor-এর code হবে ছোট, পরিষ্কার, আর সহজে বদলানো যায় এমন।
 
 ---
 
@@ -193,7 +193,7 @@ endfunction
 localparam FACT_5 = factorial(5); // 120
 ```
 
-কিন্তু এখানে একটা বড় সতর্কবাণী, আর comment-এও সেটা লেখা আছে: **`only for constants in synthesis`**। কেন? কারণ হার্ডওয়্যার চিরন্তন আর নির্দিষ্ট — gate-গুলো একবার বসে গেলে আর "আরও কয়েকবার নিজেকে ডাকা" বলে কিছু নেই। তাই recursive function কে synthesizer তখনই মানে যখন গভীরতা compile-time এই জানা যায় (যেমন `factorial(5)` — সংখ্যাটা স্থির)। এই `localparam FACT_5 = factorial(5);` লাইনে factorial-টা synthesis-এর আগেই হিসাব হয়ে ১২০ হয়ে যায়, তারপর সেই ১২০ ব্যবহৃত হয়। অর্থাৎ recursion এখানে চলছে compile-time-এ, চিপের ভেতরে না। যদি তুমি runtime-এর কোনো signal দিয়ে `factorial(some_input)` ডাকো, synthesis tool হাত তুলে দেবে। মনে রাখার সহজ লাইন: **recursive function = একটা compile-time ক্যালকুলেটর, runtime engine না।**
+কিন্তু এখানে একটা বড় সতর্কবাণী, আর comment-এও সেটা লেখা আছে: **`only for constants in synthesis`**। কেন? কারণ হার্ডওয়্যার চিরন্তন আর নির্দিষ্ট — gate-গুলো একবার বসে গেলে আর "আরও কয়েকবার নিজেকে ডাকা" বলে কিছু নেই। তাই recursive function-কে synthesizer তখনই মানে যখন গভীরতা compile-time এই জানা যায় (যেমন `factorial(5)` — সংখ্যাটা স্থির)। এই `localparam FACT_5 = factorial(5);` লাইনে factorial-টা synthesis-এর আগেই হিসাব হয়ে ১২০ হয়ে যায়, তারপর সেই ১২০ ব্যবহৃত হয়। অর্থাৎ recursion এখানে চলছে compile-time-এ, চিপের ভেতরে না। যদি তুমি runtime-এর কোনো signal দিয়ে `factorial(some_input)` ডাকো, synthesis tool হাত তুলে দেবে। মনে রাখার সহজ লাইন: **recursive function = একটা compile-time ক্যালকুলেটর, runtime engine না।**
 
 ---
 
@@ -271,7 +271,7 @@ module uart_tx(
 endmodule
 ```
 
-দেখো কত পরিষ্কার হলো গল্পটা। `send_bit` task একটা মাত্র bit লাইনে বসায় (`tx = bit_value;`) তারপর `repeat(BAUD_TICKS) @(posedge clk);` দিয়ে এক bit-সময় ধরে অপেক্ষা করে — এই `repeat` + `@(posedge clk)` জোড়াটাই হলো "এতগুলো clock edge ধরে এই অবস্থায় থাকো"। তারপর `send_byte` সেই ছোট task কে ১০ বার ডাকছে: একটা start, আটটা data, একটা stop। মানুষ যেভাবে protocol-টা ভাবে — "শুরু, তারপর ডেটা, তারপর শেষ" — code টাও ঠিক সেভাবে পড়া যাচ্ছে। task ছাড়া এই একই জিনিস একটা বিশাল FSM হয়ে যেত, পড়তে কষ্ট হতো।
+দেখো কত পরিষ্কার হলো গল্পটা। `send_bit` task একটা মাত্র bit লাইনে বসায় (`tx = bit_value;`) তারপর `repeat(BAUD_TICKS) @(posedge clk);` দিয়ে এক bit-সময় ধরে অপেক্ষা করে — এই `repeat` + `@(posedge clk)` জোড়াটাই হলো "এতগুলো clock edge ধরে এই অবস্থায় থাকো"। তারপর `send_byte` সেই ছোট task-কে ১০ বার ডাকছে: একটা start, আটটা data, একটা stop। মানুষ যেভাবে protocol-টা ভাবে — "শুরু, তারপর ডেটা, তারপর শেষ" — code-টাও ঠিক সেভাবে পড়া যাচ্ছে। task ছাড়া এই একই জিনিস একটা বিশাল FSM হয়ে যেত, পড়তে কষ্ট হতো।
 
 > **🚩 খেয়াল রাখো:** এই module-এ `BAUD_TICKS` কোথাও parameter বা `localparam` হিসেবে ঘোষণা করা হয়নি — শেখানোর জন্য সরলীকৃত একটা টুকরো হিসেবে রাখা হয়েছে, যাতে মূল মনোযোগ থাকে task-এর গঠনে। বাস্তবে compile করার আগে module-এর header-এ `parameter BAUD_TICKS = ...;` যোগ করে নিতে হবে। আসল, পূর্ণাঙ্গ UART transmitter তুমি Chapter 11 (FPGA Projects)-এ বানাবে।
 
@@ -304,7 +304,7 @@ end
 
 ### Example 3 - Memory Initialization Task:
 
-শেষ উদাহরণটা ছোট কিন্তু খুব কাজের। Simulation শুরু করার আগে প্রায়ই পুরো memory টাকে একটা নির্দিষ্ট মান দিয়ে ভরে নিতে হয় (যাতে সব `x`/unknown না থাকে)। এই task সেটাই করে — একটা loop চালিয়ে প্রতিটা ঘরে `init_value` বসায়, তারপর `$display` দিয়ে একটা নিশ্চিতকরণ বার্তা ছাপে।
+শেষ উদাহরণটা ছোট কিন্তু খুব কাজের। Simulation শুরু করার আগে প্রায়ই পুরো memory-টাকে একটা নির্দিষ্ট মান দিয়ে ভরে নিতে হয় (যাতে সব `x`/unknown না থাকে)। এই task সেটাই করে — একটা loop চালিয়ে প্রতিটা ঘরে `init_value` বসায়, তারপর `$display` দিয়ে একটা নিশ্চিতকরণ বার্তা ছাপে।
 
 ```verilog
 task init_memory;
@@ -324,7 +324,7 @@ endtask
 
 ## ৮.৩ Parameters - Configurable Modules
 
-এবার এসেছি সেই feature-এ যেটার কথা chapter-এর শুরুতে বলেছিলাম — যেটা তোমাকে রাজমিস্ত্রি থেকে স্থপতি বানায়। **Parameter** হলো module-এর একটা "knob" বা নিয়ন্ত্রক — যেটা ঘুরিয়ে তুমি একই module কে ৮-bit, ১৬-bit, বা ৩২-bit বানিয়ে ফেলতে পারো, একটা লাইনও ভেতরে না বদলে।
+এবার এসেছি সেই feature-এ যেটার কথা chapter-এর শুরুতে বলেছিলাম — যেটা তোমাকে রাজমিস্ত্রি থেকে স্থপতি বানায়। **Parameter** হলো module-এর একটা "knob" বা নিয়ন্ত্রক — যেটা ঘুরিয়ে তুমি একই module-কে ৮-bit, ১৬-bit, বা ৩২-bit বানিয়ে ফেলতে পারো, একটা লাইনও ভেতরে না বদলে।
 
 ### Parameter আসলে কী?
 
@@ -333,7 +333,7 @@ endtask
 কয়েকটা মূল কথা পরিষ্কার করে নাও:
 
 - **Compile-time constant** — parameter-এর মান synthesis/compile-এর সময়ই স্থির হয়ে যায়, চিপ চলার সময় বদলায় না। তাই এটা runtime-এ কোনো বাড়তি gate বা খরচ আনে না; বরং compiler আগেভাগে সবকিছু গুছিয়ে রাখে।
-- **No runtime overhead** — `WIDTH=8` হোক বা `WIDTH=32`, parameter নিজে কোনো জায়গা খায় না; এটা শুধু compiler কে বলে দেয় কত বড় hardware বানাতে হবে।
+- **No runtime overhead** — `WIDTH=8` হোক বা `WIDTH=32`, parameter নিজে কোনো জায়গা খায় না; এটা শুধু compiler-কে বলে দেয় কত বড় hardware বানাতে হবে।
 - **এক নকশা, অনেক রূপ** — একই module বারবার ভিন্ন parameter দিয়ে instantiate করা যায়, প্রতিবার ভিন্ন আকারের hardware জন্ম নেয়।
 
 ### Basic Parameter Usage:
@@ -353,7 +353,7 @@ adder #(.WIDTH(16)) adder16(...);  // 16-bit
 adder #(.WIDTH(32)) adder32(...);  // 32-bit
 ```
 
-এই ছোট্ট উদাহরণেই পুরো ধারণাটা ধরা আছে। `#(parameter WIDTH = 8)` দিয়ে module-এর গায়ে একটা knob লাগানো হলো, default মান ৮। তারপর port declaration-এ `[WIDTH-1:0]` লিখে input/output-এর প্রস্থ সেই knob-এর সাথে বেঁধে দেওয়া হলো। (লক্ষ্য করো sum-এর প্রস্থ `[WIDTH:0]` — মানে input-এর চেয়ে এক bit বেশি, কারণ দুটো WIDTH-bit সংখ্যা যোগ করলে একটা carry-out bit বেশি হতে পারে। এই খুঁটিনাটিগুলোই professional design কে bug-মুক্ত রাখে।)
+এই ছোট্ট উদাহরণেই পুরো ধারণাটা ধরা আছে। `#(parameter WIDTH = 8)` দিয়ে module-এর গায়ে একটা knob লাগানো হলো, default মান ৮। তারপর port declaration-এ `[WIDTH-1:0]` লিখে input/output-এর প্রস্থ সেই knob-এর সাথে বেঁধে দেওয়া হলো। (লক্ষ্য করো sum-এর প্রস্থ `[WIDTH:0]` — মানে input-এর চেয়ে এক bit বেশি, কারণ দুটো WIDTH-bit সংখ্যা যোগ করলে একটা carry-out bit বেশি হতে পারে। এই খুঁটিনাটিগুলোই professional design-কে bug-মুক্ত রাখে।)
 
 নিচে instantiation-এ মজাটা দেখো: একই `adder` module থেকে `adder16` আর `adder32` দুটো আলাদা আকারের যন্ত্র বেরিয়ে এল, শুধু `#(.WIDTH(16))` আর `#(.WIDTH(32))` লিখে। তুমি adder-এর ভেতরের একটা লাইনও ছোঁওনি। এটাই parameterization-এর পুরো গল্প — **একবার সঠিকভাবে লেখো, সারাজীবন যেকোনো আকারে ব্যবহার করো।**
 
@@ -410,7 +410,7 @@ endmodule
 
 কখন কোনটা ব্যবহার করবে? নিয়মটা সহজ: যে মান ব্যবহারকারীর বদলানোর কথা (যেমন `WIDTH`), সেটা `parameter`। আর যে মান সেই `WIDTH` থেকে **derive** করা — যেমন এখানে `HALF_WIDTH = WIDTH / 2` বা `MAX_VALUE = (1 << WIDTH) - 1` — সেটা `localparam`। কারণ ব্যবহারকারী যদি ভুল করে `HALF_WIDTH` আলাদা করে override করে দেয়, তাহলে `WIDTH` এর সাথে আর মিল থাকবে না, design ভেঙে পড়বে। `localparam` দিয়ে তুমি এই দরজাটা বন্ধ রাখছো — "এটা আমার অভ্যন্তরীণ হিসাব, এতে হাত দিও না।" সংক্ষেপে: **parameter = বাইরের knob; localparam = ভেতরের তালাবন্ধ ধ্রুবক।**
 
-(একটা সুন্দর প্যাটার্ন এখানে লুকানো — `(1 << WIDTH) - 1` মানে WIDTH-bit-এর সর্বোচ্চ মান। WIDTH=8 হলে এটা ২⁸−১ = ২৫৫। এভাবে সংখ্যা হাতে না লিখে সূত্রে লেখলে, WIDTH বদলালে সবকিছু আপনাআপনি ঠিক থাকে।)
+(একটা সুন্দর প্যাটার্ন এখানে লুকানো — `(1 << WIDTH) - 1` মানে WIDTH-bit-এর সর্বোচ্চ মান। WIDTH=8 হলে এটা ২⁸−১ = ২৫৫। এভাবে সংখ্যা হাতে না লিখে সূত্রে লিখলে, WIDTH বদলালে সবকিছু আপনাআপনি ঠিক থাকে।)
 
 ### Parameterized Register File:
 
@@ -473,7 +473,7 @@ register_file #(
 
 এই module-টা ভালো করে বোঝো, কারণ Chapter 14-তে তুমি এটারই একটা version আসল CPU-তে বসাবে। তিনটা parameter দিয়ে এটা সম্পূর্ণ configurable: data কত চওড়া, কয়টা register, আর address কত bit (যেটা `$clog2(NUM_REGS)` দিয়ে নিজে হিসাব হয়ে যায়)।
 
-সবচেয়ে গুরুত্বপূর্ণ স্থাপত্য-সিদ্ধান্তটা code-এ স্পষ্ট: **read combinational, write sequential** — উপরের diagram-এ যা দেখলে ঠিক তাই। read দুটো `assign` দিয়ে করা, মানে address দিলেই তাৎক্ষণিক data বেরোয়, কোনো clock-এর অপেক্ষা নেই — CPU কে এক clock cycle-এর মধ্যেই operand পেতে হয় বলে এটা জরুরি। অন্যদিকে write আছে `always @(posedge clk)` এর ভেতরে, মানে নতুন মান কেবল clock edge-এ, এবং `write_en` ১ হলে তবেই বসে — এতে ভুল সময়ে register নষ্ট হয় না। এই দুই আচরণের মিশ্রণটাই register file কে একই সাথে দ্রুত (পড়ায়) আর নিরাপদ (লেখায়) রাখে। (একটা মজার সত্য যা পরে কাজে লাগবে: RISC-V-এ register 0 সবসময় শূন্য — সেই বিশেষ আচরণ এখানে নেই, কারণ এটা সাধারণ register file; CPU বানানোর সময় ওটা যোগ করতে হবে।)
+সবচেয়ে গুরুত্বপূর্ণ স্থাপত্য-সিদ্ধান্তটা code-এ স্পষ্ট: **read combinational, write sequential** — উপরের diagram-এ যা দেখলে ঠিক তাই। read দুটো `assign` দিয়ে করা, মানে address দিলেই তাৎক্ষণিক data বেরোয়, কোনো clock-এর অপেক্ষা নেই — CPU-কে এক clock cycle-এর মধ্যেই operand পেতে হয় বলে এটা জরুরি। অন্যদিকে write আছে `always @(posedge clk)` এর ভেতরে, মানে নতুন মান কেবল clock edge-এ, এবং `write_en` ১ হলে তবেই বসে — এতে ভুল সময়ে register নষ্ট হয় না। এই দুই আচরণের মিশ্রণটাই register file-কে একই সাথে দ্রুত (পড়ায়) আর নিরাপদ (লেখায়) রাখে। (একটা মজার সত্য যা পরে কাজে লাগবে: RISC-V-এ register 0 সবসময় শূন্য — সেই বিশেষ আচরণ এখানে নেই, কারণ এটা সাধারণ register file; CPU বানানোর সময় ওটা যোগ করতে হবে।)
 
 ---
 
@@ -512,7 +512,7 @@ flowchart TB
     style NOTE2 fill:#fff3e0,stroke:#e65100
 ```
 
-বাঁ দিকটা সময়ের গল্প (একটা যন্ত্র, পরপর কাজ); ডান দিকটা জায়গার গল্প (অনেক যন্ত্র, একসাথে)। এই কারণেই generate-এর loop variable একটা সাধারণ `integer` না, বরং একটা বিশেষ জিনিস — **`genvar`** (generate variable)। `genvar` compiler কে স্পষ্ট বলে দেয়: "এই variable-টা runtime-এ গোনার জন্য না, এটা hardware copy-এর নম্বর গোনার জন্য।"
+বাঁ দিকটা সময়ের গল্প (একটা যন্ত্র, পরপর কাজ); ডান দিকটা জায়গার গল্প (অনেক যন্ত্র, একসাথে)। এই কারণেই generate-এর loop variable একটা সাধারণ `integer` না, বরং একটা বিশেষ জিনিস — **`genvar`** (generate variable)। `genvar` compiler-কে স্পষ্ট বলে দেয়: "এই variable-টা runtime-এ গোনার জন্য না, এটা hardware copy-এর নম্বর গোনার জন্য।"
 
 মূল কথাগুলো গেঁথে নাও:
 
@@ -630,7 +630,7 @@ endmodule
 
 ### Nested Generate:
 
-সবশেষে generate-এর চূড়ান্ত রূপ — **nested generate**, মানে loop-এর ভেতরে loop। যখন hardware-টা দ্বিমাত্রিক (rows × columns), তখন এটা লাগে। সবচেয়ে সুন্দর উদাহরণ একটা **crossbar switch** — যেখানে যেকোনো input কে যেকোনো output-এর সাথে জোড়া যায় (ভাবো একটা টেলিফোন এক্সচেঞ্জ যেখানে যে কেউ যে কাউকে কল করতে পারে)। এর জন্য প্রতিটা output × প্রতিটা input-এর জন্য একটা করে switch লাগে — অর্থাৎ একটা grid।
+সবশেষে generate-এর চূড়ান্ত রূপ — **nested generate**, মানে loop-এর ভেতরে loop। যখন hardware-টা দ্বিমাত্রিক (rows × columns), তখন এটা লাগে। সবচেয়ে সুন্দর উদাহরণ একটা **crossbar switch** — যেখানে যেকোনো input-কে যেকোনো output-এর সাথে জোড়া যায় (ভাবো একটা টেলিফোন এক্সচেঞ্জ যেখানে যে কেউ যে কাউকে কল করতে পারে)। এর জন্য প্রতিটা output × প্রতিটা input-এর জন্য একটা করে switch লাগে — অর্থাৎ একটা grid।
 
 ```verilog
 module crossbar #(
@@ -654,7 +654,7 @@ module crossbar #(
 endmodule
 ```
 
-দুটো `genvar` (`i` আর `j`) লক্ষ্য করো — বাইরের loop প্রতিটা output ধরে ঘোরে, ভেতরের loop প্রতিটা input ধরে। ফলে OUTPUTS × INPUTS সংখ্যক switch তৈরি হয়, পুরো একটা grid। যদি `OUTPUTS=4, INPUTS=4` হয়, তাহলে ১৬টা switch — এক টুকরো nested generate দিয়ে। হাতে এই ১৬টা switch লিখতে গেলে কত লাইন, আর আকার বদলালে কত ঝামেলা, একবার ভাবো। এখানেও দুটো block-এই নাম দেওয়া (`output_stage`, `input_mux`) — তাই কোনো নির্দিষ্ট switch কে চিনতে হলে `output_stage[2].input_mux[1]...` এভাবে পৌঁছানো যায়।
+দুটো `genvar` (`i` আর `j`) লক্ষ্য করো — বাইরের loop প্রতিটা output ধরে ঘোরে, ভেতরের loop প্রতিটা input ধরে। ফলে OUTPUTS × INPUTS সংখ্যক switch তৈরি হয়, পুরো একটা grid। যদি `OUTPUTS=4, INPUTS=4` হয়, তাহলে ১৬টা switch — এক টুকরো nested generate দিয়ে। হাতে এই ১৬টা switch লিখতে গেলে কত লাইন, আর আকার বদলালে কত ঝামেলা, একবার ভাবো। এখানেও দুটো block-এই নাম দেওয়া (`output_stage`, `input_mux`) — তাই কোনো নির্দিষ্ট switch-কে চিনতে হলে `output_stage[2].input_mux[1]...` এভাবে পৌঁছানো যায়।
 
 এই section-টা যদি এক বাক্যে মনে রাখতে চাও: **generate মানে তুমি hardware-এর নকশা লেখো, আর compiler সেই নকশা থেকে যত খুশি copy নিজে বসিয়ে দেয় — তোমার processor-এর datapath ঠিক এভাবেই scalable আর পরিষ্কার থাকবে।**
 
@@ -662,7 +662,7 @@ endmodule
 
 ## ৮.৫ Compiler Directives
 
-এ পর্যন্ত যা শিখেছো — function, task, parameter, generate — সবই Verilog **ভাষার** অংশ, hardware বর্ণনা করে। এবার একটু ভিন্ন জিনিস: **compiler directive**, যেগুলো backtick (`` ` ``) দিয়ে শুরু হয়। এগুলো hardware বর্ণনা করে না; বরং compiler কে **নির্দেশ** দেয় — "এই শব্দটা ওই দিয়ে বদলে দাও", "এই অংশটা এবার বাদ দাও", "এই file-টা এখানে ঢোকাও"। C-এর `#define`, `#ifdef`, `#include` জানলে এদের অনেকটা চেনা লাগবে — কাজও প্রায় একই।
+এ পর্যন্ত যা শিখেছো — function, task, parameter, generate — সবই Verilog **ভাষার** অংশ, hardware বর্ণনা করে। এবার একটু ভিন্ন জিনিস: **compiler directive**, যেগুলো backtick (`` ` ``) দিয়ে শুরু হয়। এগুলো hardware বর্ণনা করে না; বরং compiler-কে **নির্দেশ** দেয় — "এই শব্দটা ওই দিয়ে বদলে দাও", "এই অংশটা এবার বাদ দাও", "এই file-টা এখানে ঢোকাও"। C-এর `#define`, `#ifdef`, `#include` জানলে এদের অনেকটা চেনা লাগবে — কাজও প্রায় একই।
 
 কেন এগুলো দরকার? কারণ বড় design-এ তুমি চাইবে এক জায়গায় একটা ধ্রুবক বদলালে সব জায়গায় বদলে যাক, debug-এর code-টা চিপে না গিয়ে শুধু simulation-এ চলুক, আর অনেক file একই সংজ্ঞা শেয়ার করুক। directive এই সব সম্ভব করে।
 
@@ -684,7 +684,7 @@ if (counter == `MAX_COUNT)
 assign max_val = `MAX(x, y);
 ```
 
-দুটো জিনিস খেয়াল করো। প্রথমত, macro নিজের ভেতরে আরেকটা macro ব্যবহার করতে পারে (`` `MAX_COUNT `` এর ভেতরে `` `WIDTH ``) — তাই এক জায়গায় `` `WIDTH `` বদলালে সব ছড়িয়ে যায়। দ্বিতীয়ত, macro argument-ও নিতে পারে, যেমন `` `MAX(a, b) ``। কিন্তু এখানে একটা সূক্ষ্ম কিন্তু জরুরি অভ্যাস: প্রতিটা argument আর পুরো expression কে বন্ধনীতে মুড়ে রাখা — `((a) > (b) ? ...)`। কেন? কারণ macro হলো অন্ধ text substitution; বন্ধনী না দিলে `` `MAX(x+1, y) `` এর মতো কিছুতে operator precedence-এর কারণে ভুল হিসাব হতে পারে। এই বন্ধনী-মোড়ানো অভ্যাসটা C তেও একইভাবে দরকার।
+দুটো জিনিস খেয়াল করো। প্রথমত, macro নিজের ভেতরে আরেকটা macro ব্যবহার করতে পারে (`` `MAX_COUNT `` এর ভেতরে `` `WIDTH ``) — তাই এক জায়গায় `` `WIDTH `` বদলালে সব ছড়িয়ে যায়। দ্বিতীয়ত, macro argument-ও নিতে পারে, যেমন `` `MAX(a, b) ``। কিন্তু এখানে একটা সূক্ষ্ম কিন্তু জরুরি অভ্যাস: প্রতিটা argument আর পুরো expression-কে বন্ধনীতে মুড়ে রাখা — `((a) > (b) ? ...)`। কেন? কারণ macro হলো অন্ধ text substitution; বন্ধনী না দিলে `` `MAX(x+1, y) `` এর মতো কিছুতে operator precedence-এর কারণে ভুল হিসাব হতে পারে। এই বন্ধনী-মোড়ানো অভ্যাসটা C তেও একইভাবে দরকার।
 
 (সতর্কতা: parameter আর `` `define `` দুটোই compile-time constant দেয়, কিন্তু module-নির্দিষ্ট, type-aware, override-যোগ্য মানের জন্য parameter-ই ভালো। `` `define `` রাখো সত্যিকারের global জিনিসের জন্য — যেমন পুরো project জুড়ে একই opcode সংজ্ঞা।)
 
@@ -762,7 +762,7 @@ module testbench;
 endmodule
 ```
 
-পড়ার নিয়ম: `` `timescale একক/নির্ভুলতা ``। এখানে `1ns/1ps` মানে — প্রতিটা `#1` সমান ১ ন্যানোসেকেন্ড (time unit), আর simulator সময় হিসাব রাখবে ১ পিকোসেকেন্ড সূক্ষ্মতায় (precision)। তাই `forever #5 clk = ~clk;` মানে প্রতি ৫ ন্যানোসেকেন্ডে clock উল্টে যায় — অর্থাৎ পূর্ণ এক cycle ১০ ন্যানোসেকেন্ড, frequency ১০০ MHz। precision কেন আলাদা? কারণ কখনো কখনো delay ভগ্নাংশ হয় (যেমন `#0.5`), আর simulator কে জানতে হয় কত সূক্ষ্ম পর্যন্ত হিসাব রাখবে। নিয়ম: precision সবসময় unit-এর সমান বা ছোট।
+পড়ার নিয়ম: `` `timescale একক/নির্ভুলতা ``। এখানে `1ns/1ps` মানে — প্রতিটা `#1` সমান ১ ন্যানোসেকেন্ড (time unit), আর simulator সময় হিসাব রাখবে ১ পিকোসেকেন্ড সূক্ষ্মতায় (precision)। তাই `forever #5 clk = ~clk;` মানে প্রতি ৫ ন্যানোসেকেন্ডে clock উল্টে যায় — অর্থাৎ পূর্ণ এক cycle ১০ ন্যানোসেকেন্ড, frequency ১০০ MHz। precision কেন আলাদা? কারণ কখনো কখনো delay ভগ্নাংশ হয় (যেমন `#0.5`), আর simulator-কে জানতে হয় কত সূক্ষ্ম পর্যন্ত হিসাব রাখবে। নিয়ম: precision সবসময় unit-এর সমান বা ছোট।
 
 ### Useful Compiler Directives:
 
@@ -770,10 +770,10 @@ endmodule
 
 | Directive | কী করে | কখন লাগে |
 |---|---|---|
-| `` `default_nettype none `` | undeclared wire কে error বানায় | টাইপো ধরতে — সবচেয়ে দরকারি একটা |
+| `` `default_nettype none `` | undeclared wire-কে error বানায় | টাইপো ধরতে — সবচেয়ে দরকারি একটা |
 | `` `resetall `` | আগের সব directive মুছে default-এ ফেরায় | file-এর শেষে পরিষ্কার করতে |
 | `` `undef NAME `` | আগের `` `define `` বাতিল করে | macro-এর জীবন সীমিত করতে |
-| `` `celldefine / `endcelldefine `` | module কে library "cell" হিসেবে চিহ্নিত করে | gate-level/library মডেলে |
+| `` `celldefine / `endcelldefine `` | module-কে library "cell" হিসেবে চিহ্নিত করে | gate-level/library মডেলে |
 
 ```verilog
 `default_nettype none   // Catch typos
@@ -784,7 +784,7 @@ endmodule
 `undef WIDTH            // Undefine macro
 ```
 
-এর মধ্যে `` `default_nettype none `` কে আলাদা করে ভালোবাসো — এটা তোমার অনেক রাত বাঁচাবে। সাধারণত Verilog-এ তুমি ভুল করে একটা নাম টাইপ করলে (যেমন `dataa` এর বদলে `data`) compiler চুপচাপ একটা নতুন ১-bit wire ধরে নেয়, কোনো অভিযোগ করে না — তারপর তোমার design রহস্যজনকভাবে ভুল করে। `` `default_nettype none `` লিখলে এই স্বয়ংক্রিয় wire বানানো বন্ধ হয়, ফলে যেকোনো অঘোষিত নাম সঙ্গে সঙ্গে error দেখায়। এই একটা লাইন professional রা প্রায় সব file-এর শুরুতে রাখে।
+এর মধ্যে `` `default_nettype none `` কে আলাদা করে ভালোবাসো — এটা তোমার অনেক রাত বাঁচাবে। সাধারণত Verilog-এ তুমি ভুল করে একটা নাম টাইপ করলে (যেমন `dataa` এর বদলে `data`) compiler চুপচাপ একটা নতুন ১-bit wire ধরে নেয়, কোনো অভিযোগ করে না — তারপর তোমার design রহস্যজনকভাবে ভুল করে। `` `default_nettype none `` লিখলে এই স্বয়ংক্রিয় wire বানানো বন্ধ হয়, ফলে যেকোনো অঘোষিত নাম সঙ্গে সঙ্গে error দেখায়। এই একটা লাইন professional-রা প্রায় সব file-এর শুরুতে রাখে।
 
 ---
 
@@ -827,7 +827,7 @@ module single_port_ram #(
 endmodule
 ```
 
-পুরো logic-টা একটা `always @(posedge clk)` block-এ — মানে এই RAM **synchronous**, সব কিছু clock edge-এ ঘটে। `write_en` ১ হলে নতুন data ঘরে বসে; আর প্রতি edge-এ addr-এর ঘরের মান `data_out` এ আসে (read)। এই synchronous আচরণটাই FPGA-এর built-in block RAM-এর সাথে মেলে — তাই এভাবে লিখলে synthesizer তোমার এই array কে চিপের বিশেষ, দ্রুত memory block-এ বসিয়ে দেয় (একে বলে memory "inference")। লক্ষ্য করো এখানে `<=` non-blocking — clock-synchronous memory-তে সবসময় এটাই।
+পুরো logic-টা একটা `always @(posedge clk)` block-এ — মানে এই RAM **synchronous**, সব কিছু clock edge-এ ঘটে। `write_en` ১ হলে নতুন data ঘরে বসে; আর প্রতি edge-এ addr-এর ঘরের মান `data_out` এ আসে (read)। এই synchronous আচরণটাই FPGA-এর built-in block RAM-এর সাথে মেলে — তাই এভাবে লিখলে synthesizer তোমার এই array-কে চিপের বিশেষ, দ্রুত memory block-এ বসিয়ে দেয় (একে বলে memory "inference")। লক্ষ্য করো এখানে `<=` non-blocking — clock-synchronous memory-তে সবসময় এটাই।
 
 > **🚩 খেয়াল রাখো:** এই module-এ তিনটা parameter (`DATA_WIDTH`, `ADDR_WIDTH`, `DEPTH`) আলাদাভাবে দেওয়া আছে, অথচ এদের একটা সম্পর্ক আছে — `DEPTH` হওয়া উচিত `2**ADDR_WIDTH` (এখানে ১০-bit address মানে ঠিক ১০২৪টা ঘর, যা মিলে যায়)। বাস্তব design-এ একটাকে অন্যটা থেকে derive করা নিরাপদ — যেমন `ADDR_WIDTH` রেখে `localparam DEPTH = 2**ADDR_WIDTH;`, নয়তো ব্যবহারকারী অসংগত মান দিলে (যেমন `ADDR_WIDTH=10` কিন্তু `DEPTH=512`) address-এর অর্ধেক ঘর কখনো পৌঁছানো যাবে না। শেখার জন্য এখানে তিনটাই খোলা রাখা হয়েছে।
 
@@ -1006,15 +1006,15 @@ end
 
 ## ৮.৮ Synthesis Attributes
 
-Synthesizer (যে tool তোমার Verilog কে gate-এ পরিণত করে) খুব চালাক — সে নিজে থেকে অনেক সিদ্ধান্ত নেয়: কোন signal বাদ দেওয়া যায়, memory কোথায় বসবে, FSM কীভাবে encode হবে। বেশিরভাগ সময় তার সিদ্ধান্ত ঠিক। কিন্তু মাঝে মাঝে তুমি জানো তার চেয়ে ভালো — তখন তুমি একটা **attribute** দিয়ে তাকে ইশারা (বা সরাসরি নির্দেশ) দাও। Attribute লেখা হয় `(* ... *)` দিয়ে, আর এটা যে জিনিসের ঠিক আগে বসে তার উপর প্রযোজ্য হয়।
+Synthesizer (যে tool তোমার Verilog-কে gate-এ পরিণত করে) খুব চালাক — সে নিজে থেকে অনেক সিদ্ধান্ত নেয়: কোন signal বাদ দেওয়া যায়, memory কোথায় বসবে, FSM কীভাবে encode হবে। বেশিরভাগ সময় তার সিদ্ধান্ত ঠিক। কিন্তু মাঝে মাঝে তুমি জানো তার চেয়ে ভালো — তখন তুমি একটা **attribute** দিয়ে তাকে ইশারা (বা সরাসরি নির্দেশ) দাও। Attribute লেখা হয় `(* ... *)` দিয়ে, আর এটা যে জিনিসের ঠিক আগে বসে তার উপর প্রযোজ্য হয়।
 
 ভাবো attribute হলো তোমার design-এ লাগানো sticky-note — "এই signal-টা মুছো না", "এই memory-টা block RAM-এ রাখো", "এই FSM-টা one-hot-এ encode করো"। নিচে সবচেয়ে দরকারি কয়েকটা:
 
-| Attribute | কী বলে synthesizer কে | কখন দরকার |
+| Attribute | কী বলে synthesizer-কে | কখন দরকার |
 |---|---|---|
 | `keep = "true"` | এই signal মুছে ফেলো না | debug-এ signal probe করতে |
-| `ram_style = "block"` | array কে block RAM-এ রাখো | বড় memory |
-| `ram_style = "distributed"` | array কে LUT-based RAM-এ রাখো | ছোট, দ্রুত memory |
+| `ram_style = "block"` | array-কে block RAM-এ রাখো | বড় memory |
+| `ram_style = "distributed"` | array-কে LUT-based RAM-এ রাখো | ছোট, দ্রুত memory |
 | `fsm_encoding = "one_hot"` | প্রতিটা state এক bit | দ্রুত, কিন্তু বেশি flip-flop |
 | `fsm_encoding = "sequential"` | state binary-তে গোনা | কম flip-flop |
 | `dont_touch = "true"` | এই module/signal-এ হাত দিও না | hierarchy অক্ষত রাখতে |
@@ -1054,7 +1054,7 @@ module my_module(...);
 
 দুটো জিনিস গভীরভাবে বোঝার মতো। প্রথমত, `keep`/`dont_touch` কেন লাগে — synthesizer optimization-এর সময় "অপ্রয়োজনীয়" signal মুছে ফেলে। কিন্তু debug করতে গিয়ে তুমি হয়তো একটা ভেতরের signal probe করতে চাও, যেটা সে মুছে দিয়েছে — তখন `keep` দিয়ে সেটা টিকিয়ে রাখো। দ্বিতীয়ত, `fsm_encoding` এর one-hot বনাম sequential — এটা একটা ক্লাসিক trade-off: one-hot-এ প্রতিটা state-এর জন্য আলাদা flip-flop (তাই বেশি flip-flop খায়), কিন্তু "এখন কোন state" বোঝা দ্রুত (শুধু একটা bit দেখলেই হয়), তাই circuit দ্রুত চলে। FPGA-তে flip-flop প্রচুর থাকে, তাই one-hot প্রায়ই ভালো; চিপে জায়গা কম হলে sequential বাছা হয়।
 
-সতর্কতা: attribute হলো শেষ অস্ত্র, প্রথম নয়। আগে পরিষ্কার, ঠিক code লেখো — বেশিরভাগ সময় synthesizer নিজেই সঠিক কাজ করবে। attribute তখনই ব্যবহার করো যখন তোমার কাছে নির্দিষ্ট কারণ আছে, আর tool কে override করার দরকার বুঝেছো। এগুলোর পুরো শক্তি তুমি Part 5 (VLSI)-এ OpenLane নিয়ে কাজ করার সময় টের পাবে।
+সতর্কতা: attribute হলো শেষ অস্ত্র, প্রথম নয়। আগে পরিষ্কার, ঠিক code লেখো — বেশিরভাগ সময় synthesizer নিজেই সঠিক কাজ করবে। attribute তখনই ব্যবহার করো যখন তোমার কাছে নির্দিষ্ট কারণ আছে, আর tool-কে override করার দরকার বুঝেছো। এগুলোর পুরো শক্তি তুমি Part 5 (VLSI)-এ OpenLane নিয়ে কাজ করার সময় টের পাবে।
 
 ---
 
@@ -1094,7 +1094,7 @@ module priority_encoder #(
 endmodule
 ```
 
-এই module-এ তিনটা ধারণা একসাথে কাজ করছে, খেয়াল করো: (১) **parameter** `WIDTH` দিয়ে এটা যেকোনো আকারের input নিতে পারে; (২) **`$clog2(WIDTH)`** দিয়ে output-এর প্রস্থ নিজে হিসাব হয় (৮ input-এর index ০-৭ ধরতে ৩ bit); (৩) loop-টা MSB থেকে নিচে নামছে, আর `!found` দিয়ে নিশ্চিত করছে শুধু **প্রথম** (সর্বোচ্চ) set-bit টাই ধরা হয় — এটাই "priority"। আর `valid` output-টা একটা গুরুত্বপূর্ণ সংকেত: input-এ একটাও ১ না থাকলে `encoded` শূন্য দেখাবে, কিন্তু সেই শূন্য তো bit-0 কেও বোঝাতে পারে! `valid=0` দিয়ে তুমি বোঝো "আসলে কিছুই set ছিল না" — তাই এমন encoder-এ `valid` ছাড়া চলে না।
+এই module-এ তিনটা ধারণা একসাথে কাজ করছে, খেয়াল করো: (১) **parameter** `WIDTH` দিয়ে এটা যেকোনো আকারের input নিতে পারে; (২) **`$clog2(WIDTH)`** দিয়ে output-এর প্রস্থ নিজে হিসাব হয় (৮ input-এর index ০-৭ ধরতে ৩ bit); (৩) loop-টা MSB থেকে নিচে নামছে, আর `!found` দিয়ে নিশ্চিত করছে শুধু **প্রথম** (সর্বোচ্চ) set-bit টাই ধরা হয় — এটাই "priority"। আর `valid` output-টা একটা গুরুত্বপূর্ণ সংকেত: input-এ একটাও ১ না থাকলে `encoded` শূন্য দেখাবে, কিন্তু সেই শূন্য তো bit-0-কেও বোঝাতে পারে! `valid=0` দিয়ে তুমি বোঝো "আসলে কিছুই set ছিল না" — তাই এমন encoder-এ `valid` ছাড়া চলে না।
 
 ### Gray Counter with Generate:
 
@@ -1126,7 +1126,7 @@ module gray_counter #(
 endmodule
 ```
 
-এই উদাহরণটা সুন্দরভাবে দেখায় কীভাবে **sequential আর generate একসাথে** কাজ করে। প্রথম অংশটা একটা সাধারণ binary counter — `always @(posedge clk)` এ প্রতি edge-এ ১ বাড়ে। তারপর `generate` অংশটা সেই binary count কে তাৎক্ষণিকভাবে Gray code-এ রূপান্তর করে: সবচেয়ে উপরের bit একই থাকে, আর প্রতিটা নিচের bit হলো পাশের দুটো binary bit-এর XOR (Example 3-এর উল্টো রূপান্তর)। generate-for-টা এখানে WIDTH-1টা XOR gate বসায় — WIDTH বদলালে gate সংখ্যা নিজে মিলে যায়।
+এই উদাহরণটা সুন্দরভাবে দেখায় কীভাবে **sequential আর generate একসাথে** কাজ করে। প্রথম অংশটা একটা সাধারণ binary counter — `always @(posedge clk)` এ প্রতি edge-এ ১ বাড়ে। তারপর `generate` অংশটা সেই binary count-কে তাৎক্ষণিকভাবে Gray code-এ রূপান্তর করে: সবচেয়ে উপরের bit একই থাকে, আর প্রতিটা নিচের bit হলো পাশের দুটো binary bit-এর XOR (Example 3-এর উল্টো রূপান্তর)। generate-for-টা এখানে WIDTH-1টা XOR gate বসায় — WIDTH বদলালে gate সংখ্যা নিজে মিলে যায়।
 
 কেন Gray counter দরকার? কারণ Gray code-এ পরপর দুটো সংখ্যার মধ্যে ঠিক **একটা** bit বদলায়। সাধারণ binary-তে ৭ (`0111`) থেকে ৮ (`1000`)-এ যেতে চারটা bit একসাথে বদলায় — আর এই bit-গুলো যদি একদম একই মুহূর্তে না বদলায় (বাস্তবে কখনোই হয় না), মাঝখানে ক্ষণিকের জন্য ভুল মান (glitch) দেখা দিতে পারে। Gray code-এ একবারে একটা bit বদলায় বলে এই বিপদ নেই — তাই এটা asynchronous FIFO আর clock-domain crossing (দুটো ভিন্ন clock-এর মধ্যে data পাঠানো)-এ অপরিহার্য, যেখানে glitch মানে data নষ্ট।
 
@@ -1227,7 +1227,7 @@ endtask
 
 ### Mistake 2: Generate Without genvar ❌
 
-দ্বিতীয় ক্লাসিক ভুল — `generate for` লেখার সময় loop variable কে `genvar` ঘোষণা করতে ভুলে যাওয়া। মনে রাখো, generate-এর loop variable সাধারণ runtime variable না; এটা hardware copy-এর নম্বর গোনে, তাই এর জন্য বিশেষ `genvar` লাগে।
+দ্বিতীয় ক্লাসিক ভুল — `generate for` লেখার সময় loop variable-কে `genvar` ঘোষণা করতে ভুলে যাওয়া। মনে রাখো, generate-এর loop variable সাধারণ runtime variable না; এটা hardware copy-এর নম্বর গোনে, তাই এর জন্য বিশেষ `genvar` লাগে।
 
 ```verilog
 // ❌ WRONG
@@ -1264,7 +1264,7 @@ module top;
 endmodule
 ```
 
-`#(16)` লিখলে এটা module-এর **প্রথম** parameter কে ১৬ ধরে — কিন্তু কোন parameter প্রথম, সেটা তোমাকে মনে রাখতে হবে, আর পরে কেউ যদি parameter-এর order বদলায়, তোমার ১৬ ভুল জায়গায় চলে যাবে। `#(.WIDTH(16))` লিখলে তুমি স্পষ্ট বলছো "WIDTH = 16", order যাই হোক ঠিক জায়গায় যাবে। তাই সবসময় **named override** ব্যবহার করো — ঠিক যেমন Chapter 7-এ port connection-এও named style শিখেছিলে। নিয়মটা এক: বড় design-এ কখনো position-এর উপর ভরসা কোরো না, সবসময় নাম দাও।
+`#(16)` লিখলে এটা module-এর **প্রথম** parameter-কে ১৬ ধরে — কিন্তু কোন parameter প্রথম, সেটা তোমাকে মনে রাখতে হবে, আর পরে কেউ যদি parameter-এর order বদলায়, তোমার ১৬ ভুল জায়গায় চলে যাবে। `#(.WIDTH(16))` লিখলে তুমি স্পষ্ট বলছো "WIDTH = 16", order যাই হোক ঠিক জায়গায় যাবে। তাই সবসময় **named override** ব্যবহার করো — ঠিক যেমন Chapter 7-এ port connection-এও named style শিখেছিলে। নিয়মটা এক: বড় design-এ কখনো position-এর উপর ভরসা কোরো না, সবসময় নাম দাও।
 
 ---
 

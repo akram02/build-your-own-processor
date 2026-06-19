@@ -1,5 +1,5 @@
 # 🔄 Chapter 4: Build Your Own Memory Circuits
-## Flip-Flops থেকে FSM - তোমার Processor কে Memory দাও!
+## Flip-Flops থেকে FSM - তোমার Processor-কে Memory দাও!
 
 > **"Combinational circuits compute. Sequential circuits remember. Time to add memory!"**
 >
@@ -1254,7 +1254,7 @@ S2: Got "10"
 S3: Got "101" (detected!)
 ```
 
-state গুলোর অর্থ বুঝে নাও — এগুলো আসলে "অগ্রগতির মাইলফলক"। S0 = এখনো কিছু মেলেনি; S1 = একটা `1` পেয়েছি (pattern-এর শুরু); S2 = `10` পেয়েছি (দুই-তৃতীয়াংশ পথ); S3 = `101` সম্পূর্ণ, পেয়ে গেছি! এভাবে state দিয়ে "এতদূর এসেছি" মনে রাখাটাই FSM-এর আসল কৌশল।
+state-গুলোর অর্থ বুঝে নাও — এগুলো আসলে "অগ্রগতির মাইলফলক"। S0 = এখনো কিছু মেলেনি; S1 = একটা `1` পেয়েছি (pattern-এর শুরু); S2 = `10` পেয়েছি (দুই-তৃতীয়াংশ পথ); S3 = `101` সম্পূর্ণ, পেয়ে গেছি! এভাবে state দিয়ে "এতদূর এসেছি" মনে রাখাটাই FSM-এর আসল কৌশল।
 
 **State Diagram:**
 
@@ -1294,7 +1294,7 @@ diagram-টা একটু সময় নিয়ে পড়ো — প্
 
 **State Encoding:**
 
-hardware-এ state গুলোকে binary number হিসেবে রাখতে হবে। ৪টা state-এর জন্য ২টা bit যথেষ্ট (Q1 Q0):
+hardware-এ state-গুলোকে binary number হিসেবে রাখতে হবে। ৪টা state-এর জন্য ২টা bit যথেষ্ট (Q1 Q0):
 
 | State | Q1 Q0 |
 |-------|-------|
@@ -1629,7 +1629,7 @@ Bonus:
 - Share your design!
 ```
 
-এই project-টা পুরোপুরি তোমার শেখা FSM design steps মেনেই করো — states ঠিক করো, diagram আঁকো, table বানাও, তারপর hardware। আর bonus গুলোতে হাত দিলে তুমি টের পাবে একটা সাধারণ FSM-কে কত সহজে আরও বুদ্ধিমান করে তোলা যায়। পারলে তোমার design শেয়ার করো — অন্যরা অনুপ্রাণিত হবে!
+এই project-টা পুরোপুরি তোমার শেখা FSM design steps মেনেই করো — states ঠিক করো, diagram আঁকো, table বানাও, তারপর hardware। আর bonus-গুলোতে হাত দিলে তুমি টের পাবে একটা সাধারণ FSM-কে কত সহজে আরও বুদ্ধিমান করে তোলা যায়। পারলে তোমার design শেয়ার করো — অন্যরা অনুপ্রাণিত হবে!
 
 ---
 
@@ -1664,7 +1664,7 @@ Next: Chapter 5 - Learn to Code Hardware!
 
 **"You just gave your processor memory and control. Next, you'll code it!"**
 
-**"তুমি তোমার processor কে memory এবং control দিয়েছো। এবার code করবে!"**
+**"তুমি তোমার processor-কে memory এবং control দিয়েছো। এবার code করবে!"**
 
 Made with ❤️ for builders | বানানোর জন্য ভালোবাসা দিয়ে তৈরি
 
