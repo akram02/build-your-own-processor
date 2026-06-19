@@ -197,7 +197,7 @@ Forwarding-এর পুরো ধারণাটা এক বাক্যে: 
 |--------|------|---------------------|--------------|
 | `2'b00` | Register file | স্বাভাবিক পড়া | কোনো hazard নেই |
 | `2'b01` | MEM/WB register | দুই-আগের instruction-এর result | MEM hazard |
-| `2'b10` | EX/MEM register | ঠিক-আগের instruction-এর result | EX hazard |
+| `2'b10` | EX/MEM register | ঠিক আগের instruction-এর result | EX hazard |
 
 দুটো হিসাব মিলে গেলে কে জেতে? **EX/MEM (`2'b10`)** — কারণ একই register দুবার লেখা হলে সবচেয়ে নতুন (ঠিক আগেরটা) মানই সঠিক। উপরের কোডে EX/MEM-এর শর্তটা আগে আসে বলে এই priority নিজে থেকেই বজায় থাকে।
 
