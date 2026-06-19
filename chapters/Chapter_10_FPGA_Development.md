@@ -142,7 +142,7 @@ Synthesize → Place & Route → Bitstream → USB দিয়ে board-এ প
 
 | Resource | পরিমাণ | এটা দিয়ে কী হয় |
 |---|---|---|
-| **LUTs** (Look-Up Table) | 8640 | যেকোনো combinational logic—তোমার gate, mux, adder এখানেই বসে |
+| **LUTs** (Look-Up Tables) | 8640 | যেকোনো combinational logic—তোমার gate, mux, adder এখানেই বসে |
 | **Flip-Flops** | 6480 | state ধরে রাখে—register, counter, FSM-এর memory |
 | **Block RAM** | 468 Kb (26 × 18 Kb) | বড় data রাখার জন্য—instruction memory, frame buffer |
 | **DSP Multipliers** | 20 × (18×18) | দ্রুত গুণ—signal processing, ALU-এর multiply |
@@ -522,7 +522,7 @@ IO_LOC "led" 10;   →  "led" signal-টা pin 10-এ বসাও
 | **LED 5** | 16 | Red |
 | **Button S1** | 3 | active low (টিপলে 0) |
 | **Button S2** | 4 | active low (টিপলে 0) |
-| **HDMI** | 69–76, 71, 77, 79–83 | video output |
+| **HDMI** | 69–77, 79–83 | video output |
 
 > 💡 **পুরো pinout কোথায়?** এই টেবিলে শুধু আমাদের দরকারি pin আছে। চাইলে 174টা pin এরই সম্পূর্ণ তালিকা পাবে Tang Nano 9K-এর official schematic বা board documentation-এ (online সহজলভ্য)। যখন নিজের sensor/peripheral জুড়বে, তখন ওটা খুলে দরকারি pin খুঁজে নেবে।
 
@@ -778,7 +778,7 @@ endmodule
 
 LED ছিল তোমার প্রথম output—এবার button, তোমার প্রথম input। এতদিন chip শুধু তোমাকে কিছু *দেখাচ্ছিল*; এবার তুমি তাকে কিছু *বলবে*। কিন্তু button-এর সাথে একটা মজার সমস্যা আছে, যেটা প্রতিটা hardware ডিজাইনারকে একবার না একবার কামড় দেয়—**bounce**।
 
-**Bounce ব্যাপারটা কী?** তুমি ভাবো button টিপলে পরিষ্কারভাবে 1→0 হয়ে যায়। বাস্তবে না! Button-এর ভেতরে দুটো ধাতব পাত আছে; টেপার সময় সেগুলো একবারে লেগে না গিয়ে কয়েক মিলিসেকেন্ড ধরে কাঁপতে কাঁপতে লাগে—যেন একটা বল মেঝেতে কয়েকবার লাফিয়ে তারপর থামে। chip-এর 27 MHz চোখে এই কাঁপুনি দেখায় 0-1-0-1-0... অনেকগুলো দ্রুত চাপ হিসেবে! তাই একবার টিপলেও LED হয়তো ৫-৬ বার toggle করে ফেলবে—এলোমেলো, অনির্দেশ্য।
+**Bounce ব্যাপারটা কী?** তুমি ভাবো button টিপলে পরিষ্কারভাবে 1→0 হয়ে যায়। বাস্তবে না! Button-এর ভেতরে দুটো ধাতব পাত আছে; টেপার সময় সেগুলো একবারে লেগে না গিয়ে কয়েক মিলিসেকেন্ড ধরে কাঁপতে কাঁপতে লাগে—যেন একটা বল মেঝেতে কয়েকবার লাফিয়ে তারপর থামে। chip-এর 27 MHz clock-এর চোখে এই কাঁপুনি দেখায় 0-1-0-1-0... অনেকগুলো দ্রুত চাপ হিসেবে! তাই একবার টিপলেও LED হয়তো ৫-৬ বার toggle করে ফেলবে—এলোমেলো, অনিশ্চিত।
 
 **সমাধান: debounce।** কৌশলটা সরল—button-এর মান বদলালে সাথে সাথে বিশ্বাস না করে একটু *অপেক্ষা* করো। যদি signal-টা একটানা কিছুক্ষণ (এখানে ~20ms, একটা counter দিয়ে গোনা) স্থির থাকে, তবেই সেটাকে আসল চাপ হিসেবে মানো। কাঁপুনি ততক্ষণে থেমে গেছে। নিচের code-এ `debounce` counter আর `btn_stable` ঠিক এই কাজটাই করছে—কাঁপুনি উপেক্ষা করে শুধু স্থির অবস্থাটা ধরে:
 
@@ -1293,7 +1293,7 @@ Badges Earned:
 🎖️ Multi-Project Developer
 🏆 REAL Hardware Engineer!
 
-MILESTONE: 50% COMPLETE! 🎊
+MILESTONE: 40% COMPLETE! 🎊
 You're now deploying to REAL hardware!
 
 Next: Chapter 11 - Advanced FPGA Projects!
