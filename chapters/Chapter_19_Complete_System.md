@@ -191,7 +191,7 @@ SW x6, 0x10000000(x0)  # GPIO-তে লেখো
 | `0x10003000 – 0x10003FFF` | 4 KB | **Interrupt Ctrl** | কোন peripheral CPU-কে ডাকছে |
 
 > 💡 **চাবিকাঠি:** ঠিকানার উপরের কয়েকটা bit দেখেই বলে দেওয়া যায় কথাটা কার জন্য।
-> ঠিকানা `0x1000_0000`-এর নিচে হলে → memory; তা না হলে দ্বিতীয় hex digit বলে দেয়
+> ঠিকানা `0x1000_0000`-এর নিচে হলে → memory; তা না হলে `0x1000_X000`-এর X-অঙ্কটা (ঠিকানার `[15:12]` bit) বলে দেয়
 > কোন peripheral (`0`=GPIO, `1`=UART, `2`=Timer, `3`=IntC)। এই "ঠিকানা দেখে
 > গন্তব্য ঠিক করা"-র কাজটাই হলো **address decoding**, যেটা bus করে — section ১৯.৫-এ
 > বিস্তারিত দেখব।
@@ -223,7 +223,7 @@ UART-এর পুরো নাম **Universal Asynchronous Receiver/Transmitter
 একটা চিঠির খামের সাথে তুলনা করো। লাইন স্বাভাবিক অবস্থায় থাকে high (১)। transmit
 শুরু হলে প্রথমে যায় একটা **start bit** (০) — "সাবধান, বার্তা আসছে!"। তারপর ৮টা
 **data bit** (আসল বাইট)। শেষে একটা **stop bit** (১) — "শেষ হলো"। receiver
-start bit-এর পতন (high→low) দেখে জেগে ওঠে, তারপর baud rate ধরে ঠিক সময়ে সময়ে
+start bit-এর পতন (high→low) দেখে জেগে ওঠে, তারপর baud rate ধরে ঠিক সময়মতো
 bit-গুলো পড়ে নেয়।
 
 ```
@@ -680,7 +680,7 @@ Timer চারটা register দেখায়:
 সংকেত পাঠায়; CPU তখন চলতি কাজ থামিয়ে একটা বিশেষ ফাংশন (**ISR** — Interrupt
 Service Routine) চালায়, কাজ সেরে আবার ঠিক যেখানে ছিল সেখানে ফিরে আসে।
 
-কিন্তু একটা সমস্যা: CPU-র তো একটাই "কলিং বেল" তার, অথচ peripheral অনেকগুলো
+কিন্তু একটা সমস্যা: CPU-র তো "কলিং বেল" তার একটাই, অথচ peripheral অনেকগুলো
 (UART, Timer, ...)। কে বেল বাজাল? এখানেই আসে **Interrupt Controller**। সে সব
 peripheral-এর interrupt লাইন একসাথে শোনে, **priority** অনুযায়ী সবচেয়ে জরুরিটা
 বেছে নেয়, আর CPU-কে একটাই সংকেত দিয়ে বলে "X নম্বর interrupt এসেছে"। তিনটা ধাপ:
@@ -695,8 +695,8 @@ peripheral-এর interrupt লাইন একসাথে শোনে, **prio
 
 নিচের কোডে এই তিন ধাপ মিলিয়ে নাও। `interrupt_pending <= interrupt_pending |
 interrupt_sources` লাইনটা নতুন interrupt **latch** করে রাখে। priority encoder-এর
-লুপ (`for i = 7 downto 0`) সব pending-আর-enabled bit-এর মধ্যে সবচেয়ে বড় index-টা
-বেছে `interrupt_id`-তে রাখে — মানে বড় নম্বরের interrupt-এর priority বেশি। আর
+লুপ (`for i = 7 downto 0`) সব pending-আর-enabled bit-এর মধ্যে সবচেয়ে ছোট index-টা
+বেছে `interrupt_id`-তে রাখে — মানে ছোট নম্বরের interrupt-এর priority বেশি। আর
 software `INT_ACK`-এ লিখে কোনো interrupt-কে "দেখা হয়ে গেছে" বলে clear করতে পারে।
 
 ```verilog
@@ -797,7 +797,7 @@ endmodule
 > `assign interrupt_ack = 1'b0;` লেখা আছে আর কোডের কমেন্টেও বলা: "this core does
 > not service interrupts"। মানে Interrupt Controller সঠিকভাবে interrupt **ধরে,
 > জমায় আর রিপোর্ট করে**, কিন্তু CPU সেটা পেয়ে নিজে থেকে ISR-এ লাফ দেয় না।
-> তাই section ১৯.৭-এর Timer Interrupt উদাহরণে `timer_isr()` আপনাআপনি চলবে না;
+> তাই section ১৯.৭-এর Timer Interrupt উদাহরণে `timer_isr()` নিজে থেকে চলবে না;
 > ঐ pattern-টা ভবিষ্যতে CPU-তে interrupt সাপোর্ট যোগ করার নকশা হিসেবে রাখা।
 > এখন interrupt status জানতে software-এ PENDING register **poll** করে নিতে পারো।
 
@@ -1133,7 +1133,7 @@ CPU-র `SW` আর `LW` instruction হয়, যা bus হয়ে ঠি�
 প্রথম উদাহরণ — নিজের চিপ থেকে "Hello, World!" ছাপানো। `uart_putc()` ফাংশনটা
 section ১৯.১-এর STATUS register table-এর সাথে হুবহু মিলিয়ে পড়ো: `while (*uart_status
 & 0x2);` লাইনটা bit 1 (`tx_busy`) ১ থাকা পর্যন্ত অপেক্ষা করে — অর্থাৎ আগের byte
-পাঠানো শেষ হওয়ার জন্য **poll** করে। তারপর `*uart_data = c;` দিয়ে নতুন byte
+পাঠানো শেষ হওয়া পর্যন্ত **poll** করে। তারপর `*uart_data = c;` দিয়ে নতুন byte
 পাঠায়। `uart_puts()` শুধু এক এক করে string-এর প্রতিটা অক্ষরে `uart_putc()` ডাকে।
 
 ```c
