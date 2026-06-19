@@ -52,15 +52,15 @@ Chapter 21-এ তুমি শিখেছ RTL থেকে GDSII পর্য�
 ভিতরে সব tool-কে সঠিক ক্রমে ডাকে, একটার ফল আরেকটাকে পাস করে, আর শেষে তোমার হাতে
 fabrication-ready GDSII তুলে দেয়।
 
-একটা analogy ভাবো: তুমি যদি একটা restaurant-এ গিয়ে আলাদা করে চাল কাটো, সবজি
-কাটো, মসলা বাটো, ভাজো, রান্না করো — সেটা হলো হাতে হাতে tool চালানো। আর OpenLane
+একটা analogy ভাবো: তুমি যদি একটা restaurant-এ গিয়ে আলাদা করে সবজি কাটো, পেঁয়াজ
+কুচাও, মসলা বাটো, ভাজো, রান্না করো — সেটা হলো হাতে হাতে tool চালানো। আর OpenLane
 হলো একটা পূর্ণাঙ্গ **recipe + automated kitchen**: তুমি শুধু উপকরণ (RTL) আর রেসিপি
 কার্ড (config) দিলে, পুরো রান্নাটা নিজে নিজে হয়ে গরম প্লেটে (GDSII) চলে আসে।
 
 | বিষয় | OpenLane সম্পর্কে |
 |------|-------------------|
 | এটা কী | পুরোপুরি automated RTL-to-GDSII flow |
-| বানিয়েছে | Efabless (Google-এর সহযোগিতায়) |
+| বানিয়েছে | Efabless |
 | কোথায় ব্যবহৃত হয় | TinyTapeout, ChipIgnite — আসল chip fabrication-এ |
 | PDK | Sky130 আগে থেকেই integrated (Chapter 23-এ বিস্তারিত) |
 | চালানোর সহজ উপায় | Docker container — এক command-এ পুরো environment |
@@ -584,7 +584,7 @@ Max frequency: 55.2 MHz
 ### Timing Report:
 
 এটাই সবচেয়ে গুরুত্বপূর্ণ report-গুলোর একটা — STA মানে **Static Timing Analysis**।
-এটা signoff-এর পর তৈরি, অর্থাৎ routing শেষে আসল তারসহ হিসাব করা। মূল ধারণাটা
+এটা routing শেষে signoff পর্যায়ে তৈরি, অর্থাৎ আসল তারসহ হিসাব করা। মূল ধারণাটা
 **slack**:
 
 - **slack ধনাত্মক (+)** = signal সময়ের আগেই পৌঁছেছে — পরীক্ষায় পাস, হাতে সময়ও ছিল। 👍
@@ -634,8 +634,8 @@ Good for IoT applications!
 
 কীভাবে পড়বে: মোট মাত্র **2.5 mW @ 1.8V** — অত্যন্ত কম। তুলনা করো: একটা সাধারণ LED
 জ্বলে কয়েক মিলিওয়াটে। এত কম power বলেই এই ধরনের ছোট processor একটা coin cell
-battery-তে দিনের পর দিন চলতে পারে — ঠিক যেমন একটা sensor node-এর দরকার। তোমার Dynamic
-(2.0 mW) যেহেতু Leakage (0.5 mW)-এর চেয়ে বড়, বুঝতে পারছ chip বেশিরভাগ সময় আসলে
+battery-তে দিনের পর দিন চলতে পারে — ঠিক যেমন একটা sensor node-এর দরকার। তোমার Dynamic power
+(2.0 mW) যেহেতু Leakage power (0.5 mW)-এর চেয়ে বড়, বুঝতে পারছ chip বেশিরভাগ সময় আসলে
 কাজ করছে — অলস বসে চুঁইয়ে যাচ্ছে না।
 
 ### Area Report:
@@ -651,7 +651,7 @@ Utilization: 62%
 ```
 
 কীভাবে পড়বে: **Core area** হলো cell-গুলো যেখানে বসে, আর **Total die area**-তে
-চারপাশের IO আর margin-ও যোগ। **Utilization 62%** মানে core-এর ৬২% cell-এ ভরা,
+চারপাশের IO আর margin-ও যোগ। **Utilization 62%** মানে core-এর ৬২% জায়গা cell দিয়ে ভরা,
 বাকি ৩৮% রাখা হয়েছে তার টানার (routing) ফাঁক হিসেবে — এটা স্বাস্থ্যকর। ১০০%-এর
 কাছাকাছি ভরে ফেললে routing-এ congestion হয়; আবার খুব কম হলে জায়গা নষ্ট। ৫০–৭০%
 সাধারণত আদর্শ অঞ্চল।
@@ -708,7 +708,7 @@ synthesis-কে বলে গতিকে সবার আগে রাখত�
 
 ### Reduce Area:
 
-chip TinyTapeout tile-এ আঁটছে না, বা ছোট করে fabrication খরচ বাঁচাতে চাও? তখন এগুলো।
+chip TinyTapeout tile-এ আঁটছে না, বা ছোট করে fabrication খরচ বাঁচাতে চাও? তাহলে এগুলো।
 
 ```tcl
 # Use smaller cells
