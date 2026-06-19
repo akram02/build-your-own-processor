@@ -214,10 +214,10 @@ metal-এর নিচে থাকে transistor বানানোর মূ�
 
 | Device layer | কাজ |
 |---|---|
-| N-diffusion | NMOS transistor-এর উৎস ও মুখ |
-| P-diffusion | PMOS transistor-এর উৎস ও মুখ |
+| N-diffusion | NMOS transistor-এর source ও drain |
+| P-diffusion | PMOS transistor-এর source ও drain |
 | Polysilicon | transistor-এর gate (যা switch নিয়ন্ত্রণ করে) |
-| N-well | PMOS-কে আলাদা রাখার অঞ্চল (isolation) |
+| N-well | PMOS transistor বসানোর n-type অঞ্চল |
 
 আর শুধু সাধারণ digital logic-ই নয়, Sky130-তে কিছু বিশেষ স্তর/device-ও আছে,
 যেগুলো analog আর high-voltage কাজের জন্য দরকার হয়:
@@ -282,7 +282,7 @@ gate-কেও তাই কয়েকভাবে বানানো হয�
 
 > 💡 শুরুতে এত variant নিয়ে মাথা ঘামিও না। **`sky130_fd_sc_hd` দিয়েই শুরু
 > করো** — পরে যখন timing বা power নিয়ে fine-tune করার দরকার হবে, তখন অন্য
-> library-র কথা ভাববে। এটাই reference হিসেবে রাখার আদর্শ উদাহরণ: জেনে রাখো
+> library-র কথা ভাববে। এটাই reference হিসেবে রাখার আদর্শ উদাহরণ: জেনে রাখো যে
 > আছে, দরকার হলে খুঁজে নেবে।
 
 ### Common Cells:
@@ -391,7 +391,7 @@ Sky130-তে যে transistor-গুলো simulate করার জন্য 
 | Parameter | কী বলে |
 |---|---|
 | Threshold voltage (Vth) | কত voltage দিলে transistor "চালু" হয় |
-| Mobility | charge কত সহজে গায়ের ভেতর চলে (গতির সাথে সম্পর্কিত) |
+| Mobility | charge কত সহজে material-এর ভেতর দিয়ে চলে (গতির সাথে সম্পর্কিত) |
 | Channel length modulation | চালু অবস্থায় current কতটা "নিখুঁত ধ্রুব" নয় |
 | Gate oxide thickness | gate-এর নিচের অন্তরক স্তরের পুরুত্ব (capacitance ঠিক করে) |
 | Junction capacitances | transistor-এর ভেতরের লুকানো capacitor (গতি কমায়) |
@@ -404,7 +404,7 @@ Sky130-তে যে transistor-গুলো simulate করার জন্য 
 
 নিচের ছোট্ট উদাহরণটা একটা **inverter** (NOT gate) — সবচেয়ে সরল CMOS circuit,
 একটা PMOS আর একটা NMOS মিলে তৈরি। এই কয়েক লাইনই SPICE-কে বলে দিচ্ছে কোন
-transistor কোথায় জোড়া, কোন model মানে, কী voltage দাও, আর কতক্ষণ ধরে হিসাব
+transistor কোথায় জোড়া, কোন model মেনে চলে, কী voltage দাও, আর কতক্ষণ ধরে হিসাব
 করো। লাইনগুলো পড়ার দরকার নেই মুখস্থ করার জন্য — শুধু দেখে নাও একটা SPICE
 file দেখতে কেমন হয়:
 
