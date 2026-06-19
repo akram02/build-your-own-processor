@@ -110,7 +110,7 @@ flowchart TD
 
 - **একই সময়ে instruction আর data আনা যায়** — দুটো আলাদা পথ থাকায় কোনো conflict নেই।
 - **বেশি bandwidth** — প্রতি cycle-এ বেশি কাজ এগোয়।
-- তাই DSP (Digital Signal Processor) আর অনেক microcontroller-এ Harvard ব্যবহার হয়, যেখানে গতিটা খুব জরুরি।
+- তাই DSP (Digital Signal Processor) আর অনেক microcontroller-এ Harvard ব্যবহার করা হয়, যেখানে গতিটা খুব জরুরি।
 
 আমরা এই বইয়ে একটা মাঝামাঝি পথ — **Modified Harvard** — বেছে নেব, যেটা আসলে দুই দুনিয়ার সেরাটা একসাথে দেয়:
 
@@ -232,7 +232,7 @@ flowchart LR
     ALU --> RF
 ```
 
-পাঁচটা অংশ: **PC, IR, Register File, ALU, Control Unit**। কঠিন তীরগুলো (data path) দেখাচ্ছে data কোন পথে বয়ে যায়, আর ফুটকি-তীরগুলো (control signals) দেখাচ্ছে control unit কীভাবে বাকিদের পরিচালনা করে। এই দুই ধরনের সংযোগের পার্থক্যটা মনে রাখা খুব জরুরি — data আর control আলাদা জিনিস।
+পাঁচটা অংশ: **PC, IR, Register File, ALU, Control Unit**। মোটা তীরগুলো (data path) দেখাচ্ছে data কোন পথে বয়ে যায়, আর ফুটকি-তীরগুলো (control signals) দেখাচ্ছে control unit কীভাবে বাকিদের পরিচালনা করে। এই দুই ধরনের সংযোগের পার্থক্যটা মনে রাখা খুব জরুরি — data আর control আলাদা জিনিস।
 
 ### ১. Program Counter (PC):
 
