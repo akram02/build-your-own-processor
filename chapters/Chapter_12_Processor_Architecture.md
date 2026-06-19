@@ -7,7 +7,7 @@
 
 ---
 
-## 🎯 এই Chapter এ তুমি শিখবে:
+## 🎯 এই Chapter-এ তুমি শিখবে:
 
 ```
 ✅ What is a Processor? - CPU fundamentals
@@ -17,7 +17,7 @@
 ✅ Simple CPU Design - 8-bit processor
 ✅ Register File - fast storage
 ✅ ALU Integration - arithmetic unit
-✅ তোমার নিজের processor এর architecture! 🎉
+✅ তোমার নিজের processor-এর architecture! 🎉
 ```
 
 **Time Required:** 1 week (5-6 hours/day)  
@@ -31,7 +31,7 @@
 
 এতদিন তুমি gate, adder, register, FSM — এগুলো আলাদা আলাদা বানিয়েছো। একটা **processor** হলো এই সবকিছুকে এমনভাবে জুড়ে দেওয়া যেন তারা একসাথে মিলে **memory-তে রাখা instruction পড়ে, একটার পর একটা চালিয়ে যায়**। অর্থাৎ processor কোনো জাদুর বাক্স নয় — তুমি এতদিন যা শিখেছো, তারই একটা সাজানো-গোছানো রূপ।
 
-একটা CPU কে মূলত তিন ভাগে ভাবলে সবচেয়ে সহজ হয়:
+একটা CPU-কে মূলত তিন ভাগে ভাবলে সবচেয়ে সহজ হয়:
 
 - **Datapath** — যেখানে আসল কাজটা হয়। এখানে থাকে register (data রাখার জায়গা), ALU (যোগ-বিয়োগ-AND-OR করার unit), আর multiplexer (কোন data কোথায় যাবে সেই রাস্তা ঠিক করার switch)। Datapath হলো processor-এর হাত-পা।
 - **Control Unit** — যে ঠিক করে দেয় কখন কী হবে। সে instruction পড়ে decode করে, তারপর datapath-এর প্রতিটা অংশকে control signal পাঠায়: "এখন ALU যোগ করবে", "এখন এই register-এ লিখবে"। Control unit হলো processor-এর মস্তিষ্ক।
@@ -89,7 +89,7 @@ flowchart TD
 
 - **Stored program** — program memory-তেই থাকে, তাই software পাল্টে computer-কে নতুন কাজ করানো যায়।
 - **একই memory-তে code আর data** — সরল ডিজাইন, কম তার, কম খরচ।
-- **Sequential execution** — instruction গুলো একটার পর একটা চলে, আমাদের চেনা fetch-decode-execute চক্র মেনে।
+- **Sequential execution** — instruction-গুলো একটার পর একটা চলে, আমাদের চেনা fetch-decode-execute চক্র মেনে।
 
 তবে একটা দুর্বলতাও আছে: যেহেতু instruction আর data একই রাস্তা (bus) দিয়ে যাতায়াত করে, processor একই সময়ে instruction **আর** data — দুটো আনতে পারে না। একটা আনতে গেলে অন্যটাকে দাঁড়িয়ে থাকতে হয়। এই সীমাবদ্ধতাটার নাম **"von Neumann bottleneck"**, আর এখান থেকেই পরের ধারণাটা জন্ম নেয়।
 
@@ -110,7 +110,7 @@ flowchart TD
 
 - **একই সময়ে instruction আর data আনা যায়** — দুটো আলাদা পথ থাকায় কোনো conflict নেই।
 - **বেশি bandwidth** — প্রতি cycle-এ বেশি কাজ এগোয়।
-- তাই DSP (Digital Signal Processor) আর অনেক microcontroller-এ Harvard ব্যবহার হয়, যেখানে গতিটা খুব জরুরি।
+- তাই DSP (Digital Signal Processor) আর অনেক microcontroller-এ Harvard ব্যবহার করা হয়, যেখানে গতিটা খুব জরুরি।
 
 আমরা এই বইয়ে একটা মাঝামাঝি পথ — **Modified Harvard** — বেছে নেব, যেটা আসলে দুই দুনিয়ার সেরাটা একসাথে দেয়:
 
@@ -151,7 +151,7 @@ flowchart LR
 
 ### RISC vs CISC:
 
-ISA নিয়ে গত কয়েক দশকে একটা বড় দার্শনিক বিতর্ক চলেছে: instruction গুলো কেমন হওয়া উচিত? দুটো ঘরানা আছে।
+ISA নিয়ে গত কয়েক দশকে একটা বড় দার্শনিক বিতর্ক চলেছে: instruction-গুলো কেমন হওয়া উচিত? দুটো ঘরানা আছে।
 
 **CISC (Complex Instruction Set Computer)** বলে — "একটা instruction দিয়েই অনেক কাজ করিয়ে নাও।" যেমন x86-এ এমন একটা instruction আছে যা একই সাথে memory থেকে data আনে, যোগ করে, আবার memory-তে ফেরত রাখে। সুবিধা: program ছোট হয়, compiler-এর কাজ সহজ। অসুবিধা: হার্ডওয়্যার জটিল, আর প্রতিটা instruction চালাতে কত সময় লাগবে তা আগে থেকে বলা কঠিন।
 
@@ -232,7 +232,7 @@ flowchart LR
     ALU --> RF
 ```
 
-পাঁচটা অংশ: **PC, IR, Register File, ALU, Control Unit**। কঠিন তীরগুলো (data path) দেখাচ্ছে data কোন পথে বয়ে যায়, আর ফুটকি-তীরগুলো (control signals) দেখাচ্ছে control unit কীভাবে বাকিদের পরিচালনা করে। এই দুই ধরনের সংযোগের পার্থক্যটা মনে রাখা খুব জরুরি — data আর control আলাদা জিনিস।
+পাঁচটা অংশ: **PC, IR, Register File, ALU, Control Unit**। মোটা তীরগুলো (data path) দেখাচ্ছে data কোন পথে বয়ে যায়, আর ফুটকি-তীরগুলো (control signals) দেখাচ্ছে control unit কীভাবে বাকিদের পরিচালনা করে। এই দুই ধরনের সংযোগের পার্থক্যটা মনে রাখা খুব জরুরি — data আর control আলাদা জিনিস।
 
 ### ১. Program Counter (PC):
 
@@ -298,7 +298,7 @@ wire [1:0] reg_b  = ir[1:0];
 
 ALU যখন যোগ করবে, তখন সংখ্যা দুটো কোথা থেকে আসবে? প্রতিবার ধীরগতির memory-তে যাওয়া অপচয় হবে। তাই processor-এর ভেতরেই অল্প কিছু অতি-দ্রুত storage রাখা হয় — এদের বলে **register**, আর এদের একসাথে রাখা সংগ্রহটাকে বলে **Register File**। এগুলো processor-এর হাতের নাগালে থাকা ছোট্ট workbench: যে data নিয়ে এখন কাজ হচ্ছে, তা এখানেই রাখা থাকে।
 
-একটা ব্যাপার খেয়াল করার মতো — এই register file-এ **দুটো read port আর একটা write port**। কেন দুটো read? কারণ `ADD R1, R2`-এর মতো instruction-এ ALU-র একই সময়ে **দুটো** operand লাগে, তাই দুটো register একসাথে পড়তে পারা চাই। আর read গুলো **combinational** (`assign` দিয়ে, সাথে সাথে মান পাওয়া যায়), কিন্তু write হয় **sequential** (`posedge clk`-এ, clock-এর ধারে)। এই পার্থক্যটা গুরুত্বপূর্ণ: তুমি যেকোনো মুহূর্তে register পড়তে পারো, কিন্তু নতুন মান লেখা হয় শুধু clock-এর টিক্-এ, আর তাও যখন `write_enable` চালু থাকে — অর্থাৎ আবারও control unit-ই ঠিক করে দেয় কখন লেখা হবে।
+একটা ব্যাপার খেয়াল করার মতো — এই register file-এ **দুটো read port আর একটা write port**। কেন দুটো read? কারণ `ADD R1, R2`-এর মতো instruction-এ ALU-র একই সময়ে **দুটো** operand লাগে, তাই দুটো register একসাথে পড়তে পারা চাই। আর read-গুলো **combinational** (`assign` দিয়ে, সাথে সাথে মান পাওয়া যায়), কিন্তু write হয় **sequential** (`posedge clk`-এ, clock-এর ধারে)। এই পার্থক্যটা গুরুত্বপূর্ণ: তুমি যেকোনো মুহূর্তে register পড়তে পারো, কিন্তু নতুন মান লেখা হয় শুধু clock-এর টিক্-এ, আর তাও যখন `write_enable` চালু থাকে — অর্থাৎ আবারও control unit-ই ঠিক করে দেয় কখন লেখা হবে।
 
 ```verilog
 // Register File - fast storage
@@ -861,7 +861,7 @@ IPS = 27,000,000 / 5
 - [ ] একটা সহজ program দিয়ে test করো
 
 **Day 7 — Testing:** সব মিলিয়ে কাজ করছে কিনা যাচাই।
-- [ ] sample program গুলো চালাও
+- [ ] sample program-গুলো চালাও
 - [ ] যেখানে আটকায় সেখানে debug করো
 - [ ] waveform দেখে বিশ্লেষণ করো
 - [ ] কী শিখলে লিখে রাখো

@@ -3,11 +3,11 @@
 
 > **"You built a computer. Now learn the FUTURE. Welcome to the bleeding edge!"**
 >
-> **"তুমি computer বানিয়েছো। এবার FUTURE শেখো। Bleeding edge এ স্বাগতম!"**
+> **"তুমি computer বানিয়েছো। এবার FUTURE শেখো। Bleeding edge-এ স্বাগতম!"**
 
 ---
 
-## 🎯 এই Chapter এ তুমি শিখবে:
+## 🎯 এই Chapter-এ তুমি শিখবে:
 
 ```
 ✅ Superscalar Execution - multiple instructions/cycle
@@ -17,7 +17,7 @@
 ✅ Multi-Core Systems - thread-level parallelism
 ✅ GPU Architecture - massive parallelism
 ✅ Future Directions - quantum, neuromorphic
-✅ তোমার journey complete! 🎉
+✅ তোমার design journey সম্পূর্ণ! 🎉
 ```
 
 **Time Required:** 1-2 weeks (self-paced learning)  
@@ -85,7 +85,7 @@ But same principles! 🚀
 এই তালিকাটা ভয় পাওয়ার মতো লাগতে পারে, কিন্তু একটা কথা মনে রাখো: এর
 প্রতিটা trick-এর পেছনে একটাই সহজ লক্ষ্য — **কোনো cycle যেন বসে বসে নষ্ট না
 হয়** (keep the hardware busy)। তোমার pipeline-এ stall হলে যেমন cycle নষ্ট
-হতো, modern CPU সেই নষ্ট cycle-গুলো একে একে উদ্ধার করার গল্প। আমরা এক এক করে
+হতো, modern CPU হলো সেই নষ্ট cycle-গুলো একে একে উদ্ধার করার গল্প। আমরা এক এক করে
 দেখব কীভাবে।
 
 🎉 **This chapter = Understanding modern CPUs!**
@@ -348,7 +348,7 @@ modern CPU branch prediction-এ বিপুল hardware ঢালে।
 
 ### Prediction Techniques:
 
-#### 1. Two-Bit Saturating Counter — এক ভুলে মত বদলায় না:
+#### 1. Two-Bit Saturating Counter — এক ভুলেই মত বদলায় না:
 
 ১-bit predictor-এর সমস্যা: একটা loop-এর শেষ iteration-এ একবার ভুল হলেই সে
 পুরো মত বদলে ফেলে, ফলে পরের loop-এর শুরুতেও আবার ভুল করে — অর্থাৎ একটা ভুলে
@@ -795,7 +795,7 @@ Massive parallelism! 🚀
 শুধু একটামাত্র যোগ (`c[i] = a[i] + b[i]`) লিখেছ, আর `i = blockIdx.x *
 blockDim.x + threadIdx.x` লাইনটা প্রতিটা thread-কে তার নিজের অনন্য index দিয়ে
 দিচ্ছে। হাজার thread একসাথে চালালে প্রতিটা array-র আলাদা element সারে — Chapter
-20.4-এর সেই scalar loop এখানে hardware-এর সমান্তরালতায় গলে গেছে। **Massive
+২০.৪-এর সেই scalar loop এখানে hardware-এর সমান্তরালতায় গলে গেছে। **Massive
 parallelism!** 🚀
 
 ---
@@ -1014,8 +1014,7 @@ INCREDIBLE KNOWLEDGE! 🏆
 The world is yours! 🌍
 ```
 
-একটা পরামর্শ: চারটে একসাথে করতে যেও না। যেটা তোমার বুকে সবচেয়ে বেশি ধাক্কা
-দিয়েছে — হয়তো branch predictor বানানোর ইচ্ছা, হয়তো নিজের ছোট্ট GPU-র স্বপ্ন
+একটা পরামর্শ: চারটে একসাথে করতে যেও না। যেটা তোমাকে সবচেয়ে বেশি টানে — হয়তো branch predictor বানানোর ইচ্ছা, হয়তো নিজের ছোট্ট GPU-র স্বপ্ন
 — সেই একটা জিনিস বেছে নাও আর সেটাই শেষ পর্যন্ত বানাও। একটা শেষ-করা ছোট প্রকল্প
 দশটা অর্ধেক-করা ধারণার চেয়ে অনেক বেশি শেখায়।
 
@@ -1117,7 +1116,7 @@ YOU HAVE THE SKILLS! 💼✅
 
 ---
 
-## ২০.১০ The End... and Beginning!
+## ২০.১০ Design শেষ — এবার আসল Silicon!
 
 ### Chapter 20 Mission Complete!
 
@@ -1125,11 +1124,10 @@ YOU HAVE THE SKILLS! 💼✅
 ✅ Advanced topics learned
 ✅ Modern techniques understood
 ✅ Future directions explored
-✅ Complete book finished!
+✅ Design journey complete!
 
-20 Chapters complete! 🎊
-100% done! 🎉
-Your journey complete! 🏆
+20 of 25 chapters done — 80%! 🎊
+Next: real silicon (Ch 21-25)! 🚀
 ```
 
 ### Design Complete — A Huge Milestone!

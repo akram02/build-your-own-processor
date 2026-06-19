@@ -7,7 +7,7 @@
 
 ---
 
-## 🎯 এই Chapter এ তুমি বানাবে:
+## 🎯 এই Chapter-এ তুমি বানাবে:
 
 ```
 ✅ Data Hazard Detection - find dependencies
@@ -25,7 +25,7 @@
 
 ---
 
-## 🚀 Quick Understanding - Pipeline এর আসল সমস্যা!
+## 🚀 Quick Understanding - Pipeline-এর আসল সমস্যা!
 
 Chapter 16-এ তুমি pipeline বানিয়েছিলে — পাঁচটা instruction পাশাপাশি, প্রতি cycle-এ একটা করে শেষ হচ্ছে, কাগজে-কলমে ৫× speedup। কিন্তু একটা সমস্যা চাপা পড়ে ছিল: ওই pipeline ধরে নিয়েছিল প্রতিটা instruction তার আগেরটার থেকে সম্পূর্ণ স্বাধীন। **আসল program কখনো এমন হয় না।**
 
@@ -197,7 +197,7 @@ Forwarding-এর পুরো ধারণাটা এক বাক্যে: 
 |--------|------|---------------------|--------------|
 | `2'b00` | Register file | স্বাভাবিক পড়া | কোনো hazard নেই |
 | `2'b01` | MEM/WB register | দুই-আগের instruction-এর result | MEM hazard |
-| `2'b10` | EX/MEM register | ঠিক-আগের instruction-এর result | EX hazard |
+| `2'b10` | EX/MEM register | ঠিক আগের instruction-এর result | EX hazard |
 
 দুটো হিসাব মিলে গেলে কে জেতে? **EX/MEM (`2'b10`)** — কারণ একই register দুবার লেখা হলে সবচেয়ে নতুন (ঠিক আগেরটা) মানই সঠিক। উপরের কোডে EX/MEM-এর শর্তটা আগে আসে বলে এই priority নিজে থেকেই বজায় থাকে।
 

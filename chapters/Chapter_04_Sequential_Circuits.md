@@ -1,5 +1,5 @@
 # 🔄 Chapter 4: Build Your Own Memory Circuits
-## Flip-Flops থেকে FSM - তোমার Processor কে Memory দাও!
+## Flip-Flops থেকে FSM - তোমার Processor-কে Memory দাও!
 
 > **"Combinational circuits compute. Sequential circuits remember. Time to add memory!"**
 >
@@ -7,7 +7,7 @@
 
 ---
 
-## 🎯 এই Chapter এ তুমি বানাবে:
+## 🎯 এই Chapter-এ তুমি বানাবে:
 
 আগের chapter-এ তুমি এমন circuit বানিয়েছিলে যেগুলো শুধু *হিসাব* করতে পারে — input দিলে output দেয়, ব্যস। কিন্তু একটা সমস্যা ছিল: তারা কিছুই *মনে রাখতে* পারে না। একটা calculator যদি আগের সংখ্যাটা ভুলে যায়, তাহলে যোগ করবে কী করে? এই chapter-এ আমরা circuit-কে স্মৃতি (memory) দেব। আর স্মৃতি পাওয়া মানেই — তোমার processor-এর জন্মের প্রথম শ্বাস।
 
@@ -20,7 +20,7 @@
 ✅ 4-bit Register - data storage
 ✅ Shift Register - data mover
 ✅ Counter - number generator
-✅ Finite State Machine - তোমার processor এর control! 🎉
+✅ Finite State Machine - তোমার processor-এর control! 🎉
 ```
 
 **Time Required:** 2 weeks (3-4 hours/day)  
@@ -34,7 +34,7 @@
 
 ### এখনই বানাও - SR Latch:
 
-**যাও CircuitVerse.org এ এবং:**
+**যাও CircuitVerse.org-এ এবং:**
 
 ```
 Components:
@@ -65,7 +65,7 @@ Test:
 
 🎉 **Congratulations! তুমি একটা memory element বানিয়েছো!**
 
-**এটাই তোমার processor এর register এর foundation!** তোমার CPU-র ভেতরে যে ৩২টা register data ধরে রাখে, তাদের প্রত্যেকটা bit এই একই ধারণার উপর দাঁড়িয়ে আছে — শুধু আরও পরিশীলিত রূপে।
+**এটাই তোমার processor-এর register-এর foundation!** তোমার CPU-র ভেতরে যে ৩২টা register data ধরে রাখে, তাদের প্রত্যেকটা bit এই একই ধারণার উপর দাঁড়িয়ে আছে — শুধু আরও পরিশীলিত রূপে।
 
 ---
 
@@ -102,10 +102,10 @@ flowchart LR
 প্রশ্ন আসতেই পারে — "শুধু হিসাব করতে পারলেই তো হতো, মনে রাখার দরকার কী?" উত্তরটা হলো: মনে রাখতে না পারলে **কোনো processor-ই বানানো যায় না**। ভেবে দেখো —
 
 ```
-Processor এ দরকার:
+Processor-এ দরকার:
 ✅ Registers - data store করতে
 ✅ Program Counter - next instruction track করতে
-✅ State machines - control logic এর জন্য
+✅ State machines - control logic-এর জন্য
 ✅ Memory - data remember করতে
 
 Without Sequential = No Processor!
@@ -127,14 +127,14 @@ Clock (CLK):
 
 Everything happens at clock edges!
 
-Rising Edge:  ─┐ (0→1)
-              └
-              
-Falling Edge:   ┌─ (1→0)
+Rising Edge:    ┌─ (0→1)
               ──┘
+              
+Falling Edge: ─┐ (1→0)
+               └
 ```
 
-দুটো শব্দ মনে রাখো — **rising edge** (0→1, যখন signal উপরে উঠছে) আর **falling edge** (1→0, যখন নিচে নামছে)। আমাদের বেশিরভাগ circuit rising edge-এ কাজ করবে। প্রতি edge-এ flip-flop গুলো একসাথে "ছবি তোলে" — সেই মুহূর্তের input ধরে রাখে, আর পরের edge পর্যন্ত সেই মানেই স্থির থাকে। এই তালে চলাকেই বলে **synchronous** design, আর এটাই নির্ভরযোগ্য circuit বানানোর সবচেয়ে গুরুত্বপূর্ণ অভ্যাস।
+দুটো শব্দ মনে রাখো — **rising edge** (0→1, যখন signal উপরে উঠছে) আর **falling edge** (1→0, যখন নিচে নামছে)। আমাদের বেশিরভাগ circuit rising edge-এ কাজ করবে। প্রতি edge-এ flip-flop-গুলো একসাথে "ছবি তোলে" — সেই মুহূর্তের input ধরে রাখে, আর পরের edge পর্যন্ত সেই মানেই স্থির থাকে। এই তালে চলাকেই বলে **synchronous** design, আর এটাই নির্ভরযোগ্য circuit বানানোর সবচেয়ে গুরুত্বপূর্ণ অভ্যাস।
 
 ---
 
@@ -199,7 +199,7 @@ Invalid state: Both outputs try to be 0!
 
 ### Using NAND Gates:
 
-একই latch দুটো NAND gate দিয়েও বানানো যায়। গঠন প্রায় একই — সেই cross-coupled feedback — কিন্তু একটা মোচড় আছে: এখানে input গুলো **active LOW**, অর্থাৎ কাজটা ঘটে input 1 নয়, 0 দিলে।
+একই latch দুটো NAND gate দিয়েও বানানো যায়। গঠন প্রায় একই — সেই cross-coupled feedback — কিন্তু একটা মোচড় আছে: এখানে input-গুলো **active LOW**, অর্থাৎ কাজটা ঘটে input 1 নয়, 0 দিলে।
 
 **Circuit:**
 ```
@@ -427,7 +427,7 @@ CLK-এর পাশে ওই ছোট্ট ত্রিভুজ চিহ�
 
 **Timing Diagram:**
 
-এবার rising-edge flip-flop-এর waveform দেখো। নিচের তীরগুলো (↑) দেখাচ্ছে rising edge গুলো কোথায়। লক্ষ করো — Q **শুধুমাত্র** ওই তীরের মুহূর্তগুলোতেই পাল্টায়, আর edge-এর ঠিক ওই মুহূর্তে D-র যা মান, Q সেটাই ধরে রাখে। edge-গুলোর মাঝখানে D যতই কাঁপুক, Q ঘুরেও তাকায় না।
+এবার rising-edge flip-flop-এর waveform দেখো। নিচের তীরগুলো (↑) দেখাচ্ছে rising edge-গুলো কোথায়। লক্ষ করো — Q **শুধুমাত্র** ওই তীরের মুহূর্তগুলোতেই পাল্টায়, আর edge-এর ঠিক ওই মুহূর্তে D-র যা মান, Q সেটাই ধরে রাখে। edge-গুলোর মাঝখানে D যতই কাঁপুক, Q ঘুরেও তাকায় না।
 
 ```
 CLK  ───┐   ┌───┐   ┌───┐
@@ -560,7 +560,7 @@ J=1, K=1: Toggle → Frequency divider, counters
 5. Test all 4 modes!
 ```
 
-চারটে মোডই আলাদা করে পরীক্ষা করো — বিশেষ করে Toggle মোডটা দুবার চালাও (একবার Q=0 থেকে, একবার Q=1 থেকে) যাতে দুদিকেই উল্টানো দেখতে পাও। নিচের test গুলো প্রতিটা মোডের একটা করে নমুনা:
+চারটে মোডই আলাদা করে পরীক্ষা করো — বিশেষ করে Toggle মোডটা দুবার চালাও (একবার Q=0 থেকে, একবার Q=1 থেকে) যাতে দুদিকেই উল্টানো দেখতে পাও। নিচের test-গুলো প্রতিটা মোডের একটা করে নমুনা:
 
 **Test All Modes:**
 ```
@@ -774,7 +774,7 @@ D0 ─[MUX]─[D FF]─ Q0
 5. Test load and hold!
 ```
 
-নিচের test case গুলো একটা একটা করে চালাও। বিশেষ করে Test 2-তে মন দাও — সেখানে EN=0, তাই D-তে নতুন `0101` দিলেও register আগের `1010`-ই ধরে রাখছে। এই "ইচ্ছেমতো ধরে রাখা" ক্ষমতাই register-কে সত্যিকারের কাজের করে তোলে।
+নিচের test case-গুলো একটা একটা করে চালাও। বিশেষ করে Test 2-তে মন দাও — সেখানে EN=0, তাই D-তে নতুন `0101` দিলেও register আগের `1010`-ই ধরে রাখছে। এই "ইচ্ছেমতো ধরে রাখা" ক্ষমতাই register-কে সত্যিকারের কাজের করে তোলে।
 
 **Test Cases:**
 ```
@@ -871,7 +871,7 @@ Serial In ─[D FF]─[D FF]─[D FF]─[D FF]
                Parallel Output
 ```
 
-এটা ঠিক একটা **serial-to-parallel converter** — এক তার দিয়ে আসা bit গুলো জমিয়ে একটা পূর্ণ সংখ্যায় রূপ দেয়।
+এটা ঠিক একটা **serial-to-parallel converter** — এক তার দিয়ে আসা bit-গুলো জমিয়ে একটা পূর্ণ সংখ্যায় রূপ দেয়।
 
 **Application:** Serial to Parallel converter (UART receiver)
 
@@ -929,7 +929,7 @@ Mode Control (2 bits):
 5. Test serial data transmission!
 ```
 
-নিচের test-এ আমরা `1101` পাঠাচ্ছি — একটা একটা bit করে, চার clock-এ। প্রতিটা clock-এর পর parallel output-এর দিকে তাকাও, দেখো কীভাবে bit গুলো জমা হচ্ছে। চার নম্বর clock-এ পুরো `1101` register-এ বসে গেছে — মানে পুরো byte সফলভাবে "received"!
+নিচের test-এ আমরা `1101` পাঠাচ্ছি — একটা একটা bit করে, চার clock-এ। প্রতিটা clock-এর পর parallel output-এর দিকে তাকাও, দেখো কীভাবে bit-গুলো জমা হচ্ছে। চার নম্বর clock-এ পুরো `1101` register-এ বসে গেছে — মানে পুরো byte সফলভাবে "received"!
 
 **Test Serial Data:**
 ```
@@ -1162,7 +1162,7 @@ FSM = Finite State Machine
 - Transitions based on inputs
 - Outputs based on state
 
-তোমার processor এর control unit = FSM!
+তোমার processor-এর control unit = FSM!
 ```
 
 তিনটে শব্দ গেঁথে নাও — **states** (সীমিত কয়েকটা অবস্থা), **transitions** (input অনুযায়ী এক অবস্থা থেকে আরেকটায় যাওয়া), আর **outputs** (অবস্থা অনুযায়ী কী ঘটবে)। আর সবচেয়ে বড় কথাটা ওই শেষ লাইনে — **তোমার processor-এর control unit একটা FSM**। CPU যখন instruction চালায়, সে fetch → decode → execute — এই states-এর মধ্যে ঘোরে, ঠিক একটা FSM-এর মতো। তাই FSM শেখা মানে তুমি কার্যত তোমার future CPU-র মস্তিষ্কটা শিখছ।
@@ -1196,7 +1196,7 @@ S2: Green (25 sec)
 
 **State Diagram:**
 
-এই state গুলো কীভাবে এক থেকে আরেকটায় যায় তা একটা **state diagram** দিয়ে দেখানো হয়। প্রতিটা বৃত্ত (বা গোল box) একটা state, আর তীরগুলো দেখায় কোন শর্তে কোথায় যাওয়া হবে। timer শেষ হলেই FSM পরের state-এ লাফ দেয় — নিচের State Table হুবহু যা বলছে, ঠিক সেই ক্রমেই:
+এই state-গুলো কীভাবে এক থেকে আরেকটায় যায় তা একটা **state diagram** দিয়ে দেখানো হয়। প্রতিটা বৃত্ত (বা গোল box) একটা state, আর তীরগুলো দেখায় কোন শর্তে কোথায় যাওয়া হবে। timer শেষ হলেই FSM পরের state-এ লাফ দেয় — নিচের State Table হুবহু যা বলছে, ঠিক সেই ক্রমেই:
 
 ```mermaid
 stateDiagram-v2
@@ -1238,7 +1238,7 @@ state diagram-টাকেই আরও নিখুঁতভাবে লেখ
 
 খেয়াল করো recipe-টার সুর — প্রথমে তুমি *ভাবো* (states ঠিক করো, diagram আঁকো), তারপর সেটাকে *আনুষ্ঠানিক* করো (table বানাও, binary code দাও), তারপর সেটাকে *hardware*-এ নামাও (logic বের করো, circuit বানাও)। ধারণা থেকে বাস্তবে যাওয়ার এই পথটাই সব digital design-এর মূল।
 
-### Example: 2-bit Sequence Detector (101)
+### Example: Sequence Detector (101)
 
 এবার একটা সত্যিকারের, ভীষণ ক্লাসিক FSM বানাই — একটা **sequence detector** যা serial input-এ "101" pattern খোঁজে। যতবার "101" আসবে, ততবার output 1 দেবে। এটা Mealy machine (কারণ output state আর input — দুটোর উপর নির্ভর করবে)।
 
@@ -1254,7 +1254,7 @@ S2: Got "10"
 S3: Got "101" (detected!)
 ```
 
-state গুলোর অর্থ বুঝে নাও — এগুলো আসলে "অগ্রগতির মাইলফলক"। S0 = এখনো কিছু মেলেনি; S1 = একটা `1` পেয়েছি (pattern-এর শুরু); S2 = `10` পেয়েছি (দুই-তৃতীয়াংশ পথ); S3 = `101` সম্পূর্ণ, পেয়ে গেছি! এভাবে state দিয়ে "এতদূর এসেছি" মনে রাখাটাই FSM-এর আসল কৌশল।
+state-গুলোর অর্থ বুঝে নাও — এগুলো আসলে "অগ্রগতির মাইলফলক"। S0 = এখনো কিছু মেলেনি; S1 = একটা `1` পেয়েছি (pattern-এর শুরু); S2 = `10` পেয়েছি (দুই-তৃতীয়াংশ পথ); S3 = `101` সম্পূর্ণ, পেয়ে গেছি! এভাবে state দিয়ে "এতদূর এসেছি" মনে রাখাটাই FSM-এর আসল কৌশল।
 
 **State Diagram:**
 
@@ -1286,7 +1286,7 @@ diagram-টা একটু সময় নিয়ে পড়ো — প্
 | S1 | 0 | S2 | 0 |
 | S1 | 1 | S1 | 0 |
 | S2 | 0 | S0 | 0 |
-| S2 | 1 | S3 | 1 | ← **Detected!** |
+| S2 | 1 | S3 | **1** ← Detected! |
 | S3 | 0 | S2 | 0 |
 | S3 | 1 | S1 | 0 |
 
@@ -1294,7 +1294,7 @@ diagram-টা একটু সময় নিয়ে পড়ো — প্
 
 **State Encoding:**
 
-hardware-এ state গুলোকে binary number হিসেবে রাখতে হবে। ৪টা state-এর জন্য ২টা bit যথেষ্ট (Q1 Q0):
+hardware-এ state-গুলোকে binary number হিসেবে রাখতে হবে। ৪টা state-এর জন্য ২টা bit যথেষ্ট (Q1 Q0):
 
 | State | Q1 Q0 |
 |-------|-------|
@@ -1319,7 +1319,7 @@ Q1 Q0 ──┘                      └── D0  ├─[2 D-FFs]─ Q1 Q0
                               Output ──┴── [Output Logic]
 ```
 
-পুরো ছবিটা মেলাও — এটাই তো sequential circuit-এর সেই মূল কাঠামো যা দিয়ে আমরা chapter শুরু করেছিলাম! flip-flop গুলো memory (বর্তমান state রাখে), combinational logic হিসাব করে (পরের state আর output ঠিক করে), আর feedback (Q1 Q0 ঘুরে next-state logic-এ ফিরে যাওয়া) অতীতকে বর্তমানে নিয়ে আসে। তুমি এখন বুঝতে পারছ — চারটে সরল উপাদান (memory, logic, feedback, clock) দিয়ে কীভাবে একটা "বুদ্ধিমান" যন্ত্র তৈরি হয়।
+পুরো ছবিটা মেলাও — এটাই তো sequential circuit-এর সেই মূল কাঠামো যা দিয়ে আমরা chapter শুরু করেছিলাম! flip-flop-গুলো memory (বর্তমান state রাখে), combinational logic হিসাব করে (পরের state আর output ঠিক করে), আর feedback (Q1 Q0 ঘুরে next-state logic-এ ফিরে যাওয়া) অতীতকে বর্তমানে নিয়ে আসে। তুমি এখন বুঝতে পারছ — চারটে সরল উপাদান (memory, logic, feedback, clock) দিয়ে কীভাবে একটা "বুদ্ধিমান" যন্ত্র তৈরি হয়।
 
 ### 🎯 Build FSM Project:
 
@@ -1398,7 +1398,7 @@ position 4-এ প্রথম "101" ধরা পড়ল (২য়-৩য়
 
 ### Week 2: Sequential Systems
 
-দ্বিতীয় সপ্তাহে আমরা এই memory element গুলো জুড়ে বড় system বানাবো — shift register, counter, আর সবশেষে সেই মুকুট-রত্ন FSM।
+দ্বিতীয় সপ্তাহে আমরা এই memory element-গুলো জুড়ে বড় system বানাবো — shift register, counter, আর সবশেষে সেই মুকুট-রত্ন FSM।
 
 **Day 8-9: Shift Registers**
 ```
@@ -1432,7 +1432,7 @@ position 4-এ প্রথম "101" ধরা পড়ল (২য়-৩য়
 
 ## ৪.১২ Timing Parameters - Critical!
 
-এতক্ষণ আমরা ধরে নিয়েছি flip-flop ঠিক সময়ে নিখুঁতভাবে কাজ করে। কিন্তু বাস্তবে — বিশেষ করে FPGA বা chip-এ — সময়ের কিছু কঠোর নিয়ম মানতে হয়, না হলে circuit ভুল করবে। এই timing parameter গুলো বোঝা একজন শৌখিন আর একজন পেশাদার designer-এর মধ্যে পার্থক্য গড়ে দেয়। তাই মন দিয়ে পড়ো।
+এতক্ষণ আমরা ধরে নিয়েছি flip-flop ঠিক সময়ে নিখুঁতভাবে কাজ করে। কিন্তু বাস্তবে — বিশেষ করে FPGA বা chip-এ — সময়ের কিছু কঠোর নিয়ম মানতে হয়, না হলে circuit ভুল করবে। এই timing parameter-গুলো বোঝা একজন শৌখিন আর একজন পেশাদার designer-এর মধ্যে পার্থক্য গড়ে দেয়। তাই মন দিয়ে পড়ো।
 
 মূল কথাটা হলো — flip-flop যখন clock edge-এ data-র "ছবি তোলে", তখন data-কে সেই মুহূর্তের আশেপাশে কিছুটা সময় **স্থির** থাকতে হয়। ঠিক যেমন ক্যামেরায় পরিষ্কার ছবি তুলতে subject-কে শাটার খোলার আগে-পরে একটু স্থির থাকতে হয়।
 
@@ -1492,12 +1492,12 @@ Q changes Tpd after the clock edge — not instantly!
 এবার আসল প্রশ্ন — তোমার circuit কত দ্রুত clock চালাতে পারবে? এটাই ঠিক করে দেয় তোমার processor কত MHz-এ চলবে! সূত্রটা সরল যুক্তির উপর দাঁড়িয়ে: এক clock cycle-এর মধ্যে তিনটে কাজ শেষ হতে হবে — (১) output বেরোতে হবে (Tpd / clock-to-q), (২) signal-টা পরের flip-flop পর্যন্ত যেতে হবে, আর (৩) সেখানে setup time-ও মানতে হবে। এই সব সময় যোগ করে যত পাও, এক cycle অন্তত তত লম্বা হতে হবে।
 
 ```
-Fmax = 1 / (Tpd + Tsu + Tclk-to-q)
+Fmax = 1 / (Tpd + Tcomb + Tsu)
 
 Example:
-Tpd = 10ns
-Tsu = 5ns  
-Tclk-to-q = 5ns
+Tpd (clock-to-Q) = 5ns
+Tcomb (signal path) = 10ns
+Tsu (setup) = 5ns
 
 Fmax = 1/(20ns) = 50 MHz
 ```
@@ -1569,7 +1569,7 @@ Fmax = 1/(20ns) = 50 MHz
 ✅ Design counters (up, down, BCD)
 ✅ Create finite state machines
 ✅ Understand timing parameters
-✅ তোমার processor এ memory এবং control logic যোগ করা!
+✅ তোমার processor-এ memory এবং control logic যোগ করা!
 ```
 
 ### তুমি বানিয়েছো:
@@ -1629,7 +1629,7 @@ Bonus:
 - Share your design!
 ```
 
-এই project-টা পুরোপুরি তোমার শেখা FSM design steps মেনেই করো — states ঠিক করো, diagram আঁকো, table বানাও, তারপর hardware। আর bonus গুলোতে হাত দিলে তুমি টের পাবে একটা সাধারণ FSM-কে কত সহজে আরও বুদ্ধিমান করে তোলা যায়। পারলে তোমার design শেয়ার করো — অন্যরা অনুপ্রাণিত হবে!
+এই project-টা পুরোপুরি তোমার শেখা FSM design steps মেনেই করো — states ঠিক করো, diagram আঁকো, table বানাও, তারপর hardware। আর bonus-গুলোতে হাত দিলে তুমি টের পাবে একটা সাধারণ FSM-কে কত সহজে আরও বুদ্ধিমান করে তোলা যায়। পারলে তোমার design শেয়ার করো — অন্যরা অনুপ্রাণিত হবে!
 
 ---
 
@@ -1664,7 +1664,7 @@ Next: Chapter 5 - Learn to Code Hardware!
 
 **"You just gave your processor memory and control. Next, you'll code it!"**
 
-**"তুমি তোমার processor কে memory এবং control দিয়েছো। এবার code করবে!"**
+**"তুমি তোমার processor-কে memory এবং control দিয়েছো। এবার code করবে!"**
 
 Made with ❤️ for builders | বানানোর জন্য ভালোবাসা দিয়ে তৈরি
 

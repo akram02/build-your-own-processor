@@ -7,7 +7,7 @@
 
 ---
 
-## 🎯 এই Chapter এ তুমি বানাবে:
+## 🎯 এই Chapter-এ তুমি বানাবে:
 
 ```
 ✅ UART (Serial Communication) - talk to computer
@@ -58,7 +58,7 @@ CPU একা যথেষ্ট নয়!
 সময় গোনে, Interrupt Controller জরুরি ঘটনা ঘটলে CPU-কে খবর দেয়। আর এই সব কিছুকে
 একসাথে জুড়ে রাখে একটা **bus** — তথ্যের রাজপথ।
 
-> 💡 **মূল intuition:** CPU হলো মাথা, peripheral গুলো হলো ইন্দ্রিয়, আর bus হলো
+> 💡 **মূল intuition:** CPU হলো মাথা, peripheral-গুলো হলো ইন্দ্রিয়, আর bus হলো
 > স্নায়ুতন্ত্র (nervous system) — যেটা মাথা থেকে ইন্দ্রিয়ে আর ইন্দ্রিয় থেকে
 > মাথায় সংকেত বয়ে নিয়ে যায়। এই তিনটা একসাথে হলেই কেবল একটা জড় চিপ "জীবন্ত
 > computer" হয়ে ওঠে।
@@ -139,7 +139,7 @@ flowchart TB
 ```
 
 > 💡 এই ছবিটা পুরো chapter-এর **মানচিত্র**। প্রতিটা section-এ আমরা এই ছবির একটা
-> করে box-এর ভেতরে ঢুকব: প্রথমে peripheral গুলো (UART, GPIO, Timer, IntC),
+> করে box-এর ভেতরে ঢুকব: প্রথমে peripheral-গুলো (UART, GPIO, Timer, IntC),
 > তারপর bus, তারপর সব কিছু এক জায়গায় জোড়া লাগিয়ে পূর্ণ SoC। যখনই হারিয়ে যাবে
 > মনে হবে, এই ছবিতে ফিরে এসো — দেখো এখন কোন box-এ আছো।
 
@@ -171,14 +171,14 @@ memory-তেই লিখছে; কিন্তু আসলে সে এক�
 
 Memory-র মতো করেই access করো:
 LW x5, 0x10001000(x0)  # UART পড়ো
-SW x6, 0x10000000(x0)  # GPIO তে লেখো
+SW x6, 0x10000000(x0)  # GPIO-তে লেখো
 
 সহজ! Unified! শক্তিশালী!
 ```
 
 পুরো **address map** টা একটা পরিষ্কার table-এ দেখি। প্রতিটা সারি একটা করে
 ঠিকানার পরিসর (range), আর প্রতিটা পরিসর একটা নির্দিষ্ট জিনিসের দখলে। খেয়াল
-করো — memory আছে নিচের দিকে (`0x0...`) আর peripheral গুলো অনেক উঁচুতে
+করো — memory আছে নিচের দিকে (`0x0...`) আর peripheral-গুলো অনেক উঁচুতে
 (`0x1000_0000` থেকে)। এই ফাঁকটা ইচ্ছে করেই রাখা, যাতে address decode করা সহজ হয়:
 
 | Address পরিসর (range) | আকার | কে দখল করে আছে | কাজ |
@@ -191,7 +191,7 @@ SW x6, 0x10000000(x0)  # GPIO তে লেখো
 | `0x10003000 – 0x10003FFF` | 4 KB | **Interrupt Ctrl** | কোন peripheral CPU-কে ডাকছে |
 
 > 💡 **চাবিকাঠি:** ঠিকানার উপরের কয়েকটা bit দেখেই বলে দেওয়া যায় কথাটা কার জন্য।
-> ঠিকানা `0x1000_0000`-এর নিচে হলে → memory; তা না হলে দ্বিতীয় hex digit বলে দেয়
+> ঠিকানা `0x1000_0000`-এর নিচে হলে → memory; তা না হলে `0x1000_X000`-এর X-অঙ্কটা (ঠিকানার `[15:12]` bit) বলে দেয়
 > কোন peripheral (`0`=GPIO, `1`=UART, `2`=Timer, `3`=IntC)। এই "ঠিকানা দেখে
 > গন্তব্য ঠিক করা"-র কাজটাই হলো **address decoding**, যেটা bus করে — section ১৯.৫-এ
 > বিস্তারিত দেখব।
@@ -223,8 +223,8 @@ UART-এর পুরো নাম **Universal Asynchronous Receiver/Transmitter
 একটা চিঠির খামের সাথে তুলনা করো। লাইন স্বাভাবিক অবস্থায় থাকে high (১)। transmit
 শুরু হলে প্রথমে যায় একটা **start bit** (০) — "সাবধান, বার্তা আসছে!"। তারপর ৮টা
 **data bit** (আসল বাইট)। শেষে একটা **stop bit** (১) — "শেষ হলো"। receiver
-start bit-এর পতন (high→low) দেখে জেগে ওঠে, তারপর baud rate ধরে ঠিক সময়ে সময়ে
-bit গুলো পড়ে নেয়।
+start bit-এর পতন (high→low) দেখে জেগে ওঠে, তারপর baud rate ধরে ঠিক সময়মতো
+bit-গুলো পড়ে নেয়।
 
 ```
 UART = Serial communication
@@ -248,7 +248,7 @@ UART-এর ভেতরে তিনটা আলাদা যন্ত্র �
 |---|---|
 | **Baud rate generator** | ঠিক গতিতে "tick" বানায় — প্রতি bit-এর সময় মেপে দেয় |
 | **Transmitter (TX)** | বাইটটাকে start + ৮ data + stop bit-এ সাজিয়ে একটা একটা করে বের করে দেয় |
-| **Receiver (RX)** | লাইন থেকে আসা bit গুলো শুনে আবার একটা পূর্ণ বাইটে জোড়া লাগায় |
+| **Receiver (RX)** | লাইন থেকে আসা bit-গুলো শুনে আবার একটা পূর্ণ বাইটে জোড়া লাগায় |
 
 ### UART Implementation:
 
@@ -680,7 +680,7 @@ Timer চারটা register দেখায়:
 সংকেত পাঠায়; CPU তখন চলতি কাজ থামিয়ে একটা বিশেষ ফাংশন (**ISR** — Interrupt
 Service Routine) চালায়, কাজ সেরে আবার ঠিক যেখানে ছিল সেখানে ফিরে আসে।
 
-কিন্তু একটা সমস্যা: CPU-র তো একটাই "কলিং বেল" তার, অথচ peripheral অনেকগুলো
+কিন্তু একটা সমস্যা: CPU-র তো "কলিং বেল" তার একটাই, অথচ peripheral অনেকগুলো
 (UART, Timer, ...)। কে বেল বাজাল? এখানেই আসে **Interrupt Controller**। সে সব
 peripheral-এর interrupt লাইন একসাথে শোনে, **priority** অনুযায়ী সবচেয়ে জরুরিটা
 বেছে নেয়, আর CPU-কে একটাই সংকেত দিয়ে বলে "X নম্বর interrupt এসেছে"। তিনটা ধাপ:
@@ -695,8 +695,8 @@ peripheral-এর interrupt লাইন একসাথে শোনে, **prio
 
 নিচের কোডে এই তিন ধাপ মিলিয়ে নাও। `interrupt_pending <= interrupt_pending |
 interrupt_sources` লাইনটা নতুন interrupt **latch** করে রাখে। priority encoder-এর
-লুপ (`for i = 7 downto 0`) সব pending-আর-enabled bit-এর মধ্যে সবচেয়ে বড় index-টা
-বেছে `interrupt_id`-তে রাখে — মানে বড় নম্বরের interrupt-এর priority বেশি। আর
+লুপ (`for i = 7 downto 0`) সব pending-আর-enabled bit-এর মধ্যে সবচেয়ে ছোট index-টা
+বেছে `interrupt_id`-তে রাখে — মানে ছোট নম্বরের interrupt-এর priority বেশি। আর
 software `INT_ACK`-এ লিখে কোনো interrupt-কে "দেখা হয়ে গেছে" বলে clear করতে পারে।
 
 ```verilog
@@ -797,7 +797,7 @@ endmodule
 > `assign interrupt_ack = 1'b0;` লেখা আছে আর কোডের কমেন্টেও বলা: "this core does
 > not service interrupts"। মানে Interrupt Controller সঠিকভাবে interrupt **ধরে,
 > জমায় আর রিপোর্ট করে**, কিন্তু CPU সেটা পেয়ে নিজে থেকে ISR-এ লাফ দেয় না।
-> তাই section ১৯.৭-এর Timer Interrupt উদাহরণে `timer_isr()` আপনাআপনি চলবে না;
+> তাই section ১৯.৭-এর Timer Interrupt উদাহরণে `timer_isr()` নিজে থেকে চলবে না;
 > ঐ pattern-টা ভবিষ্যতে CPU-তে interrupt সাপোর্ট যোগ করার নকশা হিসেবে রাখা।
 > এখন interrupt status জানতে software-এ PENDING register **poll** করে নিতে পারো।
 
@@ -1115,7 +1115,7 @@ endmodule
 এখানেই memory-mapped I/O-র পুরো সৌন্দর্য চোখে পড়বে।
 
 মূল কৌশলটা C-তে একটাই লাইন: আমরা peripheral-এর ঠিকানাকে একটা **pointer** বানাই,
-আর সেই pointer-এ লেখা/পড়া করি। মনে রাখো এই pointer গুলো `volatile` — যেমন
+আর সেই pointer-এ লেখা/পড়া করি। মনে রাখো এই pointer-গুলো `volatile` — যেমন
 `volatile unsigned int *uart_data = (unsigned int*)0x10001000;`।
 
 `volatile` শব্দটা কেন এত জরুরি? এটা compiler-কে বলে: "এই ঠিকানার মান যেকোনো
@@ -1133,7 +1133,7 @@ CPU-র `SW` আর `LW` instruction হয়, যা bus হয়ে ঠি�
 প্রথম উদাহরণ — নিজের চিপ থেকে "Hello, World!" ছাপানো। `uart_putc()` ফাংশনটা
 section ১৯.১-এর STATUS register table-এর সাথে হুবহু মিলিয়ে পড়ো: `while (*uart_status
 & 0x2);` লাইনটা bit 1 (`tx_busy`) ১ থাকা পর্যন্ত অপেক্ষা করে — অর্থাৎ আগের byte
-পাঠানো শেষ হওয়ার জন্য **poll** করে। তারপর `*uart_data = c;` দিয়ে নতুন byte
+পাঠানো শেষ হওয়া পর্যন্ত **poll** করে। তারপর `*uart_data = c;` দিয়ে নতুন byte
 পাঠায়। `uart_puts()` শুধু এক এক করে string-এর প্রতিটা অক্ষরে `uart_putc()` ডাকে।
 
 ```c
@@ -1359,7 +1359,7 @@ endmodule
 
 নিচের `.cst` ফাইলটা Gowin tool-কে বলে দেয় প্রতিটা signal চিপের কোন physical
 পায়ে (LOCATION) বসবে আর কোন voltage standard (এখানে `LVCMOS33` = ৩.৩V) ব্যবহার
-করবে। মনে রেখো — এই LOCATION গুলো Tang Nano 9K-এর জন্য নির্দিষ্ট; অন্য বোর্ডে
+করবে। মনে রেখো — এই LOCATION-গুলো Tang Nano 9K-এর জন্য নির্দিষ্ট; অন্য বোর্ডে
 নম্বর আলাদা হবে। বোর্ডের datasheet বা pinout ছবি দেখে মিলিয়ে নিও।
 
 ```tcl
@@ -1450,7 +1450,7 @@ set_pin_assignment {led[5]} {LOCATION = H14; IOSTANDARD = LVCMOS33;}
 computer** বানিয়ে ফেলেছো। পুরো গল্পটা এক নিঃশ্বাসে মনে করে নাও:
 
 > CPU (মাথা) কথা বলে **bus** (স্নায়ুতন্ত্র)-এর সাথে। bus **address decode** করে
-> ঠিক করে কথাটা **memory**-তে যাবে নাকি কোনো **peripheral**-এ। peripheral গুলো
+> ঠিক করে কথাটা **memory**-তে যাবে নাকি কোনো **peripheral**-এ। peripheral-গুলো
 > memory-র মতোই ঠিকানায় বসে আছে (**memory-mapped I/O**), তাই CPU শুধু `LW`/`SW`
 > দিয়েই UART-এ লেখে (মুখ), GPIO পড়ে/লেখে (হাত-চোখ), Timer-এ সময় গোনে (ঘড়ি),
 > আর IntC জরুরি ঘটনা ধরে (কলিং বেল)। আর এই সব হার্ডওয়্যারকে নাচায় **software** —

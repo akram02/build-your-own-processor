@@ -1,13 +1,13 @@
 # ⚙️ Chapter 3: Build Your Own Arithmetic Circuits
-## Adders থেকে ALU - তোমার Processor এর Calculator বানাও!
+## Adders থেকে ALU - তোমার Processor-এর Calculator বানাও!
 
 > **"Every processor needs a calculator. You're about to build yours!"**
 >
-> **"প্রতিটি processor এ calculator লাগে। তুমি এখন তোমারটা বানাবে!"**
+> **"প্রতিটি processor-এ calculator লাগে। তুমি এখন তোমারটা বানাবে!"**
 
 ---
 
-## 🎯 এই Chapter এ তুমি বানাবে:
+## 🎯 এই Chapter-এ তুমি বানাবে:
 
 গত chapter-এ তুমি logic gate (AND, OR, NOT, XOR) চিনেছো আর Boolean algebra দিয়ে expression সরল করতে শিখেছো। ওগুলো ছিল ইট। এই chapter-এ আমরা সেই ইট দিয়ে আসল **দেয়াল** গড়ব — মানে কাজের circuit, যেগুলো সত্যিকারের কম্পিউটারের ভেতরে বসে আছে।
 
@@ -20,7 +20,7 @@
 ✅ Demultiplexer - data distributor
 ✅ Decoder - address decoder
 ✅ Encoder - priority encoder
-✅ ALU - তোমার processor এর brain! 🎉
+✅ ALU - তোমার processor-এর brain! 🎉
 ```
 
 দেখো তালিকাটা কোথায় গিয়ে শেষ হচ্ছে — **ALU**, মানে Arithmetic Logic Unit। ওটাই তোমার বানানো processor-এর সেই অংশ যেটা আসলে যোগ-বিয়োগ-তুলনা করে। আর মজার ব্যাপারটা হলো, ALU পুরোটাই এই chapter-এর ছোট ছোট circuit জোড়া দিয়ে তৈরি। তাই আজকের প্রতিটা circuit তোমার চূড়ান্ত লক্ষ্যের দিকে একটা করে পা।
@@ -36,7 +36,7 @@ theory পড়ার আগে চলো হাতেকলমে একটা
 
 ### এখনই বানাও - Half Adder:
 
-**যাও CircuitVerse.org এ এবং:**
+**যাও CircuitVerse.org-এ এবং:**
 
 ```
 Components (drag করো):
@@ -61,9 +61,9 @@ Test:
 
 🎉 **Congratulations! তুমি একটা working adder বানিয়েছো!**
 
-খেয়াল করো কী হলো — তুমি কোনো লম্বা গণিত করোনি, শুধু দুটো gate জুড়েছো, আর circuit-টা নিজে নিজেই যোগ করে দিল। হাত-গোনা যোগের নিয়মটা (`0+0=0`, `1+1=10`) এখন তোমার বদলে এই দুই gate করছে। এটাই hardware-এর জাদু: একবার সঠিক gate বসিয়ে দিলে, সে আর কখনো ভুল করে না, ক্লান্ত হয় না।
+খেয়াল করো কী হলো — তুমি কোনো লম্বা গণিত করোনি, শুধু দুটো gate জুড়েছো, আর circuit-টা নিজে নিজেই যোগ করে দিল। হাতে-কলমে যোগের নিয়মটা (`0+0=0`, `1+1=10`) এখন তোমার বদলে এই দুই gate করছে। এটাই hardware-এর জাদু: একবার সঠিক gate বসিয়ে দিলে, সে আর কখনো ভুল করে না, ক্লান্ত হয় না।
 
-**এটাই তোমার processor এর ALU এর building block!** এই এক bit-এর adder-কেই আমরা পরে বারবার জুড়ে বড় সংখ্যা যোগ করব। ছোট থেকে বড় — এটাই আজকের পুরো গল্প।
+**এটাই তোমার processor-এর ALU-এর building block!** এই এক bit-এর adder-কেই আমরা পরে বারবার জুড়ে বড় সংখ্যা যোগ করব। ছোট থেকে বড় — এটাই আজকের পুরো গল্প।
 
 ---
 
@@ -79,7 +79,7 @@ Combinational circuit মানে এমন একটা circuit যার **ou
 
 ```
 Combinational Circuit:
-- Output শুধুমাত্র current input এর উপর নির্ভর করে
+- Output শুধুমাত্র current input-এর উপর নির্ভর করে
 - কোনো memory/state নেই
 - যেকোনো সময় same input = same output
 
@@ -143,7 +143,9 @@ A + B = Sum + Carry
 | 0 | 0 |  0  |   0   |
 | 0 | 1 |  1  |   0   |
 | 1 | 0 |  1  |   0   |
-| 1 | 1 |  0  |   1   ← এখানেই carry তৈরি হলো! |
+| 1 | 1 |  0  |   1   |
+
+> 💡 খেয়াল করো — শেষ সারিতেই প্রথমবার carry (১) তৈরি হলো!
 
 একে **Half Adder** বলা হয় কারণ এটা "অর্ধেক" কাজ করে — দুটো bit যোগ করতে পারে, কিন্তু আগের ঘর থেকে আসা carry-টা নিতে পারে না। সেই সমস্যাটা পরের section-এ আমরা ঠিক করব।
 
@@ -168,7 +170,7 @@ Carry = A · B (AND)
 দেখলে? truth table-এর প্রতিটা output কলামকে আলাদা করে দেখলে, প্রতিটার পেছনে একটা চেনা gate লুকিয়ে থাকে। কঠিন কিছু না — শুধু "কোন প্যাটার্নে output 1 হচ্ছে" সেটা চিনে নেওয়া।
 
 **Step 3: দুটো একসাথে জুড়ে circuit বানাও**
-মজার ব্যাপার — দুটো gate-ই একই দুটো input (A আর B) থেকে তার নেয়। তাই A আর B-কে দুদিকে শাখা করে দিলেই হয়ে গেল:
+মজার ব্যাপার — দুটো gate-ই একই দুটো input (A আর B) থেকে সংকেত নেয়। তাই A আর B-কে দুদিকে শাখা করে দিলেই হয়ে গেল:
 ```
         A ──┬──[XOR]── Sum
             │
@@ -210,7 +212,7 @@ Your Result: Sum=___, Carry=___
 
 ## ৩.৩ Build Full Adder - The Complete Adder
 
-### Half Adder এর Problem: কেন এটুকু যথেষ্ট নয়?
+### Half Adder-এর Problem: কেন এটুকু যথেষ্ট নয়?
 
 Half Adder দারুণ, কিন্তু একটা বড় সীমাবদ্ধতা আছে। মনে করো তুমি **একাধিক bit** যোগ করছ — যেমন হাতে কলমে বড় সংখ্যা যোগ করার সময় ডান দিক থেকে শুরু করে একটা একটা ঘর যোগ করো, আর "হাতে রইল ১" পরের ঘরে নিয়ে যাও। তাহলে পরের ঘরে কী যোগ করতে হচ্ছে? **তিনটা** জিনিস: ওই ঘরের A bit, ওই ঘরের B bit, আর আগের ঘর থেকে আসা carry।
 
@@ -596,8 +598,8 @@ Like a switch!
 
 | S | নির্বাচিত input | Y |
 |:-:|:--------------:|:-:|
-| 0 | I0             | I0 এর মান |
-| 1 | I1             | I1 এর মান |
+| 0 | I0             | I0-এর মান |
+| 1 | I1             | I1-এর মান |
 
 আরও বিস্তারিতভাবে (X মানে "যেটাই হোক, ফলাফলে কিছু আসে যায় না") দেখলে:
 
@@ -679,7 +681,7 @@ Gates: 4 AND + 1 OR(4-input)
 ```
 লক্ষ্য করো প্রতিটা পদে select line-গুলোর একটা অনন্য রূপ আছে (`S1'·S0'`, `S1'·S0`, ...) — এটাই ঠিক একটা AND-কে "খোলে", আর বাকি তিনটাকে বন্ধ রাখে।
 
-**Application:** তোমার processor এ register selection! প্রসেসরে অনেকগুলো register থাকে, কিন্তু ALU-তে একসাথে অল্প কয়েকটা পাঠানো যায়। কোন register-এর মান এখন ব্যবহার হবে — সেই বাছাইয়ের কাজটা MUX-ই করে। তাই MUX ছাড়া কোনো প্রসেসর চলে না।
+**Application:** তোমার processor-এ register selection! প্রসেসরে অনেকগুলো register থাকে, কিন্তু ALU-তে একসাথে অল্প কয়েকটা পাঠানো যায়। কোন register-এর মান এখন ব্যবহার হবে — সেই বাছাইয়ের কাজটা MUX-ই করে। তাই MUX ছাড়া কোনো প্রসেসর চলে না।
 
 ---
 
@@ -796,7 +798,7 @@ Can build using: 2 × 2:4 Decoder + enable!
 
 আবার সেই চেনা কৌশল — ছোট দিয়ে বড়। দুটো 2:4 Decoder নাও; সবচেয়ে উপরের bit (A2) দিয়ে ঠিক করো কোন Decoder-টা "চালু" (enable) হবে। A2=0 হলে প্রথমটা Y0–Y3 সামলায়, A2=1 হলে দ্বিতীয়টা Y4–Y7 সামলায়। এখানে **enable** নামের একটা বাড়তি input-এর দরকার পড়ে, যেটা গোটা Decoder-কে on/off করে — বড় circuit জোড়ার সময় এটা ভীষণ কাজের।
 
-**Application:** তোমার processor এ instruction decoding! প্রতিটা instruction-এ একটা opcode থাকে — একটা ছোট binary code যা বলে "কী করতে হবে"। Decoder সেই opcode খুলে ঠিক একটা control line চালু করে (যেমন "এটা একটা ADD instruction")। অর্থাৎ তোমার processor-এর control unit-এর কেন্দ্রেই থাকে Decoder।
+**Application:** তোমার processor-এ instruction decoding! প্রতিটা instruction-এ একটা opcode থাকে — একটা ছোট binary code যা বলে "কী করতে হবে"। Decoder সেই opcode খুলে ঠিক একটা control line চালু করে (যেমন "এটা একটা ADD instruction")। অর্থাৎ তোমার processor-এর control unit-এর কেন্দ্রেই থাকে Decoder।
 
 ---
 
@@ -857,7 +859,7 @@ If multiple inputs active → Select highest priority
 
 ---
 
-## ৩.১০ Build ALU - তোমার Processor এর Brain! 🎉
+## ৩.১০ Build ALU - তোমার Processor-এর Brain! 🎉
 
 ### The Ultimate Circuit! সব এক জায়গায়
 
@@ -870,7 +872,7 @@ ALU = Arithmetic Logic Unit
 - Core of your processor!
 ```
 
-আর এখানেই আজকের সবচেয়ে সুন্দর অন্তর্দৃষ্টি, যেটা একবার ধরে ফেললে পুরো ALU জলবৎ তরলং হয়ে যাবে: **ALU আলাদা আলাদা করে operation বাছে না — সে একসাথে সব operation চালিয়ে রাখে, তারপর MUX দিয়ে শুধু দরকারিটা বেছে নেয়।** মানে AND-unit, OR-unit, Adder — সবাই সবসময় কাজ করছে; opcode শুধু MUX-কে বলে দেয় "আজ এদের মধ্যে কোন উত্তরটা বাইরে যাবে"। অপচয় মনে হলেও hardware-এ এটাই দ্রুততম পথ, কারণ সব path সমান্তরালে (parallel) চলে।
+আর এখানেই আজকের সবচেয়ে সুন্দর অন্তর্দৃষ্টি, যেটা একবার ধরে ফেললে পুরো ALU জলের মতো সহজ হয়ে যাবে: **ALU আলাদা আলাদা করে operation বাছে না — সে একসাথে সব operation চালিয়ে রাখে, তারপর MUX দিয়ে শুধু দরকারিটা বেছে নেয়।** মানে AND-unit, OR-unit, Adder — সবাই সবসময় কাজ করছে; opcode শুধু MUX-কে বলে দেয় "আজ এদের মধ্যে কোন উত্তরটা বাইরে যাবে"। অপচয় মনে হলেও hardware-এ এটাই দ্রুততম পথ, কারণ সব path সমান্তরালে (parallel) চলে।
 
 ### Simple 1-bit ALU Design: ছোট করে বুঝি
 
@@ -942,7 +944,7 @@ flowchart LR
 |  1  |  1  |  0  | A + 1 |
 |  1  |  1  |  1  | A - 1 |
 
-একটা প্যাটার্ন খেয়াল করো: সবচেয়ে বাঁ bit (Op2) কার্যত ঠিক করছে কাজটা logic না arithmetic — Op2=0 হলে উপরের চারটা (logic: AND/OR/XOR/NOT), Op2=1 হলে নিচের চারটা (arithmetic: যোগ/বিয়োগ/বৃদ্ধি/হ্রাস)। opcode-এর এমন সাজানো গঠনই পরে control unit-কে সহজ করে দেয়।
+একটা প্যাটার্ন খেয়াল করো: সবচেয়ে বাঁদিকের bit (Op2) কার্যত ঠিক করছে কাজটা logic না arithmetic — Op2=0 হলে উপরের চারটা (logic: AND/OR/XOR/NOT), Op2=1 হলে নিচের চারটা (arithmetic: যোগ/বিয়োগ/বৃদ্ধি/হ্রাস)। opcode-এর এমন সাজানো গঠনই পরে control unit-কে সহজ করে দেয়।
 
 ### 🎯 Build Project - Complete ALU!
 
@@ -978,13 +980,13 @@ ALU শুধু উত্তরই দেয় না, উত্তর সম�
 ```
 Flags:
 - Zero (Z): Result = 0
-- Carry (C): Overflow
+- Carry (C): Unsigned overflow
 - Negative (N): MSB = 1
 - Overflow (V): Signed overflow
 ```
 
 - **Zero (Z)** — সব result bit 0 হলে 1 হয়; দুটো সংখ্যা সমান কি না (`A - B == 0`?) তা পরীক্ষা করতে অপরিহার্য।
-- **Carry (C)** — সবচেয়ে বাঁ ঘর থেকে carry বেরোলে 1; unsigned হিসাবে সীমা ছাড়ানো বোঝায়।
+- **Carry (C)** — সবচেয়ে বাঁদিকের ঘর থেকে carry বেরোলে 1; unsigned হিসাবে সীমা ছাড়ানো বোঝায়।
 - **Negative (N)** — result-এর MSB 1 হলে 1; 2's complement-এ এটা ঋণাত্মক সংখ্যা নির্দেশ করে।
 - **Overflow (V)** — signed যোগ/বিয়োগে ফল সঠিক range-এ আঁটল না, তা জানায়।
 
@@ -1156,7 +1158,7 @@ circuit বানাতে গিয়ে আটকে যাওয়া স�
 ✅ Build data selectors (MUX/DEMUX)
 ✅ Build decoders and encoders
 ✅ Build complete ALU
-✅ তোমার processor এর arithmetic brain তৈরি!
+✅ তোমার processor-এর arithmetic brain তৈরি!
 ```
 
 ### তুমি বানিয়েছো:
@@ -1247,7 +1249,7 @@ Next: Chapter 4 - Add Memory to Your Circuits!
 
 **"You just built the calculator of your processor. Next, you'll add memory!"**
 
-**"তুমি তোমার processor এর calculator বানিয়ে ফেলেছো। এবার memory যোগ করবে!"**
+**"তুমি তোমার processor-এর calculator বানিয়ে ফেলেছো। এবার memory যোগ করবে!"**
 
 Made with ❤️ for builders | বানানোর জন্য ভালোবাসা দিয়ে তৈরি
 
