@@ -464,9 +464,9 @@ NAND-এর truth table আক্ষরিক অর্থেই AND-এর উ�
 ```
 NOT gate from NAND (দুই input-এ একই signal):
 
-    A ──┬──[NAND]── A'
-        │
-        └──────────┘
+    A ──┬──┐
+        │  ├─[NAND]── A'
+        └──┘
 
 AND gate from NAND (NAND-এর পর আরেকটা NAND = inverter):
 
@@ -476,11 +476,13 @@ AND gate from NAND (NAND-এর পর আরেকটা NAND = inverter):
 
 OR gate from NAND (আগে দুটো input আলাদাভাবে উল্টে নাও):
 
-    A ──[NAND]──┐
-    A ──┘       │
-                ├──[NAND]── A+B
-    B ──[NAND]──┘
-    B ──┘
+    A ──┬──┐
+        │  ├─[NAND]──┐
+        └──┘         │
+                     ├─[NAND]── A+B
+    B ──┬──┐         │
+        │  ├─[NAND]──┘
+        └──┘
 ```
 
 OR-এর কৌশলটা একটু চালাক — এটা **De Morgan-এর নিয়ম** ব্যবহার করে, যেটা তুমি Chapter 2-এ বিস্তারিত শিখবে। আপাতত শুধু CircuitVerse-এ এই তিনটা গঠন বানাও আর truth table মিলিয়ে নিশ্চিত হও যে এরা সত্যিই AND, OR, NOT-এর মতোই আচরণ করছে। যখন নিজের চোখে দেখবে শুধু এক ধরনের gate দিয়েই সব বানানো যাচ্ছে, তখন "universal" শব্দটার মানে হাড়ে হাড়ে বুঝবে! 💡
@@ -581,21 +583,16 @@ See the pattern?
 ```
 Circuit Design:  (একই A আর B দুটো gate-এই পাঠাও)
 
-    A ───┬──────────►┌─────┐
-         │           │ XOR │──── Sum
-    B ───┼──────┬───►└─────┘
-         │      │
-         │      │    ┌─────┐
-         └──────┼───►│ AND │──── Carry
-                └───►└─────┘
-
-Components Needed:
-- 2 Input switches (A, B)
-- 1 XOR gate
-- 1 AND gate
-- 2 Output LEDs (Sum, Carry)
-
-Wire them up in CircuitVerse!
+              ┌─────┐
+   A ─┬──────►┤     │
+      │       │ XOR ├──── Sum
+   B ─┼─┬────►┤     │
+      │ │     └─────┘
+      │ │     ┌─────┐
+      └─┼────►┤     │
+        │     │ AND ├──── Carry
+        └────►┤     │
+              └─────┘
 ```
 
 ### Test Your Half Adder:
