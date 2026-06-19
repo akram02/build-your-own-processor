@@ -944,8 +944,8 @@ flowchart LR
 **States:**
 ```
 RED    → 30 seconds
-YELLOW → 5 seconds
 GREEN  → 25 seconds
+YELLOW → 5 seconds
 ```
 
 state-গুলো কীভাবে ঘোরে, সেটা একটা state diagram-এ দেখলে সবচেয়ে পরিষ্কার হয়:
