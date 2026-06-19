@@ -7,7 +7,7 @@
 
 ---
 
-## 🎯 এই Chapter এ তুমি শিখবে:
+## 🎯 এই Chapter-এ তুমি শিখবে:
 
 ```
 ✅ VLSI Design Flow - RTL থেকে GDSII

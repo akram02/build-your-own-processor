@@ -3,11 +3,11 @@
 
 > **"Your design is ready. Time to send it to the FAB! Real chip coming!"**
 >
-> **"তোমার design ready। এবার FAB এ পাঠাও! Real chip আসছে!"**
+> **"তোমার design ready। এবার FAB-এ পাঠাও! Real chip আসছে!"**
 
 ---
 
-## 🎯 এই Chapter এ তুমি করবে:
+## 🎯 এই Chapter-এ তুমি করবে:
 
 ```
 ✅ TinyTapeout পরিচিতি - what it is
@@ -753,7 +753,7 @@ flowchart TD
 - ✅ **খরচ কত** — $100-$300, এর মধ্যেই চিপ হাতে পাওয়া পর্যন্ত সব।
 - ✅ **Timeline কেমন** — ~৬-১০ মাস, বেশিরভাগটাই fabrication।
 - ✅ **Tracking কীভাবে করবে** — email, Discord, GitHub।
-- ✅ আর সবচেয়ে বড় কথা — **তোমার chip fab এ যাচ্ছে!** 🎉
+- ✅ আর সবচেয়ে বড় কথা — **তোমার chip fab-এ যাচ্ছে!** 🎉
 
 ### Next:
 
@@ -826,7 +826,7 @@ NEXT: Wait for your chip! Then Chapter 25! 🎊
 
 **"Your design is in the fab! 6 months of patience... then REAL SILICON!"**
 
-**"তোমার design fab এ! ৬ মাস অপেক্ষা... তারপর REAL SILICON!"**
+**"তোমার design fab-এ! ৬ মাস অপেক্ষা... তারপর REAL SILICON!"**
 
 Made with ❤️ for chip makers | চিপ মেকারদের জন্য ভালোবাসা দিয়ে তৈরি
 

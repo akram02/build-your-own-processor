@@ -1,13 +1,13 @@
 # ⚙️ Chapter 3: Build Your Own Arithmetic Circuits
-## Adders থেকে ALU - তোমার Processor এর Calculator বানাও!
+## Adders থেকে ALU - তোমার Processor-এর Calculator বানাও!
 
 > **"Every processor needs a calculator. You're about to build yours!"**
 >
-> **"প্রতিটি processor এ calculator লাগে। তুমি এখন তোমারটা বানাবে!"**
+> **"প্রতিটি processor-এ calculator লাগে। তুমি এখন তোমারটা বানাবে!"**
 
 ---
 
-## 🎯 এই Chapter এ তুমি বানাবে:
+## 🎯 এই Chapter-এ তুমি বানাবে:
 
 গত chapter-এ তুমি logic gate (AND, OR, NOT, XOR) চিনেছো আর Boolean algebra দিয়ে expression সরল করতে শিখেছো। ওগুলো ছিল ইট। এই chapter-এ আমরা সেই ইট দিয়ে আসল **দেয়াল** গড়ব — মানে কাজের circuit, যেগুলো সত্যিকারের কম্পিউটারের ভেতরে বসে আছে।
 
@@ -36,7 +36,7 @@ theory পড়ার আগে চলো হাতেকলমে একটা
 
 ### এখনই বানাও - Half Adder:
 
-**যাও CircuitVerse.org এ এবং:**
+**যাও CircuitVerse.org-এ এবং:**
 
 ```
 Components (drag করো):
@@ -63,7 +63,7 @@ Test:
 
 খেয়াল করো কী হলো — তুমি কোনো লম্বা গণিত করোনি, শুধু দুটো gate জুড়েছো, আর circuit-টা নিজে নিজেই যোগ করে দিল। হাত-গোনা যোগের নিয়মটা (`0+0=0`, `1+1=10`) এখন তোমার বদলে এই দুই gate করছে। এটাই hardware-এর জাদু: একবার সঠিক gate বসিয়ে দিলে, সে আর কখনো ভুল করে না, ক্লান্ত হয় না।
 
-**এটাই তোমার processor এর ALU এর building block!** এই এক bit-এর adder-কেই আমরা পরে বারবার জুড়ে বড় সংখ্যা যোগ করব। ছোট থেকে বড় — এটাই আজকের পুরো গল্প।
+**এটাই তোমার processor-এর ALU-এর building block!** এই এক bit-এর adder-কেই আমরা পরে বারবার জুড়ে বড় সংখ্যা যোগ করব। ছোট থেকে বড় — এটাই আজকের পুরো গল্প।
 
 ---
 
@@ -210,7 +210,7 @@ Your Result: Sum=___, Carry=___
 
 ## ৩.৩ Build Full Adder - The Complete Adder
 
-### Half Adder এর Problem: কেন এটুকু যথেষ্ট নয়?
+### Half Adder-এর Problem: কেন এটুকু যথেষ্ট নয়?
 
 Half Adder দারুণ, কিন্তু একটা বড় সীমাবদ্ধতা আছে। মনে করো তুমি **একাধিক bit** যোগ করছ — যেমন হাতে কলমে বড় সংখ্যা যোগ করার সময় ডান দিক থেকে শুরু করে একটা একটা ঘর যোগ করো, আর "হাতে রইল ১" পরের ঘরে নিয়ে যাও। তাহলে পরের ঘরে কী যোগ করতে হচ্ছে? **তিনটা** জিনিস: ওই ঘরের A bit, ওই ঘরের B bit, আর আগের ঘর থেকে আসা carry।
 
@@ -596,8 +596,8 @@ Like a switch!
 
 | S | নির্বাচিত input | Y |
 |:-:|:--------------:|:-:|
-| 0 | I0             | I0 এর মান |
-| 1 | I1             | I1 এর মান |
+| 0 | I0             | I0-এর মান |
+| 1 | I1             | I1-এর মান |
 
 আরও বিস্তারিতভাবে (X মানে "যেটাই হোক, ফলাফলে কিছু আসে যায় না") দেখলে:
 
@@ -679,7 +679,7 @@ Gates: 4 AND + 1 OR(4-input)
 ```
 লক্ষ্য করো প্রতিটা পদে select line-গুলোর একটা অনন্য রূপ আছে (`S1'·S0'`, `S1'·S0`, ...) — এটাই ঠিক একটা AND-কে "খোলে", আর বাকি তিনটাকে বন্ধ রাখে।
 
-**Application:** তোমার processor এ register selection! প্রসেসরে অনেকগুলো register থাকে, কিন্তু ALU-তে একসাথে অল্প কয়েকটা পাঠানো যায়। কোন register-এর মান এখন ব্যবহার হবে — সেই বাছাইয়ের কাজটা MUX-ই করে। তাই MUX ছাড়া কোনো প্রসেসর চলে না।
+**Application:** তোমার processor-এ register selection! প্রসেসরে অনেকগুলো register থাকে, কিন্তু ALU-তে একসাথে অল্প কয়েকটা পাঠানো যায়। কোন register-এর মান এখন ব্যবহার হবে — সেই বাছাইয়ের কাজটা MUX-ই করে। তাই MUX ছাড়া কোনো প্রসেসর চলে না।
 
 ---
 
@@ -796,7 +796,7 @@ Can build using: 2 × 2:4 Decoder + enable!
 
 আবার সেই চেনা কৌশল — ছোট দিয়ে বড়। দুটো 2:4 Decoder নাও; সবচেয়ে উপরের bit (A2) দিয়ে ঠিক করো কোন Decoder-টা "চালু" (enable) হবে। A2=0 হলে প্রথমটা Y0–Y3 সামলায়, A2=1 হলে দ্বিতীয়টা Y4–Y7 সামলায়। এখানে **enable** নামের একটা বাড়তি input-এর দরকার পড়ে, যেটা গোটা Decoder-কে on/off করে — বড় circuit জোড়ার সময় এটা ভীষণ কাজের।
 
-**Application:** তোমার processor এ instruction decoding! প্রতিটা instruction-এ একটা opcode থাকে — একটা ছোট binary code যা বলে "কী করতে হবে"। Decoder সেই opcode খুলে ঠিক একটা control line চালু করে (যেমন "এটা একটা ADD instruction")। অর্থাৎ তোমার processor-এর control unit-এর কেন্দ্রেই থাকে Decoder।
+**Application:** তোমার processor-এ instruction decoding! প্রতিটা instruction-এ একটা opcode থাকে — একটা ছোট binary code যা বলে "কী করতে হবে"। Decoder সেই opcode খুলে ঠিক একটা control line চালু করে (যেমন "এটা একটা ADD instruction")। অর্থাৎ তোমার processor-এর control unit-এর কেন্দ্রেই থাকে Decoder।
 
 ---
 
@@ -857,7 +857,7 @@ If multiple inputs active → Select highest priority
 
 ---
 
-## ৩.১০ Build ALU - তোমার Processor এর Brain! 🎉
+## ৩.১০ Build ALU - তোমার Processor-এর Brain! 🎉
 
 ### The Ultimate Circuit! সব এক জায়গায়
 
@@ -1247,7 +1247,7 @@ Next: Chapter 4 - Add Memory to Your Circuits!
 
 **"You just built the calculator of your processor. Next, you'll add memory!"**
 
-**"তুমি তোমার processor এর calculator বানিয়ে ফেলেছো। এবার memory যোগ করবে!"**
+**"তুমি তোমার processor-এর calculator বানিয়ে ফেলেছো। এবার memory যোগ করবে!"**
 
 Made with ❤️ for builders | বানানোর জন্য ভালোবাসা দিয়ে তৈরি
 

@@ -7,7 +7,7 @@
 
 ---
 
-## 🎯 এই Chapter এ তুমি শিখবে:
+## 🎯 এই Chapter-এ তুমি শিখবে:
 
 ```
 ✅ What is an FPGA? - Programmable chips
@@ -1026,7 +1026,7 @@ Tang Nano 9K board-এর হৃৎপিণ্ডে আছে **Gowin GW1NR-9*
 
 এই সংখ্যাগুলোকে নিজের ভাষায় বুঝে নাও:
 
-- **৮,৬৪০টি LUT** — মনে আছে, প্রতিটা LUT একটা ছোট programmable truth table, আর তুমি Verilog-এ যা logic লেখো তা এই LUT-গুলোতেই map হয়? অর্থাৎ তোমার হাতে ৮,৬৪০টি "যেকোনো-গেট-হতে-পারা" ব্লক আছে। একটা সম্পূর্ণ single-cycle RISC-V CPU এর বেশ বড় অংশ খরচ করবে, কিন্তু এতে অনায়াসে এঁটে যায় — তুমি Part 4-এ নিজেই দেখবে!
+- **৮,৬৪০টি LUT** — মনে আছে, প্রতিটা LUT একটা ছোট programmable truth table, আর তুমি Verilog-এ যা logic লেখো তা এই LUT-গুলোতেই map হয়? অর্থাৎ তোমার হাতে ৮,৬৪০টি "যেকোনো-গেট-হতে-পারা" ব্লক আছে। একটা সম্পূর্ণ single-cycle RISC-V CPU-এর বেশ বড় অংশ খরচ করবে, কিন্তু এতে অনায়াসে এঁটে যায় — তুমি Part 4-এ নিজেই দেখবে!
 - **৬,৪৮০টি FF** — এগুলোই তোমার সব register, counter আর pipeline stage-এর memory। লক্ষ্য করো FF-এর সংখ্যা LUT-এর চেয়ে কম (প্রতি LUT-এর সাথে ১টা FF নয়); এটাই স্বাভাবিক, কারণ সব logic-এর জন্য register লাগে না।
 - **৪৬৮ Kb BRAM** — এই dedicated memory দিয়েই তুমি তোমার CPU-এর instruction ও data memory বানাবে, LUT অপচয় না করেই (মনে আছে ৯.৬-এর সেই গুদামের গল্প?)।
 - **২৭ MHz clock** — board-এ আগে থেকেই একটা 27 MHz crystal বসানো, যেটা তোমার design-কে প্রতি সেকেন্ডে ২ কোটি ৭০ লক্ষ বার "tick" দেয়। ৯.১২-এর timing constraint-এ এই সংখ্যাটাই তোমার শুরুর reference হবে।

@@ -3,11 +3,11 @@
 
 > **"You built a computer. Now learn the FUTURE. Welcome to the bleeding edge!"**
 >
-> **"তুমি computer বানিয়েছো। এবার FUTURE শেখো। Bleeding edge এ স্বাগতম!"**
+> **"তুমি computer বানিয়েছো। এবার FUTURE শেখো। Bleeding edge-এ স্বাগতম!"**
 
 ---
 
-## 🎯 এই Chapter এ তুমি শিখবে:
+## 🎯 এই Chapter-এ তুমি শিখবে:
 
 ```
 ✅ Superscalar Execution - multiple instructions/cycle

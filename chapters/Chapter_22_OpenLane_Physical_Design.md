@@ -7,7 +7,7 @@
 
 ---
 
-## 🎯 এই Chapter এ তুমি করবে:
+## 🎯 এই Chapter-এ তুমি করবে:
 
 ```
 ✅ OpenLane Setup - complete toolchain
@@ -1103,7 +1103,7 @@ NEXT: Deep dive into Sky130! 🔬
 
 **"Your processor has a layout! Real chip coming soon!"**
 
-**"তোমার processor এর layout হয়ে গেছে! Real chip শীঘ্রই!"**
+**"তোমার processor-এর layout হয়ে গেছে! Real chip শীঘ্রই!"**
 
 Made with ❤️ for chip makers | চিপ মেকারদের জন্য ভালোবাসা দিয়ে তৈরি
 

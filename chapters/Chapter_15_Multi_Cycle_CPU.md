@@ -7,7 +7,7 @@
 
 ---
 
-## 🎯 এই Chapter এ তুমি বানাবে:
+## 🎯 এই Chapter-এ তুমি বানাবে:
 
 ```
 ✅ Multi-Cycle Architecture - better efficiency

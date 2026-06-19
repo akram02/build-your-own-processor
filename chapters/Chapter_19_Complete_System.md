@@ -7,7 +7,7 @@
 
 ---
 
-## 🎯 এই Chapter এ তুমি বানাবে:
+## 🎯 এই Chapter-এ তুমি বানাবে:
 
 ```
 ✅ UART (Serial Communication) - talk to computer
@@ -58,7 +58,7 @@ CPU একা যথেষ্ট নয়!
 সময় গোনে, Interrupt Controller জরুরি ঘটনা ঘটলে CPU-কে খবর দেয়। আর এই সব কিছুকে
 একসাথে জুড়ে রাখে একটা **bus** — তথ্যের রাজপথ।
 
-> 💡 **মূল intuition:** CPU হলো মাথা, peripheral গুলো হলো ইন্দ্রিয়, আর bus হলো
+> 💡 **মূল intuition:** CPU হলো মাথা, peripheral-গুলো হলো ইন্দ্রিয়, আর bus হলো
 > স্নায়ুতন্ত্র (nervous system) — যেটা মাথা থেকে ইন্দ্রিয়ে আর ইন্দ্রিয় থেকে
 > মাথায় সংকেত বয়ে নিয়ে যায়। এই তিনটা একসাথে হলেই কেবল একটা জড় চিপ "জীবন্ত
 > computer" হয়ে ওঠে।
@@ -139,7 +139,7 @@ flowchart TB
 ```
 
 > 💡 এই ছবিটা পুরো chapter-এর **মানচিত্র**। প্রতিটা section-এ আমরা এই ছবির একটা
-> করে box-এর ভেতরে ঢুকব: প্রথমে peripheral গুলো (UART, GPIO, Timer, IntC),
+> করে box-এর ভেতরে ঢুকব: প্রথমে peripheral-গুলো (UART, GPIO, Timer, IntC),
 > তারপর bus, তারপর সব কিছু এক জায়গায় জোড়া লাগিয়ে পূর্ণ SoC। যখনই হারিয়ে যাবে
 > মনে হবে, এই ছবিতে ফিরে এসো — দেখো এখন কোন box-এ আছো।
 
@@ -178,7 +178,7 @@ SW x6, 0x10000000(x0)  # GPIO তে লেখো
 
 পুরো **address map** টা একটা পরিষ্কার table-এ দেখি। প্রতিটা সারি একটা করে
 ঠিকানার পরিসর (range), আর প্রতিটা পরিসর একটা নির্দিষ্ট জিনিসের দখলে। খেয়াল
-করো — memory আছে নিচের দিকে (`0x0...`) আর peripheral গুলো অনেক উঁচুতে
+করো — memory আছে নিচের দিকে (`0x0...`) আর peripheral-গুলো অনেক উঁচুতে
 (`0x1000_0000` থেকে)। এই ফাঁকটা ইচ্ছে করেই রাখা, যাতে address decode করা সহজ হয়:
 
 | Address পরিসর (range) | আকার | কে দখল করে আছে | কাজ |
@@ -224,7 +224,7 @@ UART-এর পুরো নাম **Universal Asynchronous Receiver/Transmitter
 শুরু হলে প্রথমে যায় একটা **start bit** (০) — "সাবধান, বার্তা আসছে!"। তারপর ৮টা
 **data bit** (আসল বাইট)। শেষে একটা **stop bit** (১) — "শেষ হলো"। receiver
 start bit-এর পতন (high→low) দেখে জেগে ওঠে, তারপর baud rate ধরে ঠিক সময়ে সময়ে
-bit গুলো পড়ে নেয়।
+bit-গুলো পড়ে নেয়।
 
 ```
 UART = Serial communication
@@ -248,7 +248,7 @@ UART-এর ভেতরে তিনটা আলাদা যন্ত্র �
 |---|---|
 | **Baud rate generator** | ঠিক গতিতে "tick" বানায় — প্রতি bit-এর সময় মেপে দেয় |
 | **Transmitter (TX)** | বাইটটাকে start + ৮ data + stop bit-এ সাজিয়ে একটা একটা করে বের করে দেয় |
-| **Receiver (RX)** | লাইন থেকে আসা bit গুলো শুনে আবার একটা পূর্ণ বাইটে জোড়া লাগায় |
+| **Receiver (RX)** | লাইন থেকে আসা bit-গুলো শুনে আবার একটা পূর্ণ বাইটে জোড়া লাগায় |
 
 ### UART Implementation:
 
@@ -1115,7 +1115,7 @@ endmodule
 এখানেই memory-mapped I/O-র পুরো সৌন্দর্য চোখে পড়বে।
 
 মূল কৌশলটা C-তে একটাই লাইন: আমরা peripheral-এর ঠিকানাকে একটা **pointer** বানাই,
-আর সেই pointer-এ লেখা/পড়া করি। মনে রাখো এই pointer গুলো `volatile` — যেমন
+আর সেই pointer-এ লেখা/পড়া করি। মনে রাখো এই pointer-গুলো `volatile` — যেমন
 `volatile unsigned int *uart_data = (unsigned int*)0x10001000;`।
 
 `volatile` শব্দটা কেন এত জরুরি? এটা compiler-কে বলে: "এই ঠিকানার মান যেকোনো
@@ -1359,7 +1359,7 @@ endmodule
 
 নিচের `.cst` ফাইলটা Gowin tool-কে বলে দেয় প্রতিটা signal চিপের কোন physical
 পায়ে (LOCATION) বসবে আর কোন voltage standard (এখানে `LVCMOS33` = ৩.৩V) ব্যবহার
-করবে। মনে রেখো — এই LOCATION গুলো Tang Nano 9K-এর জন্য নির্দিষ্ট; অন্য বোর্ডে
+করবে। মনে রেখো — এই LOCATION-গুলো Tang Nano 9K-এর জন্য নির্দিষ্ট; অন্য বোর্ডে
 নম্বর আলাদা হবে। বোর্ডের datasheet বা pinout ছবি দেখে মিলিয়ে নিও।
 
 ```tcl
@@ -1450,7 +1450,7 @@ set_pin_assignment {led[5]} {LOCATION = H14; IOSTANDARD = LVCMOS33;}
 computer** বানিয়ে ফেলেছো। পুরো গল্পটা এক নিঃশ্বাসে মনে করে নাও:
 
 > CPU (মাথা) কথা বলে **bus** (স্নায়ুতন্ত্র)-এর সাথে। bus **address decode** করে
-> ঠিক করে কথাটা **memory**-তে যাবে নাকি কোনো **peripheral**-এ। peripheral গুলো
+> ঠিক করে কথাটা **memory**-তে যাবে নাকি কোনো **peripheral**-এ। peripheral-গুলো
 > memory-র মতোই ঠিকানায় বসে আছে (**memory-mapped I/O**), তাই CPU শুধু `LW`/`SW`
 > দিয়েই UART-এ লেখে (মুখ), GPIO পড়ে/লেখে (হাত-চোখ), Timer-এ সময় গোনে (ঘড়ি),
 > আর IntC জরুরি ঘটনা ধরে (কলিং বেল)। আর এই সব হার্ডওয়্যারকে নাচায় **software** —

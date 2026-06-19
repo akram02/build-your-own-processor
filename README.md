@@ -37,13 +37,13 @@ Month 12:   ✅ তোমার হাতে আসল Chip! 🎉
 
 ### ✅ সম্পূর্ণ বাংলায়
 - প্রতিটি concept বাংলায় explain করা
-- Technical terms এর সহজ ব্যাখ্যা
-- বাংলাদেশী context এ উদাহরণ
+- Technical terms-এর সহজ ব্যাখ্যা
+- বাংলাদেশী context-এ উদাহরণ
 
 ### ✅ Hands-on Projects
-- শুধু theory না, প্রতিটা chapter এ project
+- শুধু theory না, প্রতিটা chapter-এ project
 - নিজের হাতে বানাবে, নিজের চোখে দেখবে
-- Real hardware এ test করবে
+- Real hardware-এ test করবে
 
 ### ✅ Zero to Hero
 - কোনো পূর্ব জ্ঞান লাগবে না
@@ -103,7 +103,7 @@ Month 12:   ✅ তোমার হাতে আসল Chip! 🎉
 - Control unit
 - **Complete working RISC-V processor!** 🎉
 
-**Test:** C programs তোমার CPU তে চালাবে!
+**Test:** C programs তোমার CPU-তে চালাবে!
 
 ---
 
@@ -114,7 +114,7 @@ Month 12:   ✅ তোমার হাতে আসল Chip! 🎉
 - Timing optimization
 - **Real chip fabrication ready!**
 
-**Submit:** TinyTapeout/Efabless এ
+**Submit:** TinyTapeout/Efabless-এ
 **Receive:** তোমার নিজের silicon chip! 🏆
 
 ---
@@ -152,7 +152,7 @@ Build real chip - RTL থেকে silicon
 
 ### 📚 বিস্তারিত পরিকল্পনা:
 
-**দেখো:** [QUICK_START.md](QUICK_START.md) এ সম্পূর্ণ Week 1 schedule, software installation guide, এবং step-by-step roadmap পাবে।
+**দেখো:** [QUICK_START.md](QUICK_START.md)-এ সম্পূর্ণ Week 1 schedule, software installation guide, এবং step-by-step roadmap পাবে।
 
 ---
 
@@ -361,7 +361,7 @@ Week 14-16: Chapters 20-25 (VLSI)
 
 ### তুমি পারবে:
 - ✅ Digital circuits design করতে
-- ✅ Verilog এ professional code লিখতে
+- ✅ Verilog-এ professional code লিখতে
 - ✅ FPGA program করতে
 - ✅ Processor architecture বুঝতে
 - ✅ নিজের CPU বানাতে
@@ -439,7 +439,7 @@ This work is licensed under [Creative Commons Attribution-ShareAlike 4.0 Interna
 - ✅ Modify করতে পারবে
 - ✅ Commercial use করতে পারবে
 - ℹ️ Credit দিতে হবে
-- ℹ️ Same license এ শেয়ার করতে হবে
+- ℹ️ Same license-এ শেয়ার করতে হবে
 
 ---
 
@@ -479,7 +479,7 @@ This work is licensed under [Creative Commons Attribution-ShareAlike 4.0 Interna
 → Start Week 1 tomorrow
 ```
 
-#### 3️⃣ প্রশ্ন আছে? Community তে এসো
+#### 3️⃣ প্রশ্ন আছে? Community-তে এসো
 ```bash
 → GitHub Discussions এ এসো
 → নিজের পরিচয় দাও

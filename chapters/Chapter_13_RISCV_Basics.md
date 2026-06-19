@@ -7,7 +7,7 @@
 
 ---
 
-## 🎯 এই Chapter এ তুমি শিখবে:
+## 🎯 এই Chapter-এ তুমি শিখবে:
 
 ```
 ✅ RISC-V Overview - open ISA
@@ -527,7 +527,7 @@ Result: x5 = 0x12345000
 
 ### J-Type (Jump):
 
-শেষ format — unconditional jump, মানে কোনো শর্ত ছাড়াই লাফ, প্রধানত `JAL` (function call) এর জন্য। যেহেতু এখানে তুলনা করার দরকার নেই, কোনো `rs1`/`rs2` লাগে না — তাই সেই বাঁচানো জায়গা পুরোটা চলে যায় immediate-এ। ফলে J-type-এর offset বিশাল: পুরো ২০ বিট (B-type-এর ১২ বিটের তুলনায়), মানে range ±1MB — অনেক দূরের function-ও ডাকা যায়।
+শেষ format — unconditional jump, মানে কোনো শর্ত ছাড়াই লাফ, প্রধানত `JAL` (function call)-এর জন্য। যেহেতু এখানে তুলনা করার দরকার নেই, কোনো `rs1`/`rs2` লাগে না — তাই সেই বাঁচানো জায়গা পুরোটা চলে যায় immediate-এ। ফলে J-type-এর offset বিশাল: পুরো ২০ বিট (B-type-এর ১২ বিটের তুলনায়), মানে range ±1MB — অনেক দূরের function-ও ডাকা যায়।
 
 ```
 Used for: Unconditional jumps

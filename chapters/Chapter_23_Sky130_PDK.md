@@ -7,7 +7,7 @@
 
 ---
 
-## 🎯 এই Chapter এ তুমি শিখবে:
+## 🎯 এই Chapter-এ তুমি শিখবে:
 
 ```
 ✅ Sky130 PDK - Google's open process
@@ -932,6 +932,6 @@ NEXT: Submit to TinyTapeout! 📤
 
 **"তুমি technology জানো। এবার chip submit করো!"**
 
-Made with ❤️ for IC designers | IC designers দের জন্য ভালোবাসা দিয়ে তৈরি
+Made with ❤️ for IC designers | IC designers-দের জন্য ভালোবাসা দিয়ে তৈরি
 
 </div>

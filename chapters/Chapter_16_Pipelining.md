@@ -7,7 +7,7 @@
 
 ---
 
-## 🎯 এই Chapter এ তুমি বানাবে:
+## 🎯 এই Chapter-এ তুমি বানাবে:
 
 ```
 ✅ 5-Stage Pipeline - parallel execution

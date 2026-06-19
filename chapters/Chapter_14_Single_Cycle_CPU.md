@@ -7,7 +7,7 @@
 
 ---
 
-## 🎯 এই Chapter এ তুমি বানাবে:
+## 🎯 এই Chapter-এ তুমি বানাবে:
 
 ```
 ✅ Complete RV32I Processor - 47 instructions

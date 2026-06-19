@@ -7,7 +7,7 @@
 
 ---
 
-## 🎯 এই Chapter এ তুমি বানাবে:
+## 🎯 এই Chapter-এ তুমি বানাবে:
 
 ```
 ✅ Data Hazard Detection - find dependencies
@@ -25,7 +25,7 @@
 
 ---
 
-## 🚀 Quick Understanding - Pipeline এর আসল সমস্যা!
+## 🚀 Quick Understanding - Pipeline-এর আসল সমস্যা!
 
 Chapter 16-এ তুমি pipeline বানিয়েছিলে — পাঁচটা instruction পাশাপাশি, প্রতি cycle-এ একটা করে শেষ হচ্ছে, কাগজে-কলমে ৫× speedup। কিন্তু একটা সমস্যা চাপা পড়ে ছিল: ওই pipeline ধরে নিয়েছিল প্রতিটা instruction তার আগেরটার থেকে সম্পূর্ণ স্বাধীন। **আসল program কখনো এমন হয় না।**
 
