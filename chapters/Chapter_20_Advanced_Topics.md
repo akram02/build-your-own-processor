@@ -17,7 +17,7 @@
 ✅ Multi-Core Systems - thread-level parallelism
 ✅ GPU Architecture - massive parallelism
 ✅ Future Directions - quantum, neuromorphic
-✅ তোমার journey complete! 🎉
+✅ তোমার design journey সম্পূর্ণ! 🎉
 ```
 
 **Time Required:** 1-2 weeks (self-paced learning)  
@@ -1117,7 +1117,7 @@ YOU HAVE THE SKILLS! 💼✅
 
 ---
 
-## ২০.১০ The End... and Beginning!
+## ২০.১০ Design শেষ — এবার আসল Silicon!
 
 ### Chapter 20 Mission Complete!
 
@@ -1125,11 +1125,10 @@ YOU HAVE THE SKILLS! 💼✅
 ✅ Advanced topics learned
 ✅ Modern techniques understood
 ✅ Future directions explored
-✅ Complete book finished!
+✅ Design journey complete!
 
-20 Chapters complete! 🎊
-100% done! 🎉
-Your journey complete! 🏆
+20 of 25 chapters done — 80%! 🎊
+Next: real silicon (Ch 21-25)! 🚀
 ```
 
 ### Design Complete — A Huge Milestone!
