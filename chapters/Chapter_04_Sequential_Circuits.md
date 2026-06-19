@@ -127,11 +127,11 @@ Clock (CLK):
 
 Everything happens at clock edges!
 
-Rising Edge:  ─┐ (0→1)
-              └
-              
-Falling Edge:   ┌─ (1→0)
+Rising Edge:    ┌─ (0→1)
               ──┘
+              
+Falling Edge: ─┐ (1→0)
+               └
 ```
 
 দুটো শব্দ মনে রাখো — **rising edge** (0→1, যখন signal উপরে উঠছে) আর **falling edge** (1→0, যখন নিচে নামছে)। আমাদের বেশিরভাগ circuit rising edge-এ কাজ করবে। প্রতি edge-এ flip-flop-গুলো একসাথে "ছবি তোলে" — সেই মুহূর্তের input ধরে রাখে, আর পরের edge পর্যন্ত সেই মানেই স্থির থাকে। এই তালে চলাকেই বলে **synchronous** design, আর এটাই নির্ভরযোগ্য circuit বানানোর সবচেয়ে গুরুত্বপূর্ণ অভ্যাস।
@@ -1238,7 +1238,7 @@ state diagram-টাকেই আরও নিখুঁতভাবে লেখ
 
 খেয়াল করো recipe-টার সুর — প্রথমে তুমি *ভাবো* (states ঠিক করো, diagram আঁকো), তারপর সেটাকে *আনুষ্ঠানিক* করো (table বানাও, binary code দাও), তারপর সেটাকে *hardware*-এ নামাও (logic বের করো, circuit বানাও)। ধারণা থেকে বাস্তবে যাওয়ার এই পথটাই সব digital design-এর মূল।
 
-### Example: 2-bit Sequence Detector (101)
+### Example: Sequence Detector (101)
 
 এবার একটা সত্যিকারের, ভীষণ ক্লাসিক FSM বানাই — একটা **sequence detector** যা serial input-এ "101" pattern খোঁজে। যতবার "101" আসবে, ততবার output 1 দেবে। এটা Mealy machine (কারণ output state আর input — দুটোর উপর নির্ভর করবে)।
 
@@ -1286,7 +1286,7 @@ diagram-টা একটু সময় নিয়ে পড়ো — প্
 | S1 | 0 | S2 | 0 |
 | S1 | 1 | S1 | 0 |
 | S2 | 0 | S0 | 0 |
-| S2 | 1 | S3 | 1 | ← **Detected!** |
+| S2 | 1 | S3 | **1** ← Detected! |
 | S3 | 0 | S2 | 0 |
 | S3 | 1 | S1 | 0 |
 
@@ -1492,12 +1492,12 @@ Q changes Tpd after the clock edge — not instantly!
 এবার আসল প্রশ্ন — তোমার circuit কত দ্রুত clock চালাতে পারবে? এটাই ঠিক করে দেয় তোমার processor কত MHz-এ চলবে! সূত্রটা সরল যুক্তির উপর দাঁড়িয়ে: এক clock cycle-এর মধ্যে তিনটে কাজ শেষ হতে হবে — (১) output বেরোতে হবে (Tpd / clock-to-q), (২) signal-টা পরের flip-flop পর্যন্ত যেতে হবে, আর (৩) সেখানে setup time-ও মানতে হবে। এই সব সময় যোগ করে যত পাও, এক cycle অন্তত তত লম্বা হতে হবে।
 
 ```
-Fmax = 1 / (Tpd + Tsu + Tclk-to-q)
+Fmax = 1 / (Tpd + Tcomb + Tsu)
 
 Example:
-Tpd = 10ns
-Tsu = 5ns  
-Tclk-to-q = 5ns
+Tpd (clock-to-Q) = 5ns
+Tcomb (signal path) = 10ns
+Tsu (setup) = 5ns
 
 Fmax = 1/(20ns) = 50 MHz
 ```
