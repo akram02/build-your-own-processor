@@ -66,7 +66,7 @@ AND gate, "প্রসেসর আসলে কীভাবে কাজ ক�
 Month 1-6:  Learned digital design, Verilog, FPGA
 Month 7-12: Built processor, optimized, ready
 Month 13:   Submitted to TinyTapeout
-Month 14-20: Fabrication at Skywater fab
+Month 14-20: Fabrication at SkyWater fab
 Month 21:   Testing & packaging
 Month 22:   CHIP ARRIVES! 🎉
 
@@ -119,7 +119,7 @@ flowchart TD
 প্রতিটা ধাপ একটু বিস্তারিত করি, যাতে চিপটা হাতে নিয়ে তুমি ঠিক জানো ভিতরে কী
 লুকিয়ে আছে:
 
-- **Wafer তৈরি:** একটা ২০০-৩০০ mm ব্যাসের, আয়নার মতো মসৃণ, প্রায় নিখুঁত
+- **Wafer তৈরি:** একটা ২০০ বা ৩০০ mm ব্যাসের, আয়নার মতো মসৃণ, প্রায় নিখুঁত
   বিশুদ্ধ সিলিকনের গোল চাকতি। এই একটা ওয়েফারে তোমার মতো **শত শত design** একসাথে
   বসে — TinyTapeout-এর পুরো মজাটাই এখানে: সবাই মিলে একটা ওয়েফার ভাগ করে নাও,
   তাই খরচ ভাগ হয়ে যায়।
@@ -248,7 +248,7 @@ die-এর মধ্যে তোমার পুরো প্রসেসরট
 reset করতে হবে, আর তার output পড়ার ব্যবস্থা করতে হবে। TinyTapeout বোর্ড ঠিক
 এই কাজগুলোই করে। সবচেয়ে মজার ব্যাপার — তোমাকে কোনো জটিল ল্যাব যন্ত্রপাতি কিনতে
 হবে না; বোর্ডে বসানো একটা সাধারণ **RP2040** microcontroller (হ্যাঁ, Raspberry
-Pi Pico-র সেই চিপ!) তোমার প্রসেসরের "নার্স"-এর ভূমিকা নেয়।
+Pi Pico-র সেই চিপ!) তোমার প্রসেসরের "নার্স"-এর ভূমিকা পালন করে।
 
 ### Understanding the Board:
 
@@ -861,7 +861,7 @@ def debug_internal_state():
 
 বাধ্যতামূলক পরীক্ষা শেষ — এবার মজার অংশ! এখন তুমি তোমার চিপের **সীমা** খুঁজে
 দেখবে: সর্বোচ্চ কত গতিতে চলে, কত power খায়, কত গরম-ঠান্ডায় টিকে থাকে। এগুলো
-জানার দরকার নেই বললেই নয়, কিন্তু এগুলোই তোমার datasheet-কে সত্যিকারের
+জানা জরুরি না হলেও, এগুলোই তোমার datasheet-কে সত্যিকারের
 professional করে তোলে — আর সত্যি বলতে, এগুলো করতে দারুণ লাগে। এ যেন নতুন গাড়ি
 কিনে দেখা সেটা সর্বোচ্চ কত জোরে চলে।
 
@@ -1097,8 +1097,8 @@ flowchart TD
     P2["📗 Part 2 · Ch 5-8<br/>Verilog HDL<br/>হার্ডওয়্যারকে কোডে বলা"]
     P3["📙 Part 3 · Ch 9-11<br/>FPGA<br/>আসল hardware-এ চালানো"]
     P4["📕 Part 4 · Ch 12-19<br/>Processor Design<br/>সম্পূর্ণ RISC-V CPU"]
-    P5["📔 Part 5 · Ch 20-24<br/>VLSI → GDSII<br/>silicon-এর জন্য তৈরি"]
-    P6["🎊 Ch 25<br/>আসল Chip!<br/>test + উদযাপন"]
+    P5["📔 Part 5 · Ch 20-25<br/>VLSI → GDSII<br/>silicon-এর জন্য তৈরি"]
+    P6["🎊 আসল Chip!<br/>test + উদযাপন"]
 
     P1 --> P2 --> P3 --> P4 --> P5 --> P6
 
@@ -1135,7 +1135,7 @@ COMPLETE: 25/25 Chapters! 🏆
 
 ```
 Total Learning Time: 12-18 months
-Total Pages: 1,500+
+Total Pages: 1,600+
 Total Code: 5,000+ lines
 Total Projects: 25+
 Total Cost: $500-1,000
@@ -1331,7 +1331,7 @@ P.S. - Show us your chip!
 
 **"From AND gates to silicon chips. You did it!"**
 
-**"AND gate থেকে silicon chip। তুমি করেছো!"**
+**"AND gate থেকে silicon chip পর্যন্ত। তুমি করেছো!"**
 
 ---
 
