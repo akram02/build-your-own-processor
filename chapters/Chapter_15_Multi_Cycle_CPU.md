@@ -285,10 +285,10 @@ stateDiagram-v2
 | **Load** (`LW`) | FETCH → DECODE → EXECUTE (address) → MEMORY (read) → WRITEBACK | **5** |
 | **Store** (`SW`) | FETCH → DECODE → EXECUTE (address) → MEMORY (write) | **4** |
 | **Branch** (`BEQ`) | FETCH → DECODE → EXECUTE (compare & PC আপডেট) | **3** |
-| **Jump** (`JAL`) | FETCH → DECODE → WRITEBACK (target হিসাব, PC আপডেট, PC+4 জমা) | **4** |
+| **Jump** (`JAL`) | FETCH → DECODE → WRITEBACK (target হিসাব, PC আপডেট, PC+4 জমা) | **3** |
 
-`LW` সবচেয়ে বেশি (৫ cycle), `BEQ` সবচেয়ে কম (৩ cycle) — কারণ branch-এর
-ফলাফল কোথাও লেখার দরকার নেই, শুধু PC ঠিক করলেই হয়। সাধারণ প্রোগ্রামে গড়
+`LW` সবচেয়ে বেশি (৫ cycle), আর `BEQ` ও `JAL` সবচেয়ে কম (৩ cycle) — `BEQ`-এর
+ফলাফল কোথাও লেখার দরকার নেই (শুধু PC ঠিক করলেই হয়), আর `JAL` EXECUTE এড়িয়ে সরাসরি WRITEBACK-এ যায়। সাধারণ প্রোগ্রামে গড়
 দাঁড়ায় **~4 cycle/instruction**।
 
 ---
@@ -519,7 +519,7 @@ endmodule
 | State | সক্রিয় control signals | ঐ cycle-এ যা ঘটছে |
 |---|---|---|
 | `FETCH` | `mem_read`, `ir_write`, `pc_write`; `alu_src_a=PC`, `alu_src_b=4`, `alu_op=ADD`, `pc_source=ALU` | memory থেকে instruction → IR; পাশে ALU দিয়ে PC ← PC+4 |
-| `DECODE` | `alu_src_a=PC`, `alu_src_b=imm`, `alu_op=ADD` | A/B পড়া; ALU আগাম branch target (PC+imm) বানায় |
+| `DECODE` | `alu_src_a=PC`, `alu_src_b=imm`, `alu_op=ADD` | A/B পড়া; ALU আগেভাগে branch target (PC+imm) বানায় |
 | `EX_R` | `alu_src_a=A`, `alu_src_b=B`, `alu_op=funct` | rs1 ◦ rs2 হিসাব (funct দিয়ে কোন op) |
 | `EX_I` | `alu_src_a=A`, `alu_src_b=imm`, `alu_op=funct` | rs1 ◦ immediate হিসাব |
 | `EX_LOAD` / `EX_STORE` | `alu_src_a=A`, `alu_src_b=imm`, `alu_op=ADD` | address = rs1 + offset |
@@ -565,7 +565,7 @@ FETCH cycle-এ memory আমাদের instruction দেয়। কিন�
 (যেমন `LW`-এর MEM cycle-এ) সেই একই memory এবার *data* দেবে — তখন তার output
 বদলে যাবে। তাই instruction-টাকে এক্ষুনি `IR`-এ ধরে রাখতে হয়, না হলে তা হারিয়ে
 যাবে আর পরের cycle-গুলোতে opcode/rs1/rs2 আর পড়া যাবে না। `ir_write` শুধু
-FETCH-এ 1 হয়, তাই IR বাকি cycle জুড়ে স্থির থাকে। reset-এ এটা NOP
+FETCH-এ 1 হয়, তাই IR বাকি cycle-গুলো জুড়ে স্থির থাকে। reset-এ এটা NOP
 (`ADDI x0,x0,0`) দিয়ে শুরু হয় — যাতে চালু হওয়ার মুহূর্তে কোনো আবোল-তাবোল
 কাজ না হয়:
 
@@ -589,7 +589,7 @@ endmodule
 ### Data Registers (A, B):
 
 DECODE cycle-এ register file থেকে `rs1` ও `rs2`-এর মান পড়ি — কিন্তু সেগুলো
-ALU-তে দরকার পরের (EXECUTE) cycle-এ। মাঝের clock edge-এ register file অন্য
+ALU-তে দরকার হয় পরের (EXECUTE) cycle-এ। মাঝের clock edge-এ register file অন্য
 কিছু পড়তে শুরু করবে, তাই operand দুটোকে `A` ও `B`-তে latch করে রাখি। এভাবে
 EXECUTE cycle-এ ALU স্থির, নির্ভরযোগ্য input পায়। এরা প্রতি clock-এই
 register file-এর আউটপুট তুলে রাখে (আলাদা enable লাগে না), কারণ আমরা শুধু
@@ -961,7 +961,7 @@ endmodule
 ### পুরো ছবিটা: control আর datapath কীভাবে কথা বলে
 
 উপরের module-টা আসলে দুটো জগতের সংযোগ — একদিকে **datapath** (যেখানে data
-গড়ায়), অন্যদিকে **control FSM** (যে প্রতি cycle-এ datapath-কে নির্দেশ দেয়)।
+বয়ে চলে), অন্যদিকে **control FSM** (যে প্রতি cycle-এ datapath-কে নির্দেশ দেয়)।
 নিচের ছবিতে কঠিন (solid) তীর = data প্রবাহ, ফুটকি (dashed) তীর = control
 signal:
 
@@ -1057,7 +1057,7 @@ single-cycle-এর CPI কম (1.0) কিন্তু clock period বড়; 
 
 মোট সময় প্রায় সমান (120ns বনাম 123ns)! অর্থাৎ এই কাল্পনিক উদাহরণে
 multi-cycle গতিতে single-cycle-কে হারায়নি — কিন্তু গতি কখনোই multi-cycle-এর
-মূল বিক্রয়-কথা ছিল না। আসল লাভ অন্যখানে:
+মূল আকর্ষণ ছিল না। আসল লাভ অন্যখানে:
 
 - ✅ **কম খরচ** — একটাই ALU, একটাই unified memory shared হয়
 - ✅ **নমনীয় (flexible)** — যার যত cycle দরকার, সে তত নেয়; জটিল instruction
