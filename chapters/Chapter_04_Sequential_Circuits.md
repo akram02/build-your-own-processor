@@ -884,8 +884,8 @@ Serial In ─[D FF]─[D FF]─[D FF]─[D FF]
 
 **Circuit:**
 ```
-   Parallel in:  D3   D2   D1   D0     ← all 4 bits loaded at once
-                  ↓    ↓    ↓    ↓       (each Di goes to its own MUX)
+        D3           D2           D1           D0    ← parallel data in
+         ↓            ↓            ↓            ↓
   '0' ─[MUX]─[D FF]─[MUX]─[D FF]─[MUX]─[D FF]─[MUX]─[D FF]─ Serial Out
            └──── each MUX's other input = the previous FF's output ────┘
                  (when shifting, bits march left → right to Serial Out)
