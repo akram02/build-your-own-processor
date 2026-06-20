@@ -20,8 +20,8 @@
 ```
 ✅ তোমার প্রথম Verilog module
 ✅ AND/OR/NOT gates - in code!
-✅ 4-bit Adder - in 5 lines!
-✅ MUX/Decoder - with case statements
+✅ 4-bit Adder - in 1 line!
+✅ MUX/Decoder - conditional ও assign দিয়ে
 ✅ Testbench - circuit testing in code
 ✅ তোমার processor-এর প্রথম Verilog module! 🎉
 ```
@@ -249,7 +249,7 @@ assign lower_nibble = byte_data[3:0];  // Range
 assign upper_nibble = byte_data[7:4];  // Range
 
 // Bit ordering
-[7:0] means: bit 7 is MSB, bit 0 is LSB
+// [7:0] means: bit 7 is MSB, bit 0 is LSB
 ```
 
 ভাবো `[7:0]` হলো একটা ফ্ল্যাটের ৮টা ঘর, যাদের নম্বর দেওয়া 7 থেকে 0 পর্যন্ত। `wire [7:0] byte_data;` মানে — ৮টা তার একসাথে, নাম `byte_data`, ভেতরের তারগুলোর নম্বর `byte_data[7]` থেকে `byte_data[0]`। দরকার হলে পুরো গুচ্ছ একসাথে ব্যবহার করো, আর দরকার হলে নির্দিষ্ট ঘরে হাত দাও: `byte_data[0]` দিয়ে শুধু একটা bit তুলে নাও, বা `byte_data[3:0]` দিয়ে নিচের চারটা bit-এর একটা টুকরো (এটাকে বলে **slice** বা **part-select**)।
@@ -525,7 +525,7 @@ module adder_4bit(
     output [3:0] sum,
     output       cout
 );
-    // Just 2 lines for 4-bit adder!
+    // Just 1 line for the whole 4-bit adder!
     assign {cout, sum} = a + b + cin;
     
     // That's it! Verilog handles the details!
