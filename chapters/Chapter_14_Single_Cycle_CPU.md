@@ -353,8 +353,10 @@ operation একসাথে এনে CPU-র কাজে লাগাচ্�
 
 দুটো জিনিস নতুন করে খেয়াল করার মতো। প্রথমত, `alu_control` একটা **selector** — পুরো
 ALU হলো একটা বড় MUX, যা `alu_control`-এর মান দেখে কোন হিসাবের ফলটা বাইরে পাঠাবে তা
-বেছে নেয়। দ্বিতীয়ত, পাশে দুটো ছোট কিন্তু দামি signal: `zero` (ফল `0` কিনা — branch-এর
-সমতা যাচাইয়ে কাজে লাগে) আর `negative` (ফলের সবচেয়ে উপরের bit, অর্থাৎ চিহ্ন)।
+বেছে নেয়। দ্বিতীয়ত, পাশে দুটো ছোট signal: `zero` (ফল `0` কিনা) আর `negative` (ফলের সবচেয়ে
+উপরের bit, অর্থাৎ চিহ্ন)। এগুলো flag হিসেবে রাখা; তবে এই CPU-তে branch-এর সমতা
+যাচাই করে আলাদা `branch_comparator` module — তাই ALU-র এই দুটো flag এখানে
+completeness-এর জন্য (branch সিদ্ধান্তে সরাসরি ব্যবহৃত হয় না)।
 
 ```verilog
 module alu(
@@ -1210,7 +1212,7 @@ main:
     addi x6, x0, 20     # x6 = 20
     add  x7, x5, x6     # x7 = x5 + x6 = 30
     sw   x7, 0(x0)      # Store result to address 0
-    ebreak              # Stop
+    ebreak              # marker — এই core-এ NOP; testbench সময়মতো sim থামায়
 
 # Machine code (hex):
 # 00A00293  # addi x5, x0, 10
@@ -1243,7 +1245,7 @@ loop:
     bne  x6, x7, loop   # if i != 11, continue
     
     sw   x5, 0(x0)      # Store result
-    ebreak              # Stop
+    ebreak              # marker — এই core-এ NOP; testbench সময়মতো sim থামায়
 ```
 
 ### Program 3: Function Call — jump আর return
@@ -1271,7 +1273,7 @@ main:
     
     lw   ra, 0(sp)      # Restore ra
     addi sp, sp, 4      # Deallocate stack
-    ebreak              # Stop
+    ebreak              # marker — এই core-এ NOP; testbench সময়মতো sim থামায়
 
 add_func:
     add  a0, a0, a1     # a0 = a0 + a1
@@ -1363,15 +1365,18 @@ flowchart LR
 
 | পর্যায় | আনুমানিক দেরি |
 |:---|:---:|
-| Memory access (IMEM/DMEM) | ~5 ns |
-| Register file | ~2 ns |
-| ALU | ~3 ns |
+| Instruction Memory (IMEM fetch) | ~5 ns |
+| Register file (read) | ~2 ns |
+| ALU (address হিসাব) | ~3 ns |
+| Data Memory (DMEM, load) | ~5 ns |
 | MUX/routing | ~2 ns |
-| **মোট (critical path)** | **~12 ns** |
+| **মোট (load critical path)** | **~17 ns** |
 
-`12 ns` cycle মানে সর্বোচ্চ frequency `1 / 12ns ≈ 83 MHz`। কিন্তু এখানেই দুঃখ:
-**সব** instruction এই ১২ns-ই খরচ করে — এমনকি সরল `add`, যার আসলে memory দরকারই নেই
-আর ৬-৭ns-এই হয়ে যেত। এই অপচয়টাই single-cycle-এর জন্মগত দুর্বলতা।
+খেয়াল করো — load-এ memory **দুবার** ছুঁতে হয় (আগে instruction fetch, পরে data),
+তাই দুটো ৫ns আলাদা। `17 ns` cycle মানে সর্বোচ্চ frequency `1 / 17ns ≈ 59 MHz`।
+কিন্তু এখানেই দুঃখ: **সব** instruction এই ১৭ns-ই খরচ করে — এমনকি সরল `add`, যার
+data memory লাগেই না (IMEM+RF+ALU+MUX ≈ ১২ns-এই হয়ে যেত, DMEM-এর ~৫ns বাদ),
+তবুও তাকে পুরো ১৭ns cycle গুনতে হয়। এই অপচয়টাই single-cycle-এর জন্মগত দুর্বলতা।
 
 ### CPI (Cycles Per Instruction) — সংখ্যাটা যেখানে প্রতারক
 

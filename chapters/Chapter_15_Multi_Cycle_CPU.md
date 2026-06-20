@@ -86,13 +86,14 @@ ALU-তে address হিসাব → আবার memory → register-এ ল�
 
 | Instruction | Single-Cycle | Multi-Cycle | মন্তব্য |
 |---|---|---|---|
-| `ADD` | 12ns (১ cycle) | 3 cycle × 3ns = **9ns** | দ্রুত! single-cycle-এ ৭ns অপচয় হতো |
+| `ADD` | 12ns (১ cycle) | 4 cycle × 3ns = **12ns** | একই সময়, কিন্তু এক ALU/memory বারবার ব্যবহার (hardware অনেক কম) |
 | `LW` | 12ns (১ cycle) | 5 cycle × 3ns = **15ns** | একটু ধীর, কারণ এর সত্যিই অনেক ধাপ লাগে |
 
 লক্ষ করো: multi-cycle প্রতিটা instruction-কে আলাদাভাবে দেখে — যার যতটুকু
 ধাপ দরকার, সে শুধু ততটুকু cycle নেয়। `ADD` ৩ cycle-এই খালাস, কিন্তু `LW`
-পুরো ৫ cycle ব্যবহার করে (address হিসাব + memory পড়া আলাদা ধাপে)। কেউ আর
-অন্যের ধীরতার শাস্তি ভোগ করে না।
+পুরো ৫ cycle ব্যবহার করে (address হিসাব + memory পড়া আলাদা ধাপে)। multi-cycle-এর
+আসল লাভ এখানে কাঁচা গতি নয় — এক ALU আর এক memory বারবার ভাগ করে ব্যবহার (অনেক কম
+hardware), আর fast clock-টা পরের অধ্যায়ের pipelining-এর ভিত গড়ে দেয়।
 
 > **আসল লাভ:** clock দ্রুত হয়েছে, instruction-প্রতি cycle বেড়েছে — কিন্তু
 > ভারসাম্যটা প্রায়ই single-cycle-এর সমান বা ভালো জায়গায় দাঁড়ায়, আর
@@ -201,8 +202,8 @@ instruction-এর opcode দেখে।
 
 2. **DECODE (ID)** — instruction বোঝা ও operand পড়া।
    - register file থেকে `rs1`, `rs2` পড়ে `A`, `B`-তে রাখো; immediate বানাও।
-   - এই cycle-এও ALU বসে থাকে না — এটা **আগাম (speculative)** ভাবে branch
-     target (`PC + immediate`) হিসাব করে রাখে, যদি পরে branch লাগে তাই।
+   - branch target-ও এই cycle-এ **আগাম (speculative)** তৈরি হয়ে রাখে — এই
+     instruction-এর নিজের PC (`old_pc`) + immediate — যদি পরে branch লাগে তাই।
 
 3. **EXECUTE (EX)** — আসল হিসাব।
    - ALU operation চালাও: arithmetic/logic, কিংবা load/store-এর জন্য
@@ -476,7 +477,7 @@ module multi_cycle_control(
             EX_BRANCH: begin
                 alu_src_a = 2'b01;  // A (rs1)
                 alu_src_b = 2'b00;  // B (rs2)
-                alu_op = 2'b01;     // SUB for comparison
+                alu_op = 2'b01;     // SUB; actual branch decision comes from branch_comparator
                 pc_write_cond = 1;
                 pc_source = 2'b01;  // Branch target
             end
@@ -523,7 +524,7 @@ endmodule
 | `EX_R` | `alu_src_a=A`, `alu_src_b=B`, `alu_op=funct` | rs1 ◦ rs2 হিসাব (funct দিয়ে কোন op) |
 | `EX_I` | `alu_src_a=A`, `alu_src_b=imm`, `alu_op=funct` | rs1 ◦ immediate হিসাব |
 | `EX_LOAD` / `EX_STORE` | `alu_src_a=A`, `alu_src_b=imm`, `alu_op=ADD` | address = rs1 + offset |
-| `EX_BRANCH` | `alu_src_a=A`, `alu_src_b=B`, `alu_op=SUB`, `pc_write_cond`, `pc_source=branch` | তুলনা (subtraction); শর্ত মিললে PC ← branch target |
+| `EX_BRANCH` | `alu_src_a=A`, `alu_src_b=B`, `alu_op=SUB`, `pc_write_cond`, `pc_source=branch` | তুলনা করে `branch_comparator`; শর্ত মিললে PC ← branch target |
 | `MEMORY` | load হলে `mem_read`, store হলে `mem_write` | data memory পড়া/লেখা |
 | `WRITEBACK` | `reg_write` (+ load হলে `reg_src=mem`; JAL/JALR হলে `reg_src=return addr`, `pc_write`, jump `pc_source`) | ফল register-এ লেখা; jump হলে PC-ও আপডেট |
 
