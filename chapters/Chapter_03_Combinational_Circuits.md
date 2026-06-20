@@ -372,16 +372,15 @@ flowchart RL
 এই carry এক ঘর থেকে পরের ঘরে গড়িয়ে গড়িয়ে যায় বলেই এর নাম **Ripple Carry Adder** — "ripple" মানে ঢেউয়ের মতো গড়িয়ে যাওয়া। gate-level-এ তার-সংযোগটা এমন দেখায়:
 
 ```
-           A3 B3    A2 B2    A1 B1    A0 B0
-            │ │      │ │      │ │      │ │
-            ↓ ↓      ↓ ↓      ↓ ↓      ↓ ↓
-      ┌────[FA3]────[FA2]────[FA1]────[FA0]────
-Cout──┤     │        │        │        │
-      │   S3       S2       S1       S0
-      │
-    (MSB)                              (LSB)
+      A3 B3    A2 B2    A1 B1    A0 B0
+       │ │      │ │      │ │      │ │
+       ▼ ▼      ▼ ▼      ▼ ▼      ▼ ▼
+  ┌──[ FA3 ]──[ FA2 ]──[ FA1 ]──[ FA0 ]──◄ Cin=0
+  │     ▼        ▼        ▼        ▼
+Cout   S3       S2       S1       S0
+ (MSB)                              (LSB)
 
-Carry ripples from right to left!
+Carry ডান থেকে বাঁয়ে গড়িয়ে যায় (FA0 → FA3)!
 ```
 
 **Detailed Connections:**
@@ -474,22 +473,23 @@ A - B = A + (-B)
 ### Circuit Design:
 
 ```
-        B3 B2 B1 B0
-         │  │  │  │
-     ┌──[NOT NOT NOT NOT]── (1's complement)
-     │   │  │  │  │
-     │   ↓  ↓  ↓  ↓
-Sub──┤  ┌──────────────────┐
-     │  │   4-bit Adder    │
-     └→ │   (Cin = 1)      │
-        └──────────────────┘
-        A3 A2 A1 A0
-         │  │  │  │
-         ↓  ↓  ↓  ↓
-        S3 S2 S1 S0
+   B3   B2   B1   B0
+    │    │    │    │
+    ▼    ▼    ▼    ▼
+  ┌────┬────┬────┬────┐
+  │NOT │NOT │NOT │NOT │
+  └────┴────┴────┴────┘
+    │    │    │    │    (= B', 1's complement)
+    ▼    ▼    ▼    ▼
+  ┌────────────────┐
+  │  4-bit Adder   │◄── Cin = Sub
+  │  A + B' + Cin  │    (Sub=1 → বিয়োগ)
+  └────────────────┘
+    │    │    │    │
+    ▼    ▼    ▼    ▼
+   S3   S2   S1   S0
 
-When Sub=1: NOT B is applied, Cin=1
-Result: A + NOT B + 1 = A - B
+A3..A0 আলাদা ভাবে Adder-এ যায়;  Sub=1 হলে  A + (NOT B) + 1 = A − B
 ```
 
 ### Adder-Subtractor Combined: একটাই circuit, দুটো কাজ

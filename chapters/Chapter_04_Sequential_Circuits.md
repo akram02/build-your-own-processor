@@ -519,20 +519,16 @@ JK-র চারটে মোড পড়ে দেখো। এখানে �
 JK আসলে একটা SR flip-flop, যার সামনে feedback জুড়ে দেওয়া হয়েছে — Q ফিরে যাচ্ছে K-এর AND gate-এ, আর Q' ফিরে যাচ্ছে J-এর AND gate-এ। এই feedback-ই J=K=1 অবস্থায় toggle ঘটায়: যেহেতু Q আর Q' সবসময় উল্টো, feedback নিশ্চিত করে প্রতিবার ঠিক উল্টো দিকে set/reset হয়।
 
 ```
-J ──┬───[AND]───── S  ┐
-    │      ↑          │
-    │      │          │
-    │    Q' (feedback)│
-    │                 ├─[SR FF]── Q
-    │                 │      ↑
-    └──────────────────────Q'│
-                        │     │
-K ──┬───[AND]───── R  ┘     │
-    │      ↑                 │
-    │      │                 │
-    │    Q (feedback) ←──────┘
-    
-CLK ──→ (to SR FF clock)
+   J ──┐
+       ├──[AND]──── S ──┐
+ Q' ───┘                │
+                        ├──[ SR FF ]──┬── Q
+   K ──┐                │             │
+       ├──[AND]──── R ──┘             └── Q'
+   Q ──┘
+
+       feedback:  Q' → উপরের AND,   Q → নিচের AND
+   CLK ──► SR FF-এর clock
 ```
 
 ### Applications:
@@ -609,13 +605,10 @@ T=1: Toggle (flip Q)
 T flip-flop আলাদা করে বানানোর দরকারই নেই — JK-র সেই Toggle মোডটাই তো আমাদের দরকার! JK-তে যখন J আর K দুটোই 1, তখন প্রতি edge-এ toggle হয়। তাই J আর K-কে একসাথে জুড়ে দাও, আর সেই জোড়া তারটার নাম দাও T। ব্যস।
 
 ```
-       T ──┬── J  ┐
-           │       │
-           └── K  ├─[JK FF]── Q
-                  │
-CLK ───────────────┘
-
-Simply connect J=K=T!
+   T ──┬── J ──┐
+       │       ├──[ JK FF ]── Q
+       └── K ──┘
+   CLK ───────────► (JK FF clock)
 ```
 
 বুঝে নাও — T=1 দিলে J=K=1 হয়ে toggle ঘটে, আর T=0 দিলে J=K=0 হয়ে hold হয়। ঠিক যেমনটা চাই।
@@ -625,13 +618,11 @@ Simply connect J=K=T!
 D flip-flop দিয়েও T বানানো যায়, আর এই কৌশলটা একটু চালাক। আমরা চাই প্রতি edge-এ Q উল্টে যাক — অর্থাৎ পরের মান হোক বর্তমান মানের উল্টো। একটা XOR gate দিয়ে এটা করা যায়: **D = T ⊕ Q**।
 
 ```
-       Q ───┬──[XOR]── D  ┐
-            │             │
-       T ───┘             ├─[D FF]── Q
-                          │
-CLK ───────────────────────┘
-
-D = T ⊕ Q
+   Q ──┬──[XOR]── D ──┐
+       │              ├──[ D FF ]── Q
+   T ──┘
+   CLK ─────────────────► (D FF clock)
+   feedback: Q output → XOR (তাই D = T ⊕ Q)
 ```
 
 XOR-এর ধর্মটা মনে করো — T=0 হলে `D = 0 ⊕ Q = Q` (মান একই থাকে, hold)। T=1 হলে `D = 1 ⊕ Q = Q'` (মান উল্টে যায়, toggle)। সেই একই toggle behavior, কিন্তু এবার D flip-flop আর একটা XOR দিয়ে। একই গন্তব্যে পৌঁছানোর দুটো ভিন্ন পথ — এটাই দেখায় digital design-এ কত স্বাধীনতা আছে।
@@ -709,8 +700,8 @@ D1 ───[D FF]─── Q1  │
       CLK ↑         │
 D0 ───[D FF]─── Q0  ┘
       CLK ↑
-       │
-Common CLK ────┘
+          │
+          └── Common CLK (সব FF-এ একই)
 ```
 
 **With Enable:**
@@ -746,8 +737,8 @@ Features:
 
 **Complete 4-bit Register:**
 ```
-             CLR (clear all)
-              │
+           CLR (clear all)
+             ↓
 D3 ─[MUX]─[D FF]─ Q3
       ↑      ↑
 D2 ─[MUX]─[D FF]─ Q2

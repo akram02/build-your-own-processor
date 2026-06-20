@@ -227,15 +227,12 @@ endmodule
 এই MUX-টাই forwarding-এর হাত-পা। তিনটা সম্ভাব্য মান তার সামনে — register file-এর মান, EX/MEM-এর মান, MEM/WB-এর মান — আর `forward_select` বলে দেয় কোনটা ALU-তে যাবে। নিচের দৃশ্যটা মাথায় রাখো: forwarding হলো একটা "shortcut তার", যা pipeline register থেকে ফলাফল তুলে নিয়ে এক-দুই stage **পিছনে** ALU-র input-এ ফেরত পাঠায় — register file ঘুরে আসার দীর্ঘ পথ বাদ দিয়ে।
 
 ```text
-            ┌──────────────────── EX/MEM থেকে shortcut (2'b10) ────────────────────┐
-            │                ┌──────────── MEM/WB থেকে shortcut (2'b01) ────────┐  │
-            │                │                                                  │  │
-            ▼                ▼                                                  │  │
-   ID ──► [ID/EX] ──► [ MUX ]──► ALU ──► [EX/MEM] ──► MEM ──► [MEM/WB] ──► WB ──┘  │
-                        ▲                     │                                    │
-                        │                     └────────────────────────────────────┘
-                  register file
-                  এর মান (2'b00)
+                        ┌───────────── MEM/WB (2'b01) ─────────────┐
+                        │ ┌─ EX/MEM (2'b10) ──┐                    │
+                        ▼ ▼                   │                    │
+   ID ──► [ID/EX] ──► [ MUX ] ──► ALU ──► [EX/MEM] ──► MEM ──► [MEM/WB] ──► WB
+                         ▲
+                register file (2'b00)
 ```
 
 মান তৈরি হয় ডান দিকে (EX/MEM, MEM/WB), আর তারটা সেটা টেনে আনে বাম দিকের ALU input-এ — সময়ের দিক থেকে "ভবিষ্যতের নিজের কাছ থেকে ধার নেওয়া" নয়, বরং **আগের instruction-এর সদ্য-তৈরি ফলাফল পরের instruction-এর হাতে তুলে দেওয়া**।
@@ -343,7 +340,7 @@ ADD x4, x1, x3    # x1 এখুনি লাগবে
 `ADD` চায় `x1`, আর `LW` এখনো `x1` **আনছে**। সমস্যাটা টের পেতে দুটো instruction-কে পাশাপাশি timeline-এ বসাও:
 
 ```text
-   Cycle:  1     2     3      4      5
+   Cycle:  1     2     3     4      5
    LW:    [IF]  [ID]  [EX]  [MEM]  [WB]
                               ▲
                               └─ x1-এর data সবে এখানে memory থেকে আসে!
@@ -401,14 +398,13 @@ ADD x4, x1, x3    # Use x1
 ```
 
 ```text
-   Cycle:    1     2     3       4      5      6      7
+   Cycle:    1     2     3      4      5      6      7
    LW:      [IF]  [ID]  [EX]   [MEM]  [WB]
    ADD:           [IF]  [ID]   [ID]   [EX]   [MEM]  [WB]
-                         │       ▲      ▲
-                  stall এখানে    │      │
-                  ধরা পড়ে        │      └─ LW এখন MEM/WB-এ; data
-                  (LW EX-এ,      │         forward হয়ে ADD-এর EX-এ আসে ✅
-                  ADD ID-তে)     └─ ADD এক cycle ID-তে আটকে (পুনরায় ID)
+                         ▲      ▲      ▲
+                         │      │      └─ LW এখন MEM/WB-এ; data forward হয়ে ADD-এর EX-এ আসে ✅
+                         │      └─ ADD এক cycle ID-তে আটকে (পুনরায় ID)
+                         └─ stall এখানে ধরা পড়ে (LW EX-এ, ADD ID-তে)
    bubble:               · · · ►[EX]──► (NOP, কিছুই করে না)
 ```
 
@@ -450,7 +446,7 @@ branch যদি শেষ পর্যন্ত নেওয়া হয়, �
 branch **taken** হলে সেই ২-cycle penalty-র ছবি:
 
 ```text
-   Cycle:   1     2      3       4      5      6
+   Cycle:   1     2      3      4      5      6
    BEQ:    [IF]  [ID]   [EX]   [MEM]  [WB]
                          ▲
                          └─ taken! পিছনের দুটো ভুল পথ — flush করো
