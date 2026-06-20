@@ -2,7 +2,7 @@
 
 প্রতি অধ্যায় থেকে ১০টি করে candidate issue (deep per-chapter audit, 25 অধ্যায়)।
 
-**মোট: 250**  ·  HIGH: 75  ·  MED: 103  ·  LOW: 71  ·  **Fixed: 0/250**
+**মোট: 250**  ·  HIGH: 75  ·  MED: 103  ·  LOW: 71  ·  **Fixed: 5/250**
 
 ব্যবহার: যেটা ঠিক হবে সেটার `[ ]` → `[x]` করো; কমিট-মেসেজে ref দাও। `[~]` = খারাপ-positive/বাতিল।
 
@@ -14,8 +14,8 @@ Legend: **[HIGH]** আসল বাগ/ভুল · **[MED]** গুরুত্
 
 ## Chapter 1 — Digital Logic Introduction (10 issues: 2 HIGH, 5 MED, 3 LOW)
 
-- [ ] [HIGH] L138-147 — Transistor-as-switch diagram: drawn as Output→transistor→GND (pull-down), so "Gate ON → current flows" pulls Output to 0, contradicting the label "Output = 1". FIX: redraw with output pulled to VDD when ON, or relabel to match pull-down topology.
-- [ ] [HIGH] L125-130 — Voltage-level waveform malformed (top/bottom edges don't align into a valid square wave); also "5V ... তোমার FPGA তেও এমন" but Tang Nano 9K is 3.3V. FIX: redraw aligned square wave; change 5V→3.3V (or mark illustrative).
+- [x] [HIGH] L138-147 — Transistor-as-switch diagram: drawn as Output→transistor→GND (pull-down), so "Gate ON → current flows" pulls Output to 0, contradicting the label "Output = 1". FIX: redraw with output pulled to VDD when ON, or relabel to match pull-down topology.
+- [x] [HIGH] L125-130 — Voltage-level waveform malformed (top/bottom edges don't align into a valid square wave); also "5V ... তোমার FPGA তেও এমন" but Tang Nano 9K is 3.3V. FIX: redraw aligned square wave; change 5V→3.3V (or mark illustrative).
 - [ ] [MED] L269 — "মাত্র ৭টা gate দিয়েই ... বানানো যায়" framed as the amazing fact, undercutting the later (correct) NAND-universality point at L439. FIX: reword; note NAND alone suffices.
 - [ ] [MED] L182 — Reliability figures 100/60/30% decelerate (40 then 30 drop), contradicting "মান যত বাড়ে নির্ভরযোগ্যতা তত দ্রুত কমে". FIX: use 100/50/25%.
 - [ ] [MED] L123-130 — single dashed line labeled both "Threshold ~2.5V" and "(Noise margin)"; noise margin is a band (V_IH–V_IL), not one line; contradicts prose. FIX: show two lines for the margin band.
@@ -27,7 +27,7 @@ Legend: **[HIGH]** আসল বাগ/ভুল · **[MED]** গুরুত্
 
 ## Chapter 2 — Number Systems & Boolean Algebra (10 issues: 1 HIGH, 4 MED, 5 LOW)
 
-- [ ] [HIGH] L319 — "Complement নিয়ম: X·Y + X·Y′ = X" mislabeled; that's the Combining/Adjacency theorem (the basis of K-map grouping), not Complement (A·A′=0). FIX: rename to Combining/Adjacency.
+- [x] [HIGH] L319 — "Complement নিয়ম: X·Y + X·Y′ = X" mislabeled; that's the Combining/Adjacency theorem (the basis of K-map grouping), not Complement (A·A′=0). FIX: rename to Combining/Adjacency.
 - [ ] [MED] L69 — "hardware-এর ... দুটো হাত" breaks the finger-base analogy (two hands ⇒ ten fingers). FIX: "দুটো অবস্থা (ON/OFF)".
 - [ ] [MED] L215 — "১৮০ বছরেরও আগে" for Boole (1847/1854) overstates (~172-179 yrs). FIX: "প্রায় ১৭৫ বছর আগে".
 - [ ] [MED] L252 — claims to show "Identity আর Null" but only gives a Null example (A+1=1); no Identity example. FIX: add A+0=A or narrow to Null.
@@ -40,8 +40,8 @@ Legend: **[HIGH]** আসল বাগ/ভুল · **[MED]** গুরুত্
 
 ## Chapter 3 — Combinational Circuits (10 issues: 2 HIGH, 5 MED, 3 LOW)
 
-- [ ] [HIGH] L880-903 — 1-bit ALU table defines 4 ops (AND/OR/ADD/SUB) but the 4:1 MUX in both mermaid & ASCII shows only 3 inputs (AND/OR/ADD), SUB missing. FIX: 4 inputs to the 4:1 MUX.
-- [ ] [HIGH] L475-493 — subtractor uses hardwired NOT gates (always invert B) but labels carry-in "Cin = Sub" as a mode signal; with permanent inverters Sub=0 gives A+(NOT B) = A−B−1, can't add. FIX: hardwire Cin=1 & call it a subtractor, OR use B XOR Sub gates.
+- [x] [HIGH] L880-903 — 1-bit ALU table defines 4 ops (AND/OR/ADD/SUB) but the 4:1 MUX in both mermaid & ASCII shows only 3 inputs (AND/OR/ADD), SUB missing. FIX: 4 inputs to the 4:1 MUX.
+- [x] [HIGH] L475-493 — subtractor uses hardwired NOT gates (always invert B) but labels carry-in "Cin = Sub" as a mode signal; with permanent inverters Sub=0 gives A+(NOT B) = A−B−1, can't add. FIX: hardwire Cin=1 & call it a subtractor, OR use B XOR Sub gates.
 - [ ] [MED] L26/L856/L1141 — prose lists "তুলনা" (compare) as a direct ALU op, but neither ALU op-table has compare (only via SUB + Z/N flags). FIX: remove or explain via subtraction+flags.
 - [ ] [MED] L367 vs L381 — two adjacent 4-bit adder diagrams both label "(MSB)" on different signals (S3 in mermaid, Cout in ASCII). FIX: one convention.
 - [ ] [MED] L49-53 / L175-179 — half-adder QuickWin diagram: B doesn't visibly reach the AND gate (Carry=A·B needs both). FIX: branch B into both gates.

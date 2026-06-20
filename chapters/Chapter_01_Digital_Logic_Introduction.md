@@ -122,9 +122,9 @@ Example: Smartphone, laptop, তোমার processor!
 ```
 Voltage Levels (তোমার FPGA তেও এমন):
 
-5V  ──┐       ┌───────┐       ┌─────   Logic 1 (HIGH)
+3.3V──┐       ┌───────┐       ┌─────   Logic 1 (HIGH)
       │       │       │       │
-      │       │       │       │        Threshold: ~2.5V
+      │       │       │       │        Threshold: ~1.65V
 - - - │ - - - │ - - - │ - - - │ - - -  (Noise margin)
       │       │       │       │
 0V    └───────┘       └───────┘──────   Logic 0 (LOW)
@@ -135,16 +135,16 @@ Voltage Levels (তোমার FPGA তেও এমন):
 ```
 Transistor (Building block):
 
-         ┌──── Output (0 or 1)
+         ┌──── 1 (HIGH supply)
          │
       ───┤
          │ ←── Gate (Control signal)
       ───┤
          │
-        GND
+         └──── Output
 
-Gate ON  → Current flows → Output = 1
-Gate OFF → No current    → Output = 0
+Gate ON  → current flows → Output = 1
+Gate OFF → no current    → Output = 0
 ```
 
 এবার আসল চমকটা ধরো: একটা transistor মানে একটা switch, একটা switch মানে একটা bit। আর একটা আধুনিক CPU-তে এমন **১০০ কোটিরও বেশি** transistor থাকে, যেগুলো প্রতিটা সেকেন্ডে কোটি কোটিবার নিখুঁতভাবে on/off হয়। ভয় পেয়ো না — তুমি ১০০ কোটি transistor হাতে বসাবে না! তুমি শিখবে কীভাবে অল্প কয়েকটা switch দিয়ে একটা ছোট building block বানাতে হয়, তারপর সেই block-গুলো বারবার বসিয়ে বড় কিছু গড়তে হয়। ঠিক যেভাবে কয়েকটা ইট দিয়ে দেয়াল, আর কয়েকটা দেয়াল দিয়ে গোটা বাড়ি।
