@@ -111,22 +111,22 @@ Synthesize → Place & Route → Bitstream → USB দিয়ে board-এ প
                  Tang Nano 9K (top view)
                        ┌─USB-C─┐
                        │  ▭▭   │   ← power + programming
-              ┌────────┴───────┴────────┐
-   pin    →   ║ ●                      ● ║   ← pin
-   headers    ║                          ║     headers
-   (left)     ║   ●  ●  ●  ●  ●  ●       ║     (right)
-              ║   └── 6 LEDs (0–5) ──┘   ║
-              ║                          ║
-              ║      ┌────────────┐      ║
-              ║      │  GW1NR-9C  │      ║   ← the FPGA chip
-              ║      │   (FPGA)   │      ║      (the real hero)
-              ║      └────────────┘      ║
-              ║                          ║
-              ║   [S1]          [S2]     ║   ← 2 push buttons
-              ║                          ║
-              ║   [ HDMI ]   [TF card]   ║   ← video out + SD slot
-              ║   [   8 MB PSRAM    ]    ║   ← external memory
-              ║ ●                      ● ║
+              ┌────────┴───────┴─────────┐
+   pin    →   │ ●                      ● │   ← pin
+   headers    │                          │     headers
+   (left)     │   ●  ●  ●  ●  ●  ●       │     (right)
+              │   └── 6 LEDs (0–5) ──┘   │
+              │                          │
+              │      ┌────────────┐      │
+              │      │  GW1NR-9C  │      │   ← the FPGA chip
+              │      │   (FPGA)   │      │      (the real hero)
+              │      └────────────┘      │
+              │                          │
+              │   [S1]          [S2]     │   ← 2 push buttons
+              │                          │
+              │   [ HDMI ]   [TF card]   │   ← video out + SD slot
+              │   [   8 MB PSRAM    ]    │   ← external memory
+              │ ●                      ● │
               └──────────────────────────┘
                   Size: ~21mm × 72mm
                   (লম্বা-সরু — breadboard-এ দিব্যি বসে যায়)
