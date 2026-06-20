@@ -835,22 +835,22 @@ Chapter 16-এর "৫× speedup" ছিল স্বপ্ন — যেখা�
 | উৎস | CPI-তে যোগ | কেন |
 |------|------------|------|
 | Base (ideal) | 1.0 | প্রতি cycle একটা instruction শেষ |
-| Data hazards | +0.1–0.3 | forwarding বেশিরভাগ সারায়, তাই কম |
-| Load-use stalls | +0.2–0.5 | প্রতিটায় ১ bubble |
-| Branch mispredictions | +0.5–1.0 | প্রতিটায় ২ bubble — সবচেয়ে দামি |
-| **Typical মোট** | **CPI = 1.3–1.5** | বাস্তব pipeline-এর স্বাভাবিক মান |
+| Data hazards (forwarded) | +0.0 | forwarding বিনামূল্যে সারায় — কোনো bubble নেই |
+| Load-use stalls | +0.1–0.2 | প্রতিটায় ১ bubble |
+| Branch mispredictions | +0.2–0.3 | প্রতিটায় ২ bubble — সবচেয়ে দামি |
+| **Typical মোট** | **CPI = 1.3–1.5** | 1.0 + 0.0 + (0.1–0.2) + (0.2–0.3) |
 
 খেয়াল করো branch misprediction-ই সবচেয়ে বেশি যোগ করে — কারণ ২ cycle penalty load-use-এর ১ cycle-এর দ্বিগুণ, আর কোডে branch থাকে প্রচুর। এজন্যই §১৭.৭-এর branch prediction এত গুরুত্বপূর্ণ।
 
 ### ১০০ instruction-এর হিসাব
 
 ```text
-   Cycles ≈ 5 (pipeline fill) + 99 (বাকি instruction) + stalls
-          ≈ 104 + 30
-          ≈ 134 cycles
+   Pipelined ≈ 5 (pipeline fill) + 99 (বাকি instruction) + ~30 stalls
+             ≈ 134 cycle   (প্রতি cycle ছোট — মাত্র এক stage-এর সমান লম্বা)
 
-   Single-cycle হলে লাগত: 100 instruction × 5 = 500 cycle-সমতুল্য কাজ
-   Speedup = 500 / 134 ≈ 3.7×
+   Single-cycle: প্রতি instruction ১ cycle (CPI=1), কিন্তু সেই cycle ~৫× লম্বা
+                 (এক cycle-এ পাঁচ stage-এর কাজ) → সময় = 100 × 5 = 500 একক
+   Speedup = 500 / 134 ≈ 3.7×   (cycle-সংখ্যায় নয়, সময়ে তুলনা)
 ```
 
 প্রথম instruction-টা pipeline ভরাতে ৫ cycle নেয়, তারপর বাকি ৯৯টা আদর্শভাবে এক cycle করে — সাথে hazard-এর জন্য ~৩০ cycle stall যোগ হয়। ফল: ১০০ instruction-এ ~১৩৪ cycle। স্বপ্নের ৫× না হলেও এটা সত্যিকারের **3.7×** — আর এটাই আসল CPU-তে পাওয়া যায়। বাস্তব speedup সাধারণত **3.5–4.0×**।
