@@ -126,12 +126,15 @@ flowchart TD
 
 ### 130nm CMOS Process:
 
-"130nm process" কথাটার মানে কী? এর মানে — এই process দিয়ে বানানো একটা
-transistor-এর gate সবচেয়ে ছোট যতটুকু করা যায়, সেটা প্রায় **130 nanometer**,
-অর্থাৎ **0.13 micrometer**। একটা চুলের ব্যাস প্রায় ৮০,০০০ nm; তার মানে
-একটা চুলের প্রস্থে প্রায় ৬০০টা এমন transistor পাশাপাশি বসে যায়! এই "সবচেয়ে
-ছোট মাপ"-টাকেই বলে **feature size** বা **process node**, আর এটাই পুরো
-technology-র নামকরণ করে।
+"130nm process" কথাটার মানে কী? সাবধান — এই **130nm** সংখ্যাটা process-এর
+**নাম** (technology node), কোনো হাতে-আঁকা বাস্তব মাপ নয়। আজকের node-নাম একটা
+ঐতিহাসিক/বাজারি লেবেল মাত্র; transistor-এর gate আসলে এতটা ছোট করে আঁকা হয় না।
+Sky130-তে সত্যিকারের সবচেয়ে ছোট gate (poly) দৈর্ঘ্য হলো **0.15 micrometer =
+150 nanometer** — এই কারণেই পরে design-rule টেবিলে Polysilicon-এর min width
+150nm দেখবে, দুটো মিলে যায়। একটা চুলের ব্যাস প্রায় ৮০,০০০ nm; তার মানে এই
+150nm মাপের প্রায় ৫০০টা gate একটা চুলের প্রস্থে পাশাপাশি বসে যায়! এই "সবচেয়ে
+ছোট আঁকা মাপ"-টাকেই বলে **feature size**, আর node-নামটা (130nm) আসে এই
+প্রজন্মের technology-কে চেনানোর জন্য।
 
 এই একটা সংখ্যা কেন এত গুরুত্বপূর্ণ? কারণ transistor যত ছোট, একই জায়গায় তত
 বেশি বসে (বেশি কাজ), তারা তত কম শক্তি খায়, আর সাধারণত তত দ্রুত switch করে।
@@ -316,7 +319,7 @@ sky130_fd_sc_hd__and2_1
    │    │   │   │     └────── function (2-input AND)
    │    │   │   └──────────── library variant (High Density)
    │    │   └──────────────── standard cell
-   │    └──────────────────── foundry (SkyWater)
+   │    └──────────────────── foundry-provided (foundry-নির্মিত IP)
    └───────────────────────── process (Sky130)
 ```
 
@@ -325,7 +328,7 @@ sky130_fd_sc_hd__and2_1
 | অংশ | মানে |
 |---|---|
 | `sky130` | process |
-| `fd` | foundry (SkyWater) |
+| `fd` | foundry-provided — foundry-নির্মিত IP (third-party নয়); এখানে foundry-টা হলো SkyWater |
 | `sc` | standard cell |
 | `hd` | library variant — High Density |
 | `__` | নাম থেকে function আলাদা করার separator |
@@ -656,6 +659,11 @@ cell (sky130_fd_sc_hd__and2_1) {
         capacitance : 0.0015;
     }
     
+    pin(B) {
+        direction : input;
+        capacitance : 0.0015;
+    }
+    
     pin(Y) {
         direction : output;
         function : "(A&B)";
@@ -692,8 +700,8 @@ output load-এর মান, আর `values`-এর প্রতিটা স�
 
 এই সেকশনটা একটু চমকপ্রদ — আর সত্যিকারের chip design-এর একটা গভীর সত্য বলে।
 
-ধরো তুমি ডিজাইনে বললে transistor-টা 130nm হবে। কিন্তু foundry যখন লক্ষ লক্ষ
-transistor বানায়, প্রতিটা কি **হুবহু** 130nm হয়? না! তৈরির প্রক্রিয়ায়
+ধরো তুমি ডিজাইনে বললে transistor-টার gate 150nm হবে। কিন্তু foundry যখন লক্ষ লক্ষ
+transistor বানায়, প্রতিটা কি **হুবহু** 150nm হয়? না! তৈরির প্রক্রিয়ায়
 সামান্য তারতম্য থাকেই — কোনোটা একটু বড়, কোনোটা একটু ছোট, oxide একটু পুরু বা
 পাতলা। এই তারতম্য **±10% বা তারও বেশি** হতে পারে। ভাবো একই কারখানায় বানানো
 দুটো বিস্কুট — একই ছাঁচে, তবু একটা একটু মুচমুচে, একটা একটু নরম।

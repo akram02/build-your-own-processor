@@ -255,10 +255,11 @@ flowchart TD
     RS --> E2["Execute"]
     RS --> E3["Execute"]
     RS --> E4["Execute"]
-    E1 --> RET["<b>Retire (in order)</b><br/>result commit করা"]
-    E2 --> RET
-    E3 --> RET
-    E4 --> RET
+    E1 --> ROB
+    E2 --> ROB
+    E3 --> ROB
+    E4 --> ROB
+    ROB --> RET["<b>Retire (in order)</b><br/>ROB head থেকে result commit করা"]
 
     classDef io fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
     classDef ooo fill:#fff3e0,stroke:#e65100,stroke-width:2px;
@@ -495,9 +496,9 @@ SIMD = Single Instruction, Multiple Data
 One instruction operates on multiple data:
 ADD v1, v2, v3  # Add 4 values at once!
 
-v1 = [a, b, c, d]
-v2 = [e, f, g, h]
-v3 = [a+e, b+f, c+g, d+h]
+v2 = [a, b, c, d]
+v3 = [e, f, g, h]
+v1 = [a+e, b+f, c+g, d+h]
 
 4× speedup! 🚀
 ```

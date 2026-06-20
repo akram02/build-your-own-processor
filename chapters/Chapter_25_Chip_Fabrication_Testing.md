@@ -70,7 +70,8 @@ Month 14-20: Fabrication at SkyWater fab
 Month 21:   Testing & packaging
 Month 22:   CHIP ARRIVES! 🎉
 
-Total: Almost 2 years!
+Total: 12-18 months learning + ~6-8 months fab wait
+       ≈ up to ~2 years total!
 Worth it: ABSOLUTELY! 🏆
 ```
 
@@ -711,11 +712,13 @@ def benchmark_dhrystone():
     tt.run_until_halt()
     end = time.time()
     
-    cycles = tt.get_cycle_count()
+    instructions = tt.get_instruction_count()  # retired instructions
     seconds = end - start
     
     # Calculate metrics
-    mips = (cycles / seconds) / 1_000_000
+    # MIPS = retired instructions / seconds; NOT cycles/seconds (that's frequency)
+    # সম্পর্ক: MIPS ≈ frequency × IPC (যেমন 35 MHz × 0.8 IPC ≈ 28 MIPS)
+    mips = (instructions / seconds) / 1_000_000
     print(f"Dhrystone MIPS: {mips:.2f}")
     
     return mips
@@ -724,7 +727,7 @@ def benchmark_dhrystone():
 perf = benchmark_dhrystone()
 
 # Compare with simulation
-sim_perf = 35  # Your simulation results
+sim_perf = 28  # Your simulation results (Dhrystone MIPS; frequency 35 MHz is separate)
 print(f"Simulation: {sim_perf} MIPS")
 print(f"Real chip:  {perf} MIPS")
 print(f"Ratio:      {perf/sim_perf:.2%}")
@@ -1134,7 +1137,7 @@ COMPLETE: 25/25 Chapters! 🏆
 ### Final Stats:
 
 ```
-Total Learning Time: 12-18 months
+Learning: 12-18 months; with fab wait ≈ up to ~2 years total
 Total Pages: 1,600+
 Total Code: 5,000+ lines
 Total Projects: 25+

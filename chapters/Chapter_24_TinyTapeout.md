@@ -81,7 +81,7 @@ flowchart TD
     A["👩‍💻 তুমি: ডিজাইন পাঠাও<br/>(OpenLane দিয়ে GDSII)"] --> B["🤖 TT: স্বয়ংক্রিয়ভাবে যাচাই<br/>(DRC / LVS / timing)"]
     B --> C["🧩 TT: শত শত ডিজাইন<br/>একসাথে এক die-তে জোড়া লাগায়"]
     C --> D["🏭 TT: SkyWater fab-এ পাঠায়"]
-    D --> E["⏳ অপেক্ষা: ৬–৮ মাস<br/>(ওয়েফার তৈরি হয়)"]
+    D --> E["⏳ fabrication: ~৬ মাস<br/>(ওয়েফার তৈরি হয়)"]
     E --> F["🔬 TT: সব চিপ test করে,<br/>PCB-তে বসায়, প্যাকেজ করে"]
     F --> G["📦 তুমি: তোমার নিজের চিপ পাও! 🎉"]
 
@@ -191,15 +191,17 @@ bidirectional, আর কয়েকটা control। প্রতিটা ড
 
 | পিন গ্রুপ | প্রস্থ | নাম | কাজ |
 |---|---|---|---|
-| Input | 8 | `ui[7:0]` | বাইরে থেকে ভেতরে — শুধু পড়া যায় |
-| Output | 8 | `uo[7:0]` | ভেতর থেকে বাইরে — শুধু চালানো যায় |
-| Bidirectional | 8 | `uio[7:0]` | দুদিকেই — input বা output, তুমি ঠিক করবে |
+| Input | 8 | `ui_in[7:0]` | বাইরে থেকে ভেতরে — শুধু পড়া যায় |
+| Output | 8 | `uo_out[7:0]` | ভেতর থেকে বাইরে — শুধু চালানো যায় |
+| Bidirectional | 8 | `uio_in[7:0]` / `uio_out[7:0]` | দুদিকেই — input বা output, তুমি ঠিক করবে |
+| Bidir direction | 8 | `uio_oe[7:0]` | প্রতিটা `uio` পিনের দিক — `1` হলে output, `0` হলে input |
 | Clock | 1 | `clk` | তোমার ডিজাইনের হৃৎস্পন্দন |
 | Reset | 1 | `rst_n` | সব শূন্যে ফেরাও (active **low**) |
 | Enable | 1 | `ena` | "এখন তোমার পালা" — mux তোমায় select করলে `1` |
 
-মোট **২৭** সিগন্যাল লাইন, আর এটা **fixed** — তুমি বাড়াতে-কমাতে পারবে না। এটাই
-সেই সাধারণ ছাঁচ যা mux-কে সব ডিজাইন একইভাবে সামলাতে দেয়।
+মোট **৪৩** সিগন্যাল লাইন — `ui_in` 8 + `uo_out` 8 + `uio_in` 8 + `uio_out` 8 +
+`uio_oe` 8 + `clk` 1 + `rst_n` 1 + `ena` 1 — আর এটা **fixed**, তুমি বাড়াতে-কমাতে
+পারবে না। এটাই সেই সাধারণ ছাঁচ যা mux-কে সব ডিজাইন একইভাবে সামলাতে দেয়।
 
 > 💡 **`uio` কেন আলাদা?** একই পিন কখনো input, কখনো output হতে পারলে অনেক নমনীয়তা
 > পাও — যেমন SPI বা I2C-তে একই তার দুদিকেই ডেটা বয়। তাই প্রতিটা `uio` পিনের
@@ -274,7 +276,7 @@ module tt_um_your_design (
     input  wire [7:0] uio_in,   // IOs: Input path
     output wire [7:0] uio_out,  // IOs: Output path
     output wire [7:0] uio_oe,   // IOs: Enable (1=output)
-    input  wire       ena,      // Enable (always 1)
+    input  wire       ena,      // Enable — high only while this tile is selected by the mux (mux select করলে 1)
     input  wire       clk,      // Clock
     input  wire       rst_n     // Reset (active low)
 );
@@ -600,7 +602,7 @@ TinyTapeout টিম মূলত তোমার CI যা পরীক্ষ�
 
 ### সময়রেখা (Timeline)
 
-জমা গৃহীত হওয়ার পর থেকে চিপ হাতে পাওয়া পর্যন্ত মোটামুটি **৬-১০ মাস** — ধাপে
+জমা গৃহীত হওয়ার পর থেকে চিপ হাতে পাওয়া পর্যন্ত মোটামুটি **৯-১২ মাস** — ধাপে
 ধাপে এমন:
 
 ```mermaid
@@ -751,7 +753,7 @@ flowchart TD
 - ✅ **কীভাবে submit করতে হয়** — GitHub template → CI → round-এ জমা।
 - ✅ **Design requirements** — 160µm × 100µm tile, fixed IO চুক্তি, Sky130।
 - ✅ **খরচ কত** — $100-$300, এর মধ্যেই চিপ হাতে পাওয়া পর্যন্ত সব।
-- ✅ **Timeline কেমন** — ~৬-১০ মাস, বেশিরভাগটাই fabrication।
+- ✅ **Timeline কেমন** — ~৯-১২ মাস, বেশিরভাগটাই fabrication।
 - ✅ **Tracking কীভাবে করবে** — email, Discord, GitHub।
 - ✅ আর সবচেয়ে বড় কথা — **তোমার chip fab-এ যাচ্ছে!** 🎉
 
@@ -762,7 +764,7 @@ flowchart TD
 করে কিনা, সেটা নিজে হাতে পরীক্ষা করা:
 
 > **Chapter 25: Chip Fabrication & Testing**
-> - 📦 ৬-৮ মাস পরে... চিপ এসে পৌঁছায়!
+> - 📦 ৯-১২ মাস পরে... চিপ এসে পৌঁছায়!
 > - 🔬 Testing methodology — কীভাবে যাচাই করবে
 > - 🔧 Bring-up process — প্রথমবার চালু করা
 > - 🐞 Debug ও validation
@@ -824,9 +826,9 @@ NEXT: Wait for your chip! Then Chapter 25! 🎊
 
 <div align="center">
 
-**"Your design is in the fab! 6 months of patience... then REAL SILICON!"**
+**"Your design is in the fab! 9-12 months of patience... then REAL SILICON!"**
 
-**"তোমার design fab-এ! ৬ মাস অপেক্ষা... তারপর REAL SILICON!"**
+**"তোমার design fab-এ! ৯-১২ মাস অপেক্ষা... তারপর REAL SILICON!"**
 
 Made with ❤️ for chip makers | চিপ মেকারদের জন্য ভালোবাসা দিয়ে তৈরি
 
