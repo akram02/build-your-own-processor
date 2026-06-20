@@ -844,7 +844,7 @@ module adder_file_tb;
     reg [3:0] a, b;
     wire [4:0] sum;
     reg [4:0] expected;
-    integer file, status, errors;
+    integer file, errors;
     
     adder_4bit dut(.a(a), .b(b), .sum(sum));
     

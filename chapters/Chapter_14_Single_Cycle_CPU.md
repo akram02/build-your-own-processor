@@ -1261,7 +1261,7 @@ function-এর ভেতরে আরেকটা call হলেও return addr
 # Call add_func(5, 3)
 
 main:
-    addi sp, sp, -4     # Allocate stack
+    addi sp, sp, -16    # Allocate frame (16-byte aligned, ABI)
     sw   ra, 0(sp)      # Save return address
     
     addi a0, x0, 5      # arg1 = 5
@@ -1272,7 +1272,7 @@ main:
     sw   a0, 0(x0)      # Store result
     
     lw   ra, 0(sp)      # Restore ra
-    addi sp, sp, 4      # Deallocate stack
+    addi sp, sp, 16     # Deallocate frame
     ebreak              # marker — এই core-এ NOP; testbench সময়মতো sim থামায়
 
 add_func:
