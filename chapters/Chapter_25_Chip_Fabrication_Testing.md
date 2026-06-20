@@ -1224,7 +1224,7 @@ Your turn to inspire! ✨
 ║  🥈 Verilog Ninja                    ║
 ║  🥇 FPGA Wizard                      ║
 ║  🏅 CPU Architect                    ║
-║  🎖️  VLSI Engineer                   ║
+║  🎖️ VLSI Engineer                    ║
 ║  👑 CHIP MASTER! 👑                  ║
 ║                                      ║
 ║  Special Achievement:                ║
