@@ -269,8 +269,8 @@ reg clk;
 initial begin
     clk = 0;
     forever begin
-        #3 clk = 1;  // High for 3ns
-        #7 clk = 0;  // Low for 7ns
+        clk = 1; #3;  // High for 3ns
+        clk = 0; #7;  // Low for 7ns
     end
 end
 // 30% duty cycle
@@ -828,9 +828,8 @@ Verilog-এ file পড়া-লেখার জন্য কিছু system t
 
 ### Reading Test Vectors from File:
 
-**test_vectors.txt:**
+**test_vectors.txt:** (শুধু সংখ্যা — কোনো `//` comment লাইন রেখো না, `%d` সেটা পড়তে পারে না)
 ```
-// a b expected_sum
 0 0 0
 0 1 1
 1 0 1
@@ -858,22 +857,17 @@ module adder_file_tb;
             $finish;
         end
         
-        // Read and test
-        while (!$feof(file)) begin
-            status = $fscanf(file, "%d %d %d\n", 
-                           a, b, expected);
+        // Read and test (loop ends when fscanf can't read 3 values: EOF/blank)
+        while ($fscanf(file, "%d %d %d", a, b, expected) == 3) begin
+            #10;
             
-            if (status == 3) begin  // Read 3 values
-                #10;
-                
-                if (sum !== expected) begin
-                    $display("ERROR: %0d+%0d=%0d, expected %0d",
-                            a, b, sum, expected);
-                    errors = errors + 1;
-                end else begin
-                    $display("PASS: %0d+%0d=%0d ✓",
-                            a, b, sum);
-                end
+            if (sum !== expected) begin
+                $display("ERROR: %0d+%0d=%0d, expected %0d",
+                        a, b, sum, expected);
+                errors = errors + 1;
+            end else begin
+                $display("PASS: %0d+%0d=%0d ✓",
+                        a, b, sum);
             end
         end
         
@@ -892,7 +886,7 @@ endmodule
 
 এই testbench-এর গল্পটা পড়ো ধাপে ধাপে। প্রথমে `$fopen("test_vectors.txt", "r")` দিয়ে file-টা *read* mode (`"r"`)-এ খোলা হলো — ফেরত আসে একটা *file handle* (এখানে `file`)। সাথে সাথে একটা নিরাপত্তা যাচাই: `if (file == 0)` — file না খুললে (হয়তো নাম ভুল, বা file নেই) `$fopen` শূন্য ফেরত দেয়, তখন error দিয়ে থেমে যাওয়াই বুদ্ধিমানের কাজ। এই check বাদ দিলে পরে অদ্ভুত আচরণে মাথা খারাপ হয়ে যাবে।
 
-তারপর `while (!$feof(file))` — "যতক্ষণ না file শেষ (end-of-file), ততক্ষণ পড়তে থাকো"। ভেতরে `$fscanf(file, "%d %d %d\n", a, b, expected)` প্রতিটা লাইন থেকে তিনটে সংখ্যা পড়ে — a, b, আর expected — ঠিক যেমন file-এ সাজানো আছে। আর একটা চমৎকার ব্যাপার: `$fscanf` ফেরত দেয় কতগুলো মান সে সফলভাবে পড়তে পারল। তাই `if (status == 3)` দিয়ে নিশ্চিত হই যে তিনটেই ঠিকমতো পড়া গেছে, তবেই test করি — এতে file-এর শেষের ফাঁকা লাইন বা comment ভুলবশত test হয়ে যায় না।
+তারপর `while ($fscanf(file, "%d %d %d", a, b, expected) == 3)` — `$fscanf` প্রতিবার একটা লাইন থেকে তিনটে সংখ্যা (a, b, expected) পড়ার চেষ্টা করে, আর ফেরত দেয় সে কতগুলো সফলভাবে পড়ল। ঠিক তিনটে পড়তে পারলে তবেই loop-এর ভেতরটা চলে; file শেষ হলে বা কোনো লাইনে তিনটে সংখ্যা না থাকলে loop নিজে থেকেই থেমে যায় (তাই আলাদা `$feof` লাগে না, infinite loop-ও হয় না)। ⚠️ এ কারণেই data file-এ `//` comment লাইন রাখা যাবে না — `%d` সেটা পড়তে না পেরে পুরো পড়াই আটকে দিত।
 
 বাকিটা চেনা: input লাগাও, `#10` অপেক্ষা করো, `!==` দিয়ে যাচাই করো, ভুল গুনে রাখো। সবশেষে — এবং এটা ভুলো না — `$fclose(file)` দিয়ে file বন্ধ করো। file খুললে বন্ধ করা ভালো অভ্যাস, ঠিক যেমন দরজা খুললে বন্ধ করতে হয়।
 
@@ -958,9 +952,9 @@ end
 
 পুরো-এলোমেলো সবসময় চাই না — কখনো তুমি চাও random, কিন্তু একটা **নির্দিষ্ট সীমার ভেতরে**। যেমন একটা module যদি শুধু 5 থেকে 10-এর মধ্যে input নেয়, তাহলে 200 ছুঁড়ে দেওয়া অর্থহীন। একে বলে *constrained random* — সীমাবদ্ধ এলোমেলো।
 
-কৌশলটা `%` (modulo, ভাগশেষ) দিয়ে। `$random % 16` মানে random সংখ্যাকে 16 দিয়ে ভাগ করে ভাগশেষ — যা সবসময় 0 থেকে 15-এর মধ্যে থাকবে (ঠিক 4-bit-এর সীমা)। আর `5 + ($random % 6)` মানে: 0-5-এর একটা random-এর সাথে 5 যোগ — ফল 5 থেকে 10-এর মধ্যে। এই দুটো বাগ্‌ধারা (`% N` দিয়ে সীমা, আর `base + (% range)` দিয়ে নির্দিষ্ট পরিসর) মনে রাখলে যেকোনো সীমায় random মান বানাতে পারবে।
+কৌশলটা `%` (modulo, ভাগশেষ) দিয়ে। `{$random} % 16` মানে random সংখ্যাকে 16 দিয়ে ভাগ করে ভাগশেষ — যা সবসময় 0 থেকে 15-এর মধ্যে থাকবে (ঠিক 4-bit-এর সীমা)। আর `5 + ({$random} % 6)` মানে: 0-5-এর একটা random-এর সাথে 5 যোগ — ফল 5 থেকে 10-এর মধ্যে। এই দুটো বাগ্‌ধারা (`% N` দিয়ে সীমা, আর `base + (% range)` দিয়ে নির্দিষ্ট পরিসর) মনে রাখলে যেকোনো সীমায় random মান বানাতে পারবে।
 
-> 💡 একটা সতর্কতা: `$random` ঋণাত্মক সংখ্যাও দিতে পারে (এটা signed)। তাই `% 16` কখনো কখনো ঋণাত্মক ভাগশেষ দিতে পারে। `a` এর মতো unsigned `reg` এ রাখলে সাধারণত সমস্যা হয় না, কিন্তু হিসাবে সরাসরি ব্যবহার করলে এই খুঁটিনাটিটা মাথায় রেখো।
+> 💡 একটা সতর্কতা: `$random` signed, তাই সরাসরি `$random % 16` মাঝে মাঝে ঋণাত্মকও হতে পারে। সেজন্য উপরে `{$random}` (concatenation) ব্যবহার করেছি — এটা মানটাকে unsigned ধরে নেয়, ফলে range ঠিক 0-15-এই থাকে। (`$unsigned($random)` লিখলেও একই কাজ হয়।)
 
 ```verilog
 reg [3:0] a;
@@ -968,10 +962,10 @@ reg [3:0] a;
 initial begin
     repeat(10) begin
         // Random 4-bit value (0-15)
-        a = $random % 16;
+        a = {$random} % 16;
         
         // Random in range [5:10]
-        a = 5 + ($random % 6);
+        a = 5 + ({$random} % 6);
         
         #10;
     end
