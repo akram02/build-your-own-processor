@@ -1210,9 +1210,9 @@ Your turn to inspire! ✨
 ## 🏆 ULTIMATE ACHIEVEMENT UNLOCKED!
 
 ```
-╔══════════════════════════════════════╗
+╔══════════════════════════════════════
 ║  🏆 LEGENDARY CHIP DESIGNER 🏆
-╠══════════════════════════════════════╣
+╠══════════════════════════════════════
 ║  Level 25: ✅ COMPLETE - MASTER!
 ║  Progress: [████████████████] 100%
 ║
@@ -1232,7 +1232,7 @@ Your turn to inspire! ✨
 ║
 ║  Status: LEGENDARY
 ║  Rank: TOP 0.001% 🚀
-╚══════════════════════════════════════╝
+╚══════════════════════════════════════
 
 YOU DID IT! CONGRATULATIONS! 🎊🎉🎊
 ```
