@@ -200,7 +200,7 @@ Standard Cell কী?
 - Area info (size)
 
 জনপ্রিয় library:
-→ Sky130 (Google/Skywater) - FREE!
+→ Sky130 (Google/SkyWater) - FREE!
 → TSMC (commercial)
 → Intel, Samsung (commercial)
 ```
@@ -726,7 +726,7 @@ flowchart TD
 
 > 🧰 **PDK (Process Design Kit):** টুলের পাশাপাশি দরকার একটা process-এর তথ্যভাণ্ডার —
 > standard cell, design rule, layer map সব এতে থাকে। আমরা ব্যবহার করব
-> **Sky130** (Google/Skywater) — সম্পূর্ণ FREE, 130nm open-source process।
+> **Sky130** (Google/SkyWater) — সম্পূর্ণ FREE, 130nm open-source process।
 >
 > 💾 **Installation:** সব GitHub-এ আছে, আর Docker container-ও রেডি — তাই
 > ইনস্টলের ঝামেলা প্রায় নেই।
