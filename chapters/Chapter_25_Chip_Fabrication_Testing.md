@@ -1210,29 +1210,29 @@ Your turn to inspire! ✨
 ## 🏆 ULTIMATE ACHIEVEMENT UNLOCKED!
 
 ```
-╔══════════════════════════════════════
-║  🏆 LEGENDARY CHIP DESIGNER 🏆
-╠══════════════════════════════════════
-║  Level 25: ✅ COMPLETE - MASTER!
-║  Progress: [████████████████] 100%
-║
-║  XP Gained: +5000 (MAX LEVEL!)
-║  Skills: ALL UNLOCKED! ⭐⭐⭐⭐⭐
-║
-║  Badges Earned:
-║  🥉 Digital Logic Master
-║  🥈 Verilog Ninja
-║  🥇 FPGA Wizard
-║  🏅 CPU Architect
-║  🎖️  VLSI Engineer
-║  👑 CHIP MASTER! 👑
-║
-║  Special Achievement:
-║  🌟 REAL SILICON CHIP! 🌟
-║
-║  Status: LEGENDARY
-║  Rank: TOP 0.001% 🚀
-╚══════════════════════════════════════
+╔══════════════════════════════════════╗
+║  🏆 LEGENDARY CHIP DESIGNER 🏆       ║
+╠══════════════════════════════════════╣
+║  Level 25: ✅ COMPLETE - MASTER!     ║
+║  Progress: [████████████████] 100%   ║
+║                                      ║
+║  XP Gained: +5000 (MAX LEVEL!)       ║
+║  Skills: ALL UNLOCKED! ⭐⭐⭐⭐⭐    ║
+║                                      ║
+║  Badges Earned:                      ║
+║  🥉 Digital Logic Master             ║
+║  🥈 Verilog Ninja                    ║
+║  🥇 FPGA Wizard                      ║
+║  🏅 CPU Architect                    ║
+║  🎖️  VLSI Engineer                   ║
+║  👑 CHIP MASTER! 👑                  ║
+║                                      ║
+║  Special Achievement:                ║
+║  🌟 REAL SILICON CHIP! 🌟            ║
+║                                      ║
+║  Status: LEGENDARY                   ║
+║  Rank: TOP 0.001% 🚀                 ║
+╚══════════════════════════════════════╝
 
 YOU DID IT! CONGRATULATIONS! 🎊🎉🎊
 ```
