@@ -889,7 +889,7 @@ flowchart LR
     style M fill:#1e5f5a,stroke:#4ad9c8,color:#fff
 ```
 
-এই চিত্রটা আসলে **এই গোটা বইয়ের roadmap**। Part 3-এ (এখন) তুমি FPGA-তে design ও test করা শিখছো — ধাপ ১ থেকে ৪। Part 4-এ তুমি FPGA-তেই একটা সম্পূর্ণ RISC-V processor বানাবে আর iterate করবে। আর Part 5-এ (Chapter 21-25) তুমি ধাপ ৫-৬ করবে: সেই পরীক্ষিত processor-কে TinyTapeout-এর মাধ্যমে আসল ASIC chip-এ পরিণত করবে! তাই এখন FPGA ভালো করে শেখার মানে শুধু এই chapter পাশ করা নয় — এটা তোমার নিজের silicon chip পাওয়ার যাত্রার প্রথম ধাপ।
+এই চিত্রটা আসলে **এই গোটা বইয়ের roadmap**। Part 3-এ (এখন) তুমি FPGA-তে design ও test করা শিখছো — ধাপ ১ থেকে ৪। Part 4-এ তুমি FPGA-তেই একটা সম্পূর্ণ RISC-V processor বানাবে আর iterate করবে। আর Part 5-এ (Chapter 20-25) তুমি ধাপ ৫-৬ করবে: সেই পরীক্ষিত processor-কে TinyTapeout-এর মাধ্যমে আসল ASIC chip-এ পরিণত করবে! তাই এখন FPGA ভালো করে শেখার মানে শুধু এই chapter পাশ করা নয় — এটা তোমার নিজের silicon chip পাওয়ার যাত্রার প্রথম ধাপ।
 
 ```
 FPGA = Perfect prototyping tool!
