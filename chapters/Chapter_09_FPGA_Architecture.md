@@ -80,7 +80,7 @@ FPGA-এর গল্পটা আসলে একটা সমস্যা স�
 ### The Timeline:
 
 ```
-1984: First FPGA by Xilinx (XC2064)
+1985: First FPGA by Xilinx (XC2064)
       - 64 logic blocks
       - Revolutionary concept!
 
@@ -113,7 +113,7 @@ Today: FPGA everywhere!
       - Space applications
 ```
 
-লক্ষ্য করো trajectory-টা কত দূর এসেছে: ১৯৮৪ সালের প্রথম FPGA-তে ছিল মাত্র **৬৪টা logic block** — আজকের high-end FPGA-তে থাকে **কয়েক মিলিয়ন** logic cell। অর্থাৎ চার দশকে capacity বেড়েছে প্রায় দশ লক্ষ গুণ! এই বিস্ফোরণের কারণেই আজ FPGA শুধু ছোট glue-logic নয়, বরং data center, 5G base station, এমনকি মহাকাশযানেও বসছে — কারণ space-এ একবার চিপ পাঠানোর পর সেটাকে দূর থেকেই reprogram করে নতুন কাজ দেওয়া যায়, যা একটা fixed ASIC দিয়ে কখনোই সম্ভব হতো না।
+লক্ষ্য করো trajectory-টা কত দূর এসেছে: ১৯৮৫ সালের প্রথম FPGA-তে ছিল মাত্র **৬৪টা logic block** — আজকের high-end FPGA-তে থাকে **কয়েক মিলিয়ন** logic cell। অর্থাৎ চার দশকে capacity বেড়েছে প্রায় দশ লক্ষ গুণ! এই বিস্ফোরণের কারণেই আজ FPGA শুধু ছোট glue-logic নয়, বরং data center, 5G base station, এমনকি মহাকাশযানেও বসছে — কারণ space-এ একবার চিপ পাঠানোর পর সেটাকে দূর থেকেই reprogram করে নতুন কাজ দেওয়া যায়, যা একটা fixed ASIC দিয়ে কখনোই সম্ভব হতো না।
 
 ### Why FPGAs Matter:
 
@@ -299,7 +299,7 @@ trade-off-টা বোঝা জরুরি: **বড় LUT** একসাথ
 এবার Verilog-এর চোখে দেখো। নিচের প্রতিটা `assign` line দেখতে সম্পূর্ণ আলাদা একেকটা circuit, তাই না? অথচ synthesis tool-এর কাছে এদের সবার মানে একটাই — "এই 4টা input দিলে output কী হবে, তার truth table বের করো এবং একটা LUT-এর ১৬টা ঘরে সেটা লিখে দাও।" তাই এই **সবগুলো** ভিন্ন function একটা **মাত্র** LUT-এ এঁটে যায়, শুধু ভেতরের ১৬টা bit-এর মান পাল্টে:
 
 ```verilog
-// Single 4-input LUT can implement:
+// A 4-input LUT can implement ANY function of 4 inputs (a,b,c,d):
 
 // Example 1: AND gate
 assign out = a & b & c & d;
@@ -313,11 +313,11 @@ assign out = a ^ b ^ c ^ d;
 // Example 4: Complex function
 assign out = (a & b) | (c & ~d);
 
-// Example 5: 4:1 MUX
-assign out = sel[1] ? (sel[0] ? d : c) :
-                      (sel[0] ? b : a);
+// Examples 1-4: প্রতিটায় ঠিক ৪টা input (a,b,c,d) → একটাই LUT! Magic! ✨
 
-All in ONE LUT! Magic! ✨
+// Example 5: 4:1 MUX-এর ৬টা input (a,b,c,d + sel[1:0]):
+//   out = sel[1] ? (sel[0]?d:c) : (sel[0]?b:a);
+//   → একটা 4-input LUT-এ আঁটে না; একাধিক LUT (বা 6-input LUT) লাগে।
 ```
 
 এখানে একটা গভীর সত্য লুকিয়ে আছে যা তোমার Verilog শেখাকে নতুন আলোয় দেখাবে: তুমি যখন Verilog লেখো, তখন আসলে gate আঁকছো না — তুমি **LUT-গুলো কীভাবে ভরাট হবে সেই truth table বর্ণনা করছো**। synthesis tool তোমার কোড পড়ে, প্রতিটা চিহ্নিত logic-এর truth table বের করে, আর সেগুলোকে FPGA-এর হাজার হাজার খালি LUT-এ ভাগ করে বসিয়ে দেয়। এই কারণেই Example 4-এর মতো একটা "জটিল" function আর Example 1-এর "সহজ" AND — দুটোরই খরচ ঠিক একটাই LUT। FPGA-এর জগতে জটিলতা মাপা হয় কত input লাগছে তা দিয়ে, gate কতগুলো তা দিয়ে নয়।
@@ -1031,9 +1031,9 @@ Tang Nano 9K board-এর হৃৎপিণ্ডে আছে **Gowin GW1NR-9*
 - **৪৬৮ Kb BRAM** — এই dedicated memory দিয়েই তুমি তোমার CPU-এর instruction ও data memory বানাবে, LUT অপচয় না করেই (মনে আছে ৯.৬-এর সেই গুদামের গল্প?)।
 - **২৭ MHz clock** — board-এ আগে থেকেই একটা 27 MHz crystal বসানো, যেটা তোমার design-কে প্রতি সেকেন্ডে ২ কোটি ৭০ লক্ষ বার "tick" দেয়। ৯.১২-এর timing constraint-এ এই সংখ্যাটাই তোমার শুরুর reference হবে।
 
-> 💡 **চিন্তার খোরাক:** ৮,৬৪০টি LUT শুনতে কম মনে হতে পারে যখন high-end FPGA-তে কয়েক মিলিয়ন থাকে। কিন্তু ভেবে দেখো — ১৯৮৪ সালের প্রথম FPGA-তে ছিল মাত্র ৬৪টা logic block, আর সেই যুগেও মানুষ দারুণ সব circuit বানিয়েছে। এই ছোট্ট ২,০০০ টাকার board-এ তুমি একটা গোটা working processor বানাবে — যা কিছুদিন আগেও কল্পনাতীত ছিল। সম্পদ সীমিত হলে বরং ভালো: এটা তোমাকে দক্ষ, পরিচ্ছন্ন design করতে শেখায়।
+> 💡 **চিন্তার খোরাক:** ৮,৬৪০টি LUT শুনতে কম মনে হতে পারে যখন high-end FPGA-তে কয়েক মিলিয়ন থাকে। কিন্তু ভেবে দেখো — ১৯৮৫ সালের প্রথম FPGA-তে ছিল মাত্র ৬৪টা logic block, আর সেই যুগেও মানুষ দারুণ সব circuit বানিয়েছে। এই ছোট্ট ২,০০০ টাকার board-এ তুমি একটা গোটা working processor বানাবে — যা কিছুদিন আগেও কল্পনাতীত ছিল। সম্পদ সীমিত হলে বরং ভালো: এটা তোমাকে দক্ষ, পরিচ্ছন্ন design করতে শেখায়।
 
-> 💡 **নোট:** উপরের spec — **৮,৬৪০ LUT, ৬,৪৮০ FF, ৪৬৮ Kb BRAM, ২৭ MHz** — হলো Tang Nano 9K-তে বসানো GW1NR-9 চিপের আসল মান (বইয়ের সাথে সঙ্গতিপূর্ণ)। Chapter 10 থেকে এই board নিয়েই কাজ করবে, তাই একবার চোখ বুলিয়ে রাখো।
+> 💡 **নোট:** উপরের **৮,৬৪০ LUT, ৬,৪৮০ FF, ৪৬৮ Kb BRAM** হলো Tang Nano 9K-তে বসানো GW1NR-9 চিপের আসল মান; আর **২৭ MHz** হলো board-এ বসানো crystal oscillator-এর frequency (এটা চিপের সর্বোচ্চ গতি নয় — GW1NR-9 আরও দ্রুত চলতে পারে)। Chapter 10 থেকে এই board নিয়েই কাজ করবে, তাই একবার চোখ বুলিয়ে রাখো।
 
 ---
 
