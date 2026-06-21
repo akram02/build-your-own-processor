@@ -284,20 +284,20 @@ transistor, আর তার উপরে স্তরে স্তরে metal-
 
 ```mermaid
 flowchart TB
-    M6["Metal 6 (সবার উপরে) — Power"]
-    M5["Metal 5 — Routing"]
+    M5["Metal 5 (সবার উপরে) — মোটা; power আর লম্বা route"]
     M4["Metal 4 — Routing"]
     M3["Metal 3 — Routing"]
     M2["Metal 2 — Routing"]
-    M1["Metal 1 — Local connection"]
+    M1["Metal 1 — সূক্ষ্ম routing"]
+    LI["li1 — Local Interconnect (Metal1-এর ঠিক নিচে)"]
     PO["Polysilicon — Gate"]
     DI["Diffusion — Transistor"]
     SU["Substrate — Silicon"]
 
-    M6 --- M5 --- M4 --- M3 --- M2 --- M1 --- PO --- DI --- SU
+    M5 --- M4 --- M3 --- M2 --- M1 --- LI --- PO --- DI --- SU
 
     style SU fill:#d9d9d9,stroke:#666
-    style M6 fill:#ffe9b3,stroke:#d49a00
+    style M5 fill:#ffe9b3,stroke:#d49a00
 ```
 
 > 🔗 **Via:** আলাদা layer-এর তারগুলোকে উপর-নিচে জুড়তে দরকার হয় একটা ছোট্ট
@@ -423,8 +423,9 @@ Critical Path:
 
 Example:
 Register → Logic → Register
-যদি logic-এ ৮ns লাগে, clock period > ৮ns হতেই হবে
-সর্বোচ্চ frequency = 1/8ns = 125 MHz
+যদি logic-এ ৮ns + setup ~১ns + clk-to-Q ~০.৫ns লাগে,
+clock period ≥ ~৯.৫ns হতেই হবে
+সর্বোচ্চ frequency = 1/9.5ns ≈ 105 MHz
 ```
 
 দুটো শর্তকে এভাবে ভাবো। **Setup time** মানে "দেরি কোরো না" — data-কে
@@ -437,9 +438,10 @@ clock-এর পরের টিক-এর *আগেই* পৌঁছে যে
 যত পথ আছে তার মধ্যে সবচেয়ে ধীর (সবচেয়ে বেশি delay) পথটা। ভাবো একদল মানুষ
 একসাথে হাঁটছে, কিন্তু পুরো দল তত জোরেই যেতে পারবে যত জোরে সবচেয়ে ধীর
 মানুষটা হাঁটে। তোমার clock-ও তত দ্রুত চলতে পারবে যত দ্রুত critical path
-signal পৌঁছাতে পারে। তাই উদাহরণের মতো, যদি critical path-এ ৮ns লাগে, তবে
-clock period ৮ns-এর বেশি রাখতেই হবে — মানে সর্বোচ্চ গতি 125 MHz। চিপ আরও
-দ্রুত চালাতে চাইলে তোমাকে এই critical path-টাকেই ছোট করতে হবে।
+signal পৌঁছাতে পারে। তাই উদাহরণের মতো, যদি critical path-এ ৮ns লাগে (সঙ্গে
+setup আর clk-to-Q যোগ করে মোটামুটি ~৯.৫ns), তবে clock period সেটার বেশি
+রাখতেই হবে — মানে সর্বোচ্চ গতি ≈ 105 MHz। চিপ আরও দ্রুত চালাতে চাইলে তোমাকে
+এই critical path-টাকেই ছোট করতে হবে।
 
 ### Timing Constraint — টুলকে তোমার লক্ষ্য বলে দেওয়া
 
@@ -708,18 +710,19 @@ Fabrication-এর জন্য তৈরি! 🎉
 flowchart TD
     OL["OpenLane — সম্পূর্ণ ASIC Flow (ছাতা)"]
     Y["Yosys → Synthesis"]
-    OR["OpenROAD → Place & Route"]
+    OR["OpenROAD → Place & Route (ছাতা)"]
+    FP["OpenROAD → Floorplan"]
     RP["RePlAce → Placement"]
+    CT["TritonCTS → Clock Tree (CTS)"]
     TR["TritonRoute → Routing"]
-    ST["OpenSTA → Timing"]
+    ST["OpenSTA → Timing (STA)"]
     MG["Magic → DRC, Extraction"]
     NG["Netgen → LVS"]
     KL["KLayout → Viewing"]
 
-    OL --> Y --> OR --> MG --> NG --> KL
-    OR --> RP
-    OR --> TR
-    OR --> ST
+    OL --> Y --> OR
+    OR --> FP --> RP --> CT --> TR --> ST
+    ST --> MG --> NG --> KL
 
     style OL fill:#ffe9b3,stroke:#d49a00
 ```

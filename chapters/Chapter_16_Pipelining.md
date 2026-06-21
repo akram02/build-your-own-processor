@@ -193,8 +193,9 @@ After 5 cycles:
   একসঙ্গে চলন্ত (in flight)।**
 
 একই চার্ট table আকারে — খালি ঘরগুলো হলো pipeline এখনও "ভরছে" (fill) বা
-"খালি হচ্ছে" (drain), আর হলুদ-চিহ্নিত cycle 5 থেকে cycle 9 পর্যন্ত হলো
-**steady state**, যেখানে প্রতি cycle-এ ঠিক একটা instruction শেষ হয়:
+"খালি হচ্ছে" (drain)। **cycle 5**-এ pipeline সম্পূর্ণ **ভরা** — পাঁচটা stage-ই
+একসাথে ব্যস্ত (এটাই full বা steady-state cycle); আর cycle 5 থেকে শুরু করে প্রতি
+cycle-এ ঠিক একটা করে instruction শেষ হয়:
 
 | Instruction | C1 | C2 | C3 | C4 | C5 | C6 | C7 | C8 | C9 |
 |:-----------:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
@@ -208,6 +209,11 @@ After 5 cycles:
 লাগে)। কিন্তু এরপর Inst2 শেষ হয় cycle 6-এ, Inst3 cycle 7-এ — **প্রতি cycle-এ
 একটা করে।** এই "প্রতি cycle-এ একটা শেষ" হওয়াটাই throughput = 1 instruction
 per cycle, আর এখান থেকেই আসে আদর্শ 5× speedup।
+
+(একটা সূক্ষ্ম ব্যাপার: এখানে মাত্র ৫টা instruction বলে pipeline পুরোপুরি ভরা
+থাকে কেবল cycle 5-এ; এরপর cycle 6→9-তে সে আবার খালি হতে থাকে — তবু ততক্ষণ
+প্রতি cycle-এ একটা করে শেষ হয়। লম্বা instruction-ধারা চালালে মাঝখানে অনেকগুলো
+পুরো-ভরা cycle পরপর আসত — সেই টানা ভরা অংশটাই সত্যিকারের **steady state**।)
 
 🎉 **This is how modern processors achieve speed!** আধুনিক প্রসেসর গাড়ির
 assembly line-এর মতোই — কখনো কোনো station-কে বসে থাকতে দেয় না।
@@ -872,11 +878,13 @@ module ex_stage(
     input wire alu_src,
     input wire branch,
     input wire [2:0] funct3,
+    input wire lui,
     output wire [31:0] alu_result,
     output wire branch_taken,
     output wire [31:0] branch_target
 );
     wire [31:0] alu_b;
+    wire [31:0] alu_out;
     wire zero;
     
     // ALU source mux
@@ -887,10 +895,14 @@ module ex_stage(
         .a(rs1_data),
         .b(alu_b),
         .alu_control(alu_control),
-        .result(alu_result),
+        .result(alu_out),
         .zero(zero),
         .negative()
     );
+    
+    // LUI: ফল শুধু upper-immediate (imm_gen আগেই বসিয়ে রেখেছে); বাকি সব
+    // instruction-এ (lui=0) ALU-র ফল সরাসরি পাস হয়ে যায়।
+    assign alu_result = lui ? immediate : alu_out;
     
     // Branch comparator (drives a separate net, then AND with branch —
     // driving branch_taken from both the port and an assign is illegal)
@@ -1010,14 +1022,14 @@ module riscv_pipelined(
     wire [31:0] id_rs1_data, id_rs2_data, id_immediate;
     wire [4:0] id_rd_addr, id_rs1_addr, id_rs2_addr;
     wire id_reg_write, id_mem_read, id_mem_write;
-    wire id_mem_to_reg, id_alu_src, id_branch, id_jump;
+    wire id_mem_to_reg, id_alu_src, id_branch, id_jump, id_lui;
     wire [3:0] id_alu_control;
     
     // ID/EX pipeline register
     wire [31:0] ex_pc_plus_4, ex_rs1_data, ex_rs2_data, ex_immediate;
     wire [4:0] ex_rd_addr, ex_rs1_addr, ex_rs2_addr;
     wire ex_reg_write, ex_mem_read, ex_mem_write;
-    wire ex_mem_to_reg, ex_alu_src, ex_branch, ex_jump;
+    wire ex_mem_to_reg, ex_alu_src, ex_branch, ex_jump, ex_lui;
     wire [3:0] ex_alu_control;
     wire [2:0] ex_funct3;
     wire id_ex_flush;
@@ -1095,7 +1107,8 @@ module riscv_pipelined(
         .alu_control(id_alu_control),
         .alu_src(id_alu_src),
         .branch(id_branch),
-        .jump(id_jump)
+        .jump(id_jump),
+        .lui(id_lui)
     );
     
     // ID/EX Pipeline Register
@@ -1119,7 +1132,7 @@ module riscv_pipelined(
         .branch_in(id_branch),
         .jump_in(id_jump),
         .funct3_in(id_instruction[14:12]),
-        .lui_in(1'b0),
+        .lui_in(id_lui),
         .pc_plus_4_out(ex_pc_plus_4),
         .rs1_data_out(ex_rs1_data),
         .rs2_data_out(ex_rs2_data),
@@ -1135,7 +1148,8 @@ module riscv_pipelined(
         .alu_src_out(ex_alu_src),
         .branch_out(ex_branch),
         .jump_out(ex_jump),
-        .funct3_out(ex_funct3)
+        .funct3_out(ex_funct3),
+        .lui_out(ex_lui)
     );
     
     // EX Stage
@@ -1148,6 +1162,7 @@ module riscv_pipelined(
         .alu_src(ex_alu_src),
         .branch(ex_branch),
         .funct3(ex_funct3),
+        .lui(ex_lui),
         .alu_result(ex_alu_result),
         .branch_taken(ex_branch_taken),
         .branch_target(ex_branch_target)
@@ -1364,8 +1379,8 @@ Stage usage:
 IF:  ADD SUB AND OR  XOR
 ID:      ADD SUB AND OR  XOR
 EX:          ADD SUB AND OR  XOR
-MEM:             ADD SUB AND OR
-WB:                  ADD SUB AND
+MEM:             ADD SUB AND OR  XOR
+WB:                  ADD SUB AND OR  XOR
 
 All stages busy!
 Maximum utilization!

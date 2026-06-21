@@ -117,6 +117,7 @@ module uart_tx #(
             end
             
             SEND: begin
+                tx <= tx_data[0];   // drive the current bit onto the line
                 if (counter < CYCLES_PER_BIT - 1) begin
                     counter <= counter + 1;
                 end else begin
@@ -607,13 +608,14 @@ module vga_sync(
         end
     end
     
-    // Generate sync signals
+    // Generate sync signals — 640×480@60 uses ACTIVE-LOW sync
+    // (0 during the sync pulse, 1 elsewhere), so we invert the window test.
     always @(posedge clk) begin
-        hsync <= (h_count >= H_VISIBLE + H_FRONT) && 
-                 (h_count < H_VISIBLE + H_FRONT + H_SYNC);
+        hsync <= ~((h_count >= H_VISIBLE + H_FRONT) && 
+                   (h_count < H_VISIBLE + H_FRONT + H_SYNC));
         
-        vsync <= (v_count >= V_VISIBLE + V_FRONT) && 
-                 (v_count < V_VISIBLE + V_FRONT + V_SYNC);
+        vsync <= ~((v_count >= V_VISIBLE + V_FRONT) && 
+                   (v_count < V_VISIBLE + V_FRONT + V_SYNC));
     end
     
     // Video enable
@@ -1220,7 +1222,7 @@ endmodule
 
 **code-টা ঠিক উপরের ঘুরন্ত-register গল্পটাই বাস্তবায়ন করছে।** `CLK_DIV` parameter দিয়ে SPI clock-কে system clock থেকে ধীর করা হয় — comment বলছে `SPI clock = sys_clk / (2*CLK_DIV)`, কারণ SCLK এক পূর্ণ চক্র পেতে দুবার toggle (HIGH তারপর LOW) করতে হয়, প্রতিবার `CLK_DIV` cycle গুনে। `start` এলে module CS নামায় (`cs <= 0`, slave-কে জাগায়) আর `TRANSFER` এ ঢোকে।
 
-`TRANSFER` এর ভেতরের timing টাই আসল। প্রতিবার SCLK toggle হওয়ার সময় দুটো ভিন্ন কাজ হয়, যা Mode 0-এর নিয়ম মেনে চলে: SCLK যখন উঠছে (rising edge), master নতুন bit MOSI-তে বসায় (`mosi <= tx_buffer[7]` — সবচেয়ে উপরের bit, কারণ SPI MSB আগে পাঠায়); আর SCLK যখন নামছে (falling edge), দুই দিকেই sample/shift হয় — MISO থেকে আসা bit `rx_buffer` এ ঢোকে আর `tx_buffer` একঘর shift হয়। ৮ bit (`bit_counter == 7`) পেরোলে `DONE`, যেখানে CS উঠে যায় (transfer শেষ) আর গৃহীত byte `rx_data` তে দেওয়া হয়। লক্ষ্য করো একই module একসাথে পাঠাচ্ছে আর পড়ছে — এটাই full-duplex-এর সৌন্দর্য।
+`TRANSFER` এর ভেতরের timing টাই আসল। প্রতিবার SCLK toggle হওয়ার সময় দুটো ভিন্ন কাজ হয়, যা SPI **Mode 1**-এর নিয়ম মেনে চলে (CPOL=0, CPHA=1): SCLK যখন উঠছে (leading/rising edge), master নতুন bit MOSI-তে বসায় (`mosi <= tx_buffer[7]` — সবচেয়ে উপরের bit, কারণ SPI MSB আগে পাঠায়); আর SCLK যখন নামছে (falling edge), দুই দিকেই sample/shift হয় — MISO থেকে আসা bit `rx_buffer` এ ঢোকে আর `tx_buffer` একঘর shift হয়। ৮ bit (`bit_counter == 7`) পেরোলে `DONE`, যেখানে CS উঠে যায় (transfer শেষ) আর গৃহীত byte `rx_data` তে দেওয়া হয়। লক্ষ্য করো একই module একসাথে পাঠাচ্ছে আর পড়ছে — এটাই full-duplex-এর সৌন্দর্য।
 
 ---
 

@@ -123,7 +123,7 @@ Locality বোঝার সবচেয়ে সহজ উপায় — ত
 - **পাশের তাক (shelf)** = L2/L3 cache। চেয়ার ছেড়ে দুই পা হেঁটে বইটা আনতে হবে। কয়েক সেকেন্ড। অনেক বেশি বই ধরে।
 - **library (লাইব্রেরি)** = DRAM/disk। হেঁটে লাইব্রেরিতে গিয়ে, খুঁজে, ধার নিয়ে ফিরতে হবে। অনেক সময়। কিন্তু প্রায় সব বই-ই আছে।
 
-এখন temporal locality: যে বইটা একটু আগে টেবিলে এনেছিলে, সেটা টেবিলেই রেখে দাও — কারণ আবার লাগবে। আর spatial locality: একটা বই আনতে লাইব্রেরিতে গেলে শুধু সেটাই নয়, **একই বিষয়ের আশপাশের বইগুলোও** একসাথে এনে রাখো — কারণ পরের অধ্যায়েই হয়তো সেগুলো লাগবে। Cache হুবহু এই দুটো কাজ করে: সদ্য ব্যবহৃত data কাছে রাখে, আর miss হলে শুধু একটা byte নয়, পুরো একটা **line** (পাশের data সহ) টেনে আনে।
+এখন temporal locality: যে বইটা একটু আগে টেবিলে এনেছিলে, সেটা টেবিলেই রেখে দাও — কারণ আবার লাগবে। আর spatial locality: একটা বই আনতে লাইব্রেরিতে গেলে শুধু সেটাই নয়, **একই বিষয়ের আশপাশের বইগুলোও** একসাথে এনে রাখো — কারণ পরের অধ্যায়েই হয়তো সেগুলো লাগবে। Cache হুবহু এই দুটো কাজ করে: সদ্য ব্যবহৃত data কাছে রাখে, আর miss হলে শুধু একটা byte নয়, একটা গোটা **line** টেনে আনে (line যথেষ্ট বড় হলে পাশের data-ও সাথে আসে — spatial locality; আমাদের এই অধ্যায়ের সরল cache-এ line ছোট — মাত্র এক word — তাই সেটা মূলত temporal locality দেখায়, নিচে সে কথা আরেকবার বলা আছে)।
 
 ### How Cache Works - ধাপে ধাপে:
 
@@ -312,7 +312,7 @@ module cache_direct_mapped #(
     // State machine for handling misses
     localparam IDLE = 2'b00;
     localparam FETCH = 2'b01;
-    localparam WRITE_BACK = 2'b10;
+    localparam WRITE_THROUGH = 2'b10;
     
     reg [1:0] state;
     
@@ -336,9 +336,14 @@ module cache_direct_mapped #(
             state <= IDLE;
             hit <= 0;
             miss <= 0;
+            mem_read <= 0;
+            mem_write <= 0;
         end else begin
             case (state)
                 IDLE: begin
+                    // default: strobe নামানো (পরিষ্কার handshake)
+                    mem_read <= 0;
+                    mem_write <= 0;
                     if (read_enable) begin
                         if (cache_hit) begin
                             // Cache hit
@@ -354,23 +359,17 @@ module cache_direct_mapped #(
                             state <= FETCH;
                         end
                     end else if (write_enable) begin
-                        if (cache_hit) begin
-                            // Write hit
+                        // Write-through: প্রতিটা write সরাসরি memory-তে যায়।
+                        // hit হলে cache-এর copy-ও update করি; miss হলে cache-এ
+                        // আনি না (no-write-allocate) — শুধু memory-তে লিখি।
+                        hit  <= cache_hit;
+                        miss <= !cache_hit;
+                        if (cache_hit)
                             data[index] <= write_data;
-                            hit <= 1;
-                            miss <= 0;
-                            // Write-through: also write to memory
-                            mem_address <= {address[31:2], 2'b00};
-                            mem_write_data <= write_data;
-                            mem_write <= 1;
-                        end else begin
-                            // Write miss - allocate in cache
-                            miss <= 1;
-                            hit <= 0;
-                            mem_address <= {address[31:2], 2'b00};
-                            mem_read <= 1;
-                            state <= FETCH;
-                        end
+                        mem_address <= {address[31:2], 2'b00};
+                        mem_write_data <= write_data;
+                        mem_write <= 1;
+                        state <= WRITE_THROUGH;
                     end else begin
                         hit <= 0;
                         miss <= 0;
@@ -391,6 +390,14 @@ module cache_direct_mapped #(
                     end
                 end
                 
+                WRITE_THROUGH: begin
+                    // memory-তে লেখা শেষ হওয়ার অপেক্ষা, তারপর strobe নামাই
+                    if (mem_ready) begin
+                        mem_write <= 0;
+                        state <= IDLE;
+                    end
+                end
+                
                 default: state <= IDLE;
             endcase
         end
@@ -401,6 +408,8 @@ endmodule
 কোডটা ছোট, কিন্তু এর মধ্যে পুরো cache-দর্শন লুকিয়ে। হিসাবের কেন্দ্রবিন্দু সেই একটা লাইন — `cache_hit = valid[index] && (tag[index] == addr_tag)`। এই combinational তুলনাটা প্রতি cycle-এ নিজে নিজে হয়ে যায়; state machine শুধু তখনই কষ্ট করে যখন miss হয় এবং DRAM-এ যেতে হয়। Read hit হলে `read_data <= data[index]` — এক cycle, ব্যস। কিন্তু miss হলে `FETCH` state-এ গিয়ে `mem_ready` এর জন্য বসে থাকা — সেই ১০০ cycle-এর শাস্তি এখানেই। এই version-এ write hit হলে cache এবং memory দুটোতেই একসাথে লেখা হয় (write-through), তাই এখানে কোনো dirty bit নেই।
 
 > 💡 **খেয়াল করো:** এই সরল cache-এ miss হলেই আমরা সরাসরি নতুন data বসিয়ে দিই — পুরোনো line-এ যা ছিল তা নিয়ে আলাদা করে ভাবি না, কারণ write-through নীতিতে cache-এর সব কিছুর একটা copy memory তেও থাকে। পরের section-এ যখন **write-back** এ যাব, তখন এই "পুরোনো line-টা কি memory-তে লিখে রেখে আসতে হবে?" প্রশ্নটাই FSM-কে জটিল করে তুলবে।
+
+> ⚠️ **Line size নিয়ে একটু সততা:** এখানে `LINE_SIZE = 4` byte — মানে প্রতিটা line ঠিক **একটা 32-bit word** (`data` array-ও এক word চওড়া)। তাই এই cache miss-এ শুধু চাওয়া word-টাই আনে, পাশের word নয় — অর্থাৎ এটা **temporal locality** (একই data বারবার) আর hit/miss-যন্ত্রটা সুন্দর করে দেখায়, কিন্তু word-জুড়ে **spatial locality** এখনো কাজে লাগায় না। আসল cache-এ line ৩২–৬৪ byte (৮–১৬ word) হয়; তখন একবারে গোটা block এসে পাশের data-ও ধরা পড়ে। বড় line চাইলে `data`-কে word-অ্যারে বানিয়ে `offset` দিয়ে word বেছে নিতে হবে — চমৎকার একটা অনুশীলন।
 
 ---
 
@@ -461,15 +470,24 @@ module cache_controller #(
     output reg [31:0] miss_count,
     output reg [31:0] access_count
 );
+    // index/tag-এর প্রস্থ NUM_LINES থেকেই বের করি — তাই NUM_LINES সত্যিই কাজ করে
+    localparam IDX_BITS = $clog2(NUM_LINES);   // index কত bit (512→9, 1024→10)
+    localparam TAG_BITS = 30 - IDX_BITS;       // 32 − 2(offset) − index
+
     // Cache storage
     reg valid [0:NUM_LINES-1];
     reg dirty [0:NUM_LINES-1];  // For write-back
-    reg [19:0] tag [0:NUM_LINES-1];
+    reg [TAG_BITS-1:0] tag [0:NUM_LINES-1];
     reg [31:0] data [0:NUM_LINES-1];
+
+    reg [31:0] saved_address;
+    reg [31:0] saved_write_data;
+    reg saved_write;
     
-    // Address fields
-    wire [9:0] index = cpu_address[11:2];
-    wire [19:0] addr_tag = cpu_address[31:12];
+    // Address fields — latch-করা saved_address থেকে নেওয়া (miss সামলানোর কয়েক
+    // cycle-এ cpu_address বদলে গেলেও যেন ঠিক line-এই কাজ হয়)
+    wire [IDX_BITS-1:0] index    = saved_address[IDX_BITS+1:2];
+    wire [TAG_BITS-1:0] addr_tag = saved_address[31:IDX_BITS+2];
     
     // Hit/Miss
     wire hit = valid[index] && (tag[index] == addr_tag);
@@ -483,9 +501,6 @@ module cache_controller #(
     localparam FETCH = 3'b100;
     
     reg [2:0] state;
-    reg [31:0] saved_address;
-    reg [31:0] saved_write_data;
-    reg saved_write;
     
     integer i;
     initial begin
@@ -512,10 +527,14 @@ module cache_controller #(
             hit_count <= 0;
             miss_count <= 0;
             access_count <= 0;
+            mem_read <= 0;
+            mem_write <= 0;
         end else begin
             case (state)
                 IDLE: begin
                     cpu_ready <= 0;
+                    mem_read <= 0;    // strobe পরিষ্কার রাখি (নইলে memory ভুল op ধরবে)
+                    mem_write <= 0;
                     if (cpu_read || cpu_write) begin
                         access_count <= access_count + 1;
                         saved_address <= cpu_address;
@@ -557,6 +576,7 @@ module cache_controller #(
                     mem_address <= {tag[index], index, 2'b00};
                     mem_write_data <= data[index];
                     mem_write <= 1;
+                    mem_read <= 0;
                     if (mem_ready) begin
                         mem_write <= 0;
                         dirty[index] <= 0;
@@ -568,6 +588,7 @@ module cache_controller #(
                     // Fetch new line from memory
                     mem_address <= {saved_address[31:2], 2'b00};
                     mem_read <= 1;
+                    mem_write <= 0;
                     if (mem_ready) begin
                         mem_read <= 0;
                         data[index] <= mem_read_data;
@@ -687,7 +708,7 @@ module memory_system(
         .mem_read(imem_read),
         .mem_write(imem_write),
         .mem_read_data(mem_read_data),
-        .mem_ready(mem_ready),
+        .mem_ready(imem_ready),
         .hit_count(instr_hits),
         .miss_count(instr_misses)
     );
@@ -712,7 +733,7 @@ module memory_system(
         .mem_read(dmem_read),
         .mem_write(dmem_write),
         .mem_read_data(mem_read_data),
-        .mem_ready(mem_ready),
+        .mem_ready(dmem_ready),
         .hit_count(data_hits),
         .miss_count(data_misses)
     );
@@ -721,11 +742,34 @@ module memory_system(
     // Data has the port whenever it reads OR writes; otherwise instruction
     // fetch gets it. (The instruction cache must stall while data has the
     // port — never let mem_write steer to the instruction address.)
-    wire dmem_access = dmem_read || dmem_write;
-    assign mem_address    = dmem_access ? dmem_address : imem_address;
+    // Locking arbiter: shared single-port DRAM-এ একসাথে দুজন যেতে পারে না।
+    // একবার কোনো cache-কে port দিলে তার পুরো transaction (mem_ready) শেষ না হওয়া
+    // পর্যন্ত grant ধরে রাখি — data-কে অগ্রাধিকার। grant মাঝপথে বদলায় না বলেই
+    // mem_ready ঠিক মালিকের কাছেই যায়, অন্য cache ভুল data latch করতে পারে না।
+    wire d_req = dmem_read || dmem_write;
+    wire i_req = imem_read;
+    reg  grant_valid;   // একটা transaction চলছে?
+    reg  grant_d;       // 1 = data cache, 0 = instruction cache
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            grant_valid <= 1'b0;
+            grant_d     <= 1'b0;
+        end else if (!grant_valid) begin
+            if (d_req)      begin grant_valid <= 1'b1; grant_d <= 1'b1; end
+            else if (i_req) begin grant_valid <= 1'b1; grant_d <= 1'b0; end
+        end else if (mem_ready) begin
+            grant_valid <= 1'b0;   // transaction শেষ — port ছেড়ে দাও
+        end
+    end
+    wire sel_d = grant_valid ? grant_d : d_req;   // idle-তে data অগ্রাধিকার
+
+    assign mem_address    = sel_d ? dmem_address : imem_address;
     assign mem_write_data = dmem_write_data;
-    assign mem_read       = dmem_access ? dmem_read : imem_read;
-    assign mem_write      = dmem_write;
+    assign mem_read       = sel_d ? dmem_read  : imem_read;
+    assign mem_write      = sel_d ? dmem_write : 1'b0;  // I$ কখনো write করে না
+    // mem_ready শুধু grant-পাওয়া cache-ই পায়:
+    assign dmem_ready =  sel_d & mem_ready;
+    assign imem_ready = ~sel_d & mem_ready;
 endmodule
 ```
 
@@ -741,7 +785,7 @@ flowchart TB
     IF -->|fetch| IC["Instruction Cache (I$)<br/>NUM_LINES = 512"]
     LS -->|load/store| DC["Data Cache (D$)<br/>NUM_LINES = 512"]
 
-    IC -->|imem_*| ARB{"Memory Arbiter<br/>data-কে অগ্রাধিকার<br/>dmem_access?"}
+    IC -->|imem_*| ARB{"Memory Arbiter<br/>data-কে অগ্রাধিকার<br/>grant lock (mem_ready পর্যন্ত)"}
     DC -->|dmem_*| ARB
 
     ARB -->|mem_*| MM["Main Memory (DRAM)<br/>একটাই port · 100 cycle"]
@@ -755,7 +799,7 @@ flowchart TB
     class MM mem
 ```
 
-খেয়াল করো দুটো cache দুজনেই DRAM থেকে আসা **একই** `mem_read_data` আর `mem_ready` তার শোনে — কারণ একসময় শুধু একজনই DRAM ব্যবহার করছে (arbiter সেটাই নিশ্চিত করে)। আর হিসাবের সুবিধার জন্য প্রতিটা cache নিজের `hit_count`/`miss_count` আলাদা করে বের করে দেয়, যাতে আমরা I$ আর D$ এর কর্মক্ষমতা আলাদা করে মাপতে পারি।
+খেয়াল করো দুটো cache একই `mem_read_data` তার শোনে, কিন্তু `mem_ready`-টা arbiter আলাদা করে বিলি করে — এই মুহূর্তে যে cache-এর port আছে শুধু সে-ই তার `ready` pulse পায় (`imem_ready` বনাম `dmem_ready`)। নইলে দুটো cache একসাথে miss-এ থাকলে, data-র জন্য আসা একটা `mem_ready` pulse instruction cache-ও ভুল করে ধরে নিত আর data-র `mem_read_data`-কে instruction ভেবে বসিয়ে দিত — instruction corruption! আর হিসাবের সুবিধার জন্য প্রতিটা cache নিজের `hit_count`/`miss_count` আলাদা করে বের করে দেয়, যাতে আমরা I$ আর D$ এর কর্মক্ষমতা আলাদা করে মাপতে পারি।
 
 > 📝 মনে রাখো এখানে I$ আর D$ উভয়েরই `NUM_LINES = 512` — মানে এই system-এ প্রতিটা cache ৫১২ line, ১৮.১-এর উদাহরণের ১০২৪ line নয়। আকারটা parameter দিয়ে সহজে বদলানো যায়, আর শেষের build plan-এ ঠিক এটাই tune করে দেখার কথা বলা আছে।
 
@@ -885,9 +929,10 @@ module main_memory #(
     reg [7:0] access_counter;
     
     // State
-    localparam IDLE = 1'b0;
-    localparam BUSY = 1'b1;
-    reg state;
+    localparam IDLE = 2'b00;
+    localparam BUSY = 2'b01;
+    localparam DONE = 2'b10;
+    reg [1:0] state;
     reg op_is_write;           // latched op type (the strobe may drop during the wait)
     reg [31:0] addr_latched;   // latched address
     reg [31:0] wdata_latched;  // latched write data
@@ -929,8 +974,16 @@ module main_memory #(
                             memory[addr_latched + 3] <= wdata_latched[31:24];
                         end
                         ready <= 1;
-                        state <= IDLE;
+                        state <= DONE;
                     end
+                end
+                
+                DONE: begin
+                    // এক cycle cooldown: strobe নামার সুযোগ দিই, যাতে শেষ-হওয়া
+                    // request-এর address ভুল করে পরের transaction-এ latch না হয়
+                    // (বিশেষত shared port-এ I$↔D$ হাতবদলের সময়)।
+                    ready <= 0;
+                    state <= IDLE;
                 end
             endcase
         end

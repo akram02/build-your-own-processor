@@ -134,7 +134,7 @@ endmodule
 ### Example 2 - Count Leading Zeros:
 
 ```verilog
-function integer count_leading_zeros;
+function [5:0] count_leading_zeros;
     input [31:0] data;
     integer i;
     begin
@@ -403,8 +403,9 @@ module my_module #(
     localparam MAX_VALUE  = (1 << WIDTH) - 1;
     
     // Use in code
-    wire [HALF_WIDTH-1:0] lower_half;
-    wire [MAX_VALUE:0]    wide_signal;
+    wire [HALF_WIDTH-1:0] lower_half;   // HALF_WIDTH = একটা width, index-এ ঠিক আছে
+    // MAX_VALUE একটা মান (number), width নয় — তাই vector index নয়, তুলনায় ব্যবহার করো:
+    //   if (count == MAX_VALUE) ...   // সর্বোচ্চে পৌঁছেছে কি?
 endmodule
 ```
 
@@ -605,20 +606,20 @@ module mux_tree #(
 );
     generate
         case (INPUTS)
-            2: begin
+            2: begin : mux2
                 assign data_out = sel ? 
                     data_in[WIDTH*2-1:WIDTH] : 
                     data_in[WIDTH-1:0];
             end
-            4: begin
+            4: begin : mux4
                 // 4-input mux
                 // ... implementation
             end
-            8: begin
+            8: begin : mux8
                 // 8-input mux
                 // ... implementation
             end
-            default: begin
+            default: begin : mux_generic
                 // Generic implementation
             end
         endcase

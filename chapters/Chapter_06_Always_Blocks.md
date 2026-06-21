@@ -195,7 +195,7 @@ always @(posedge clk) begin
     c <= a;     // Schedule for end of block (uses OLD value of a)
 end
 
-// Result: a gets b, c gets OLD a (swap!)
+// Result: a gets b, c gets OLD a (no chaining — c does NOT see new a!)
 // Parallel execution!
 // This is what you want for flip-flops!
 ```
@@ -328,7 +328,7 @@ module d_ff_reset(
 endmodule
 ```
 
-পড়ার নিয়মটা মাথায় গাঁথো: block-টা জাগে clock অথবা reset-এর rising edge-এ; জেগে প্রথমেই দেখে reset 1 কিনা — হ্যাঁ হলে `q` শূন্য, না হলে স্বাভাবিক ভাবে `d` নেয়। reset যেহেতু সবার আগে চেক হয়, সে সবসময় জয়ী — তাই একে বলে reset-এর "priority"।
+পড়ার নিয়মটা মাথায় গাঁথো: reset যেহেতু **sensitivity list-এই** আছে, block clock-এর জন্য অপেক্ষা না করে reset-এর rising edge এলেই সঙ্গে সঙ্গে জেগে `q` শূন্য করে দেয় — এটাই asynchronous reset-এর "priority" (যেকোনো মুহূর্তে আঘাত হানতে পারে)। আর block-এর ভেতরে `if (reset)` আগে থাকায় reset, `d`-র উপরেও জেতে।
 
 ### D Flip-Flop with Synchronous Reset:
 
@@ -943,6 +943,8 @@ flowchart LR
 
 **States:**
 ```
+প্রতিটা state timer_done না আসা পর্যন্ত অপেক্ষা করে;
+নিচের সময়গুলো বাইরের একটা timer ঠিক করে দেয় (এই module নিজে timer রাখে না):
 RED    → 30 seconds
 GREEN  → 25 seconds
 YELLOW → 5 seconds
@@ -1078,7 +1080,7 @@ module sequence_detector(
             
             S1: begin
                 if (in)
-                    next_state = S1;  // Stay (multiple 1s)
+                    next_state = S1;  // stay — still ends in a 1
                 else
                     next_state = S2;  // Got "10"
             end

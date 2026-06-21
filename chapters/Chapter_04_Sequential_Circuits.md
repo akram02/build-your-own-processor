@@ -43,7 +43,7 @@ Components:
 - 2 × LEDs (Q, Q')
 
 Circuit (Using NOR):
-        S ──┐
+        R ──┐
             ├─[NOR]──┬── Q (output)
         ┌───┘        │
         │            │
@@ -51,7 +51,7 @@ Circuit (Using NOR):
         │               │
         └───[NOR]───────┤
             ├───────────┘
-        R ──┘        
+        S ──┘        
                      └── Q' (complement)
 
 Test:
@@ -166,7 +166,7 @@ Output:
 
 **Circuit:**
 ```
-    S ──┐
+    R ──┐
         ├─[NOR]──┬── Q
     ┌───┘        │
     │            │
@@ -174,7 +174,7 @@ Output:
     │            │
     └───[NOR]────┤
         ├────────┘
-    R ──┘        
+    S ──┘        
                 └── Q'
 ```
 
@@ -924,11 +924,12 @@ Mode Control (2 bits):
 
 **Test Serial Data:**
 ```
-Send: 1101 (one bit per clock)
+Send: 1101 (MSB first, one bit per clock)
+Read parallel output as Q3 Q2 Q1 Q0:
 
-Clock 1: 1000
-Clock 2: 0100  
-Clock 3: 1010
+Clock 1: 0001
+Clock 2: 0011
+Clock 3: 0110
 Clock 4: 1101 ✓ (received!)
 ```
 
@@ -1076,11 +1077,11 @@ Uses synchronous counter with reset at 10
 When Q3Q2Q1Q0 = 1010 (10):
 → Reset to 0000
 
-Circuit: Add NAND gate
+Circuit: Add AND gate
 Q3 · Q1 → Reset
 ```
 
-10-কে চেনার জন্য একটা NAND gate-ই যথেষ্ট। কেন `Q3 · Q1`? কারণ 1010 হলো 0–15-এর মধ্যে প্রথম সংখ্যা যেখানে Q3 আর Q1 দুটোই 1 — তাই এই দুটো একসাথে 1 হওয়া মানেই counter 10-এ পৌঁছেছে, এবার reset করার সময়।
+10-কে চেনার জন্য একটা AND gate-ই যথেষ্ট। কেন `Q3 · Q1`? কারণ 1010 হলো 0–15-এর মধ্যে প্রথম সংখ্যা যেখানে Q3 আর Q1 দুটোই 1 — তাই এই দুটো একসাথে 1 হওয়া মানেই counter 10-এ পৌঁছেছে, এবার reset করার সময়।
 
 ---
 

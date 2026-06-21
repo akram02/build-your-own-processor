@@ -557,9 +557,9 @@ Note: Stores PC+4 in rd
 
 ---
 
-## ১৩.৪ RV32I Instruction Set - Complete
+## ১৩.৪ RV32I Instruction Set
 
-format-গুলো বোঝা হয়ে গেছে — এবার দেখি ওই খোপগুলো দিয়ে আসলে কী কী কাজ করা যায়। পুরো RV32I মাত্র ৪৭টা instruction, আর এদেরকে কয়েকটা পরিবারে ভাগ করলে মনে রাখা সহজ। মনে রেখো, এই কয়েকটা সরল instruction দিয়েই গেম, OS, AI — পৃথিবীর সব software চলে। জটিল কাজ মানে বহু সরল instruction-এর সাজানো ক্রম, ঠিক যেমন বড় দালান অসংখ্য সাধারণ ইটের।
+format-গুলো বোঝা হয়ে গেছে — এবার দেখি ওই খোপগুলো দিয়ে আসলে কী কী কাজ করা যায়। পুরো RV32I-তে ৪৭টা instruction; এর মধ্যে নিচে আমরা **৩৯টা daily-use instruction** বিস্তারিত দেখব। বাকি ৮টা — `FENCE`, `FENCE.I`, আর ৬টা CSR instruction (`CSRRW/CSRRS/CSRRC/CSRRWI/CSRRSI/CSRRCI`) — memory-ordering ও system-control-এর জন্য, যা এই বইয়ের পরিধির বাইরে। এদেরকে কয়েকটা পরিবারে ভাগ করলে মনে রাখা সহজ। মনে রেখো, এই কয়েকটা সরল instruction দিয়েই গেম, OS, AI — পৃথিবীর সব software চলে। জটিল কাজ মানে বহু সরল instruction-এর সাজানো ক্রম, ঠিক যেমন বড় দালান অসংখ্য সাধারণ ইটের।
 
 ### Arithmetic Instructions:
 
@@ -865,7 +865,7 @@ sequenceDiagram
 ```assembly
 # Caller
 main:
-    addi sp, sp, -4      # Allocate stack
+    addi sp, sp, -16     # Allocate frame (sp must stay 16-byte aligned per RISC-V ABI)
     sw   x1, 0(sp)       # Save return address
     
     li   a0, 5           # First argument
@@ -875,7 +875,7 @@ main:
     # Result in a0
     
     lw   x1, 0(sp)       # Restore return address
-    addi sp, sp, 4       # Deallocate stack
+    addi sp, sp, 16      # Deallocate frame
     ret                  # Return
 
 # Callee
@@ -884,7 +884,7 @@ add_func:
     ret                  # Return (result in a0)
 ```
 
-কয়েকটা জায়গা একটু খুলে বলি। শুরুতে `main` কেন `ra` stack-এ রাখছে? কারণ `main` নিজেই হয়তো অন্য কারো ডাকা function — তার `ra`-তে main-এর ফেরার ঠিকানা আছে। এখন `jal add_func` করলে সেই `ra` চাপা পড়ে যাবে! তাই call-এর আগে পুরোনো `ra` stack-এ জমিয়ে রাখা, আর call-এর পরে আবার তুলে আনা। `addi sp, sp, -4` দিয়ে stack-এ ৪ বাইট জায়গা করা হয় (stack নিচের দিকে বাড়ে, তাই বিয়োগ), শেষে `addi sp, sp, 4` দিয়ে সেই জায়গা ফেরত দেওয়া হয় — না দিলে stack ধীরে ধীরে উপচে পড়বে (stack overflow!)। লক্ষ করো `add_func` নিজে কোনো function ডাকে না, তাই তার `ra` নিরাপদ — তার stack ছোঁয়ার দরকারই হয়নি।
+কয়েকটা জায়গা একটু খুলে বলি। শুরুতে `main` কেন `ra` stack-এ রাখছে? কারণ `main` নিজেই হয়তো অন্য কারো ডাকা function — তার `ra`-তে main-এর ফেরার ঠিকানা আছে। এখন `jal add_func` করলে সেই `ra` চাপা পড়ে যাবে! তাই call-এর আগে পুরোনো `ra` stack-এ জমিয়ে রাখা, আর call-এর পরে আবার তুলে আনা। `addi sp, sp, -16` দিয়ে stack-এ ১৬ বাইট জায়গা করা হয় (stack নিচের দিকে বাড়ে, তাই বিয়োগ; RISC-V ABI অনুযায়ী `sp` সবসময় ১৬ বাইটে aligned থাকতে হয়, তাই মাত্র ৪ বাইট দরকার হলেও ১৬ নেওয়া হয়), শেষে `addi sp, sp, 16` দিয়ে সেই জায়গা ফেরত দেওয়া হয় — না দিলে stack ধীরে ধীরে উপচে পড়বে (stack overflow!)। লক্ষ করো `add_func` নিজে কোনো function ডাকে না, তাই তার `ra` নিরাপদ — তার stack ছোঁয়ার দরকারই হয়নি।
 
 ### Register Usage:
 

@@ -16,7 +16,7 @@
 ## 🎯 এই Chapter-এ তুমি বানাবে:
 
 ```
-✅ Tang Nano 9K setup - $12 FPGA board!
+✅ Tang Nano 9K setup - ~$25 FPGA board!
 ✅ Gowin EDA installation - free tools
 ✅ First FPGA project - LED blink
 ✅ Constraint file - pin mapping
@@ -27,7 +27,7 @@
 ```
 
 **Time Required:** 1 week (4-5 hours/day)  
-**Hardware Needed:** Tang Nano 9K board ($12), USB-C cable
+**Hardware Needed:** Tang Nano 9K board (~২,০০০ টাকা / $25), USB-C cable
 
 > 💡 **Chapter 9 vs Chapter 10:** Chapter 9-এ তুমি শিখেছ FPGA-র *ভেতরে* কী আছে—LUT, Flip-Flop, Block RAM, routing fabric। এই chapter সেই জ্ঞানকে *কাজে* লাগায়: কীভাবে toolchain দিয়ে তোমার design-কে সেই LUT-গুলোতে বসিয়ে দেবে আর board-টা program করবে। Theory থেকে আঙুলের ডগায়।
 
@@ -43,7 +43,7 @@ Tang Nano 9K হলো এই পুরো পার্টের নায়ক
 
 ```
 Tang Nano 9K Board:
-- Price: $12-15 USD
+- Price: ~$25 USD (~২,০০০ টাকা)
 - FPGA: Gowin GW1NR-9C (8640 LUTs)
 - Features:
   ✅ 6 LEDs onboard
@@ -803,9 +803,12 @@ module button_led(
         end
     end
     
-    // Toggle LED on button press
+    // Toggle LED once per PRESS. btn is active-low (PULL_MODE=UP: released=1, pressed=0).
+    // Edge-detect the released→pressed transition so it toggles ONCE, not every clock.
+    reg btn_prev;
     always @(posedge clk) begin
-        if (btn_stable && debounce == 0)
+        btn_prev <= btn_stable;
+        if (btn_prev == 1'b1 && btn_stable == 1'b0)   // 1→0 = button just pressed
             led <= ~led;
     end
 endmodule

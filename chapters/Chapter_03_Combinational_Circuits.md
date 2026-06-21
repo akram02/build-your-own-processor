@@ -482,14 +482,14 @@ A - B = A + (-B)
     │    │    │    │    (= B', 1's complement)
     ▼    ▼    ▼    ▼
   ┌────────────────┐
-  │  4-bit Adder   │◄── Cin = Sub
-  │  A + B' + Cin  │    (Sub=1 → বিয়োগ)
+  │  4-bit Adder   │◄── Cin = 1
+  │  A + B' + 1    │    (2's complement)
   └────────────────┘
     │    │    │    │
     ▼    ▼    ▼    ▼
    S3   S2   S1   S0
 
-A3..A0 আলাদা ভাবে Adder-এ যায়;  Sub=1 হলে  A + (NOT B) + 1 = A − B
+A3..A0 সরাসরি Adder-এ যায়;  A + (NOT B) + 1 = A − B  (Cin = 1)
 ```
 
 ### Adder-Subtractor Combined: একটাই circuit, দুটো কাজ
@@ -875,7 +875,7 @@ ALU = Arithmetic Logic Unit
 | 1  | 0  | A + B (add) |
 | 1  | 1  | A - B (subtract) |
 
-গঠনটা ঠিক যেমন বললাম — তিন/চারটা unit একসাথে A আর B থেকে উত্তর বের করছে, আর একটা 4:1 MUX (যেটা তুমি একটু আগেই বানিয়েছ!) S1, S0 দেখে চূড়ান্ত Result বেছে দিচ্ছে:
+গঠনটা ঠিক যেমন বললাম — চারটা unit একসাথে A আর B থেকে উত্তর বের করছে, আর একটা 4:1 MUX (যেটা তুমি একটু আগেই বানিয়েছ!) S1, S0 দেখে চূড়ান্ত Result বেছে দিচ্ছে:
 
 ```mermaid
 flowchart LR
@@ -883,11 +883,14 @@ flowchart LR
     B["B"] --> AND
     A --> OR["OR"]
     B --> OR
-    A --> ADD["ADD / SUB"]
+    A --> ADD["ADD"]
     B --> ADD
+    A --> SUB["SUB"]
+    B --> SUB
     AND --> MUX["4:1 MUX<br/>(select S1, S0)"]
     OR --> MUX
     ADD --> MUX
+    SUB --> MUX
     MUX --> R["Result"]
 ```
 
@@ -897,9 +900,11 @@ flowchart LR
         A ─┐
         B ─┴─[AND]─┐
         A ─┐       │
-        B ─┴─[OR]──┼─[MUX 4:1]── Result
-        A ─┐       │      S1 S0
-        B ─┴─[ADD]─┘
+        B ─┴─[OR]──┤
+        A ─┐       ├─[MUX 4:1]── Result
+        B ─┴─[ADD]─┤      S1 S0
+        A ─┐       │
+        B ─┴─[SUB]─┘
 ```
 
 দেখলে তো — ALU আসলে কোনো নতুন জাদু নয়, বরং তোমার আগের বানানো সব block-এর (logic gate + adder/subtractor + MUX) একটা সুন্দর সমাবেশ মাত্র।

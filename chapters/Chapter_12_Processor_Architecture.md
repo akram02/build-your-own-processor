@@ -778,6 +778,14 @@ Address | Instruction | Description
 ; R3 = address of counter
 ```
 
+> ⚠️ **মনে রাখো — এটা সরলীকৃত শিক্ষামূলক processor:** এই chapter-এ মূল লক্ষ্য fetch–decode–execute চক্রটা বোঝা। তাই এখানকার সরল top-level কিছু জিনিস এখনো পূর্ণভাবে করে না:
+> - LOAD/STORE-এর জন্য register থেকে আসা data-memory address (এই top-level-এ `mem_addr = pc`),
+> - LOAD-এর ফল register-এ ফেরানোর writeback mux (এখানে `reg_write_data = alu_result`),
+> - BEQ branch decode (zero flag দিয়ে শর্ত যাচাই),
+> - আর PC increment-এর signal (`pc_write`) এই FSM-এ cycle-এর শেষে **WRITEBACK** state-এ যায় (উপরে FETCH-এ ধারণাগতভাবে দেখানো)।
+>
+> তাই উপরের program-গুলো **ISA-র ধারণা** দেখায়; সম্পূর্ণ LOAD/STORE/branch datapath (address mux, writeback mux, branch সহ) তুমি **Chapter 14**-এর single-cycle CPU-তে বানাবে।
+
 ---
 
 ## ১২.৭ Processor Performance

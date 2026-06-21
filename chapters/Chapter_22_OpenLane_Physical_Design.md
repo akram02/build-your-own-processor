@@ -363,8 +363,9 @@ flowchart TD
 থেমে ফল দেখো, তারপর পরেরটায় যাও।
 
 এটা যেন automatic গাড়ি থেকে manual gear-এ নামা — একটু বেশি হাত লাগে, কিন্তু পুরো
-নিয়ন্ত্রণ তোমার হাতে। ধাপগুলোর ক্রম খেয়াল করো; এটা হুবহু উপরের flowchart-এরই
-ক্রম, শুধু এবার তুমি নিজে চালাচ্ছ:
+নিয়ন্ত্রণ তোমার হাতে। ধাপগুলোর ক্রম খেয়াল করো; এটা মোটামুটি উপরের flowchart-এরই
+ক্রম অনুসরণ করে, সাথে কিছু বাড়তি signoff step (spice export, antenna check) যোগ হয়
+যা diagram-এ আলাদা করে দেখানো নেই — শুধু এবার তুমি নিজে চালাচ্ছ:
 
 ```bash
 # For debugging, use interactive mode
@@ -387,8 +388,10 @@ run_antenna_check
 ```
 
 `prep -design inverter` ধাপটা সব কিছু প্রস্তুত করে — config পড়ে, ফাইল গুছিয়ে নেয়।
-এরপর প্রতিটা `run_*` command উপরের flowchart-এর একটা করে ধাপ। তালিকার শেষে দুটো
-বাড়তি signoff-ও দেখবে: `run_lvs` (layout আর schematic মেলায়) আর
+এরপর শুরুর `run_*` command-গুলো (synthesis থেকে routing) মোটামুটি flowchart-এর এক
+একটা ধাপের সাথে মেলে; এর পরের কয়েকটা আসলে বাড়তি signoff step যা diagram-এ আলাদা
+নেই। যেমন `run_magic` চালালে DRC তার ভিতরেই হয়ে যায় (আলাদা `run_drc` লাগে না), আর
+তালিকার শেষে আরও দুটো signoff দেখবে: `run_lvs` (layout আর schematic মেলায়) আর
 `run_antenna_check` — এটা fabrication-এর সময় তৈরি হওয়া একটা ভৌত সমস্যা ঠেকায়,
 যেখানে লম্বা ধাতব তারে জমে থাকা চার্জ নাজুক transistor gate নষ্ট করে দিতে পারে।
 প্রতিটা ধাপের পর তুমি KLayout-এ চালু design দেখতে পারো — চিপটা কীভাবে ধীরে ধীরে
@@ -567,19 +570,20 @@ Example output:
 ```
 Chip area for module '\riscv_simple': 12500.000000
 
-Number of cells:               850
-Number of flip-flops:          250
+Number of cells:              1144
+Number of flip-flops:          544
 Number of logic gates:         600
-
-Max frequency: 55.2 MHz
 ```
+(এখানে flip-flop ৫৪৪ আসছে মূলত 16 × 32-bit register file (~512) + 32-bit PC + কিছু
+control state থেকে; ৫১২ byte instruction ও data memory আলাদা SRAM macro হিসেবে আসে,
+তাই এই গণনায় ধরা নেই।)
 
 কীভাবে পড়বে: **Number of cells** তোমার মোট building block-এর সংখ্যা।
-**flip-flops** হলো state রাখার জায়গা — register আর pipeline এখান থেকে আসে।
-**Max frequency** হলো synthesis-এর প্রাথমিক অনুমান, এখানে ৫৫.২ MHz — মানে তোমার
-৫০ MHz target আপাতদৃষ্টিতে সম্ভব। তবে সাবধান: এটা placement আর routing-এর
-**আগের** অনুমান; আসল চিত্রটা পাবে নিচের timing report-এ, যখন তারের আসল দৈর্ঘ্য
-হিসাবে ঢোকে।
+**flip-flops** হলো state রাখার জায়গা — register আর PC এখান থেকে আসে। খেয়াল রাখো,
+এই `stat` report-এ শুধু **area আর গণনা** (cell, flip-flop, gate) থাকে — Yosys
+synthesis কোনো timing analysis করে না, তাই এখানে কোনো frequency বা slack নেই।
+আসল frequency/slack-এর প্রথম সংখ্যাটা পাবে নিচের timing report-এ (STA), যখন routing
+শেষে তারের আসল দৈর্ঘ্য হিসাবে ঢোকে।
 
 ### Timing Report:
 
@@ -940,9 +944,9 @@ TinyTapeout-এ submit করবে বা কাউকে তোমার ক�
 
 | বৈশিষ্ট্য | মান |
 |-----------|-----|
-| Clock | 40-50 MHz |
-| IPC | ~0.8 (with stalls) |
-| MIPS | ~35 |
+| Clock | 40 MHz |
+| IPC | 1.0 (single-cycle) |
+| MIPS | 40 |
 
 **Power**
 

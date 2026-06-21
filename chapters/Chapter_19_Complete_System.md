@@ -96,22 +96,27 @@ Raspberry Pi, Arduino — সব এভাবেই বানানো!
 ```
 
 এবার এই স্তরগুলোকে একটা সত্যিকারের **block diagram** হিসেবে দেখি — কে কার সাথে
-কীভাবে যুক্ত। নিচের ছবিতে খেয়াল করো: CPU সরাসরি কোনো peripheral-এর সাথে যুক্ত
-নয়। CPU কথা বলে **শুধু bus-এর সাথে**, আর bus সিদ্ধান্ত নেয় কোন কথাটা কার কাছে
-যাবে। এটাই SoC-র মূল কাঠামো।
+কীভাবে যুক্ত। নিচের ছবিতে খেয়াল করো: **data** (load/store)-এর জন্য CPU সরাসরি কোনো
+peripheral-এর সাথে যুক্ত নয় — সে কথা বলে **শুধু bus-এর সাথে**, আর bus সিদ্ধান্ত
+নেয় কোন কথাটা কার কাছে যাবে। তবে **instruction fetch** আলাদা: আমাদের এই SoC
+**Harvard-ধরনের** — instruction আসে একটা আলাদা `instruction_memory` থেকে, সরাসরি
+CPU-র PC দিয়ে (bus হয়ে নয়)। তাই ছবিতে instruction memory bus-এর বাইরে, আর bus-এর
+সাথে আছে শুধু data RAM ও peripheral-গুলো। এটাই SoC-র মূল কাঠামো।
 
 ```mermaid
 flowchart TB
     subgraph SoC["RISC-V SoC (এক চিপ)"]
         direction TB
+        IMEM["📜 Instruction Memory<br/>(program.hex)"]
         CPU["🧠 CPU Core<br/>(Pipelined RISC-V + Cache)"]
         BUS{{"🚌 System Bus<br/>+ Address Decoder"}}
 
-        CPU -- "address / write_data<br/>read / write" --> BUS
+        CPU -- "PC (fetch address)" --> IMEM
+        IMEM -- "instruction" --> CPU
+        CPU -- "data: address / write_data<br/>read / write" --> BUS
         BUS -- "read_data / ready" --> CPU
 
-        subgraph MEM["Memory"]
-            ROM["Boot ROM<br/>(Instructions)"]
+        subgraph MEM["Data Memory"]
             RAM["Data RAM"]
         end
 
@@ -123,7 +128,6 @@ flowchart TB
             INTC["⚡ Interrupt<br/>Controller"]
         end
 
-        BUS <--> ROM
         BUS <--> RAM
         BUS <--> UART
         BUS <--> GPIO
@@ -183,7 +187,7 @@ SW x6, 0x10000000(x0)  # GPIO-তে লেখো
 
 | Address পরিসর (range) | আকার | কে দখল করে আছে | কাজ |
 |---|---|---|---|
-| `0x00000000 – 0x00003FFF` | 16 KB | **Boot ROM** | যে program চলবে (instructions) |
+| `0x00000000 – 0x00003FFF` | 16 KB | **Instruction Memory** | যে program চলবে — আলাদা Harvard port, PC দিয়ে fetch (data bus-এ নয়) |
 | `0x00004000 – 0x0000FFFF` | 48 KB | **RAM** | ভেরিয়েবল, stack, ডেটা |
 | `0x10000000 – 0x10000FFF` | 4 KB | **GPIO** | LED জ্বালানো, বোতাম পড়া |
 | `0x10001000 – 0x10001FFF` | 4 KB | **UART** | serial-এ লেখা/পড়া |
@@ -195,6 +199,14 @@ SW x6, 0x10000000(x0)  # GPIO-তে লেখো
 > কোন peripheral (`0`=GPIO, `1`=UART, `2`=Timer, `3`=IntC)। এই "ঠিকানা দেখে
 > গন্তব্য ঠিক করা"-র কাজটাই হলো **address decoding**, যেটা bus করে — section ১৯.৫-এ
 > বিস্তারিত দেখব।
+
+> 📝 **বাস্তবায়নের সূক্ষ্মতা (Harvard):** উপরের unified map-টা মূলত CPU-র
+> **data-side** (load/store) ছবি — bus সেটাই decode করে। আমাদের কোডে instruction
+> থাকে একটা **আলাদা** `instruction_memory`-তে, যা PC দিয়ে সরাসরি fetch হয় (data
+> bus হয়ে নয়)। তাই "Instruction Memory" সারিটা সেই আলাদা store, data bus-এর device
+> নয়; আর bus-এর পুরো `< 0x1000_0000` অংশটা এই বাস্তবায়নে একটাই data RAM
+> (`data_memory`)। চাইলে পরে bus-এ সত্যিকারের ROM বসিয়ে von-Neumann unified memory
+> বানানো যায় — শুরুর জন্য Harvard সরল ও পরিষ্কার।
 
 🎉 **এই chapter = একটা COMPLETE WORKING COMPUTER!**
 
@@ -261,7 +273,7 @@ tick-এর তালে তালে `tx_shift` register থেকে একট
 
 ```verilog
 module uart #(
-    parameter CLOCK_FREQ = 50000000,  // 50 MHz
+    parameter CLOCK_FREQ = 27000000,  // 27 MHz (Tang Nano 9K onboard crystal)
     parameter BAUD_RATE = 115200       // Standard baud rate
 )(
     input wire clk,
@@ -1313,9 +1325,12 @@ int main() {
 gpio_out, uart_rx/tx) বোর্ডের **বাস্তব physical পিনের** সাথে জোড়ে। দুটো ধাপ:
 
 1. **Top module** — বোর্ডের LED আর বোতামকে SoC-র GPIO-র সাথে map করা। যেমন
-   `assign led = gpio_out[5:0];` — GPIO output-এর নিচের ৬ bit সরাসরি ৬টা LED-তে;
-   আর `assign gpio_in = {30'b0, btn};` — দুটো বোতাম GPIO input-এর নিচের ২ bit-এ।
-   খেয়াল করো `reset = !btn_reset` — কারণ বোর্ডের বোতাম **active-low** (চাপলে ০)।
+   `assign led = ~gpio_out[5:0];` — GPIO output-এর নিচের ৬ bit ৬টা LED-তে, তবে
+   **উল্টে** (invert করে); আর `assign gpio_in = {30'b0, btn};` — দুটো বোতাম GPIO
+   input-এর নিচের ২ bit-এ। খেয়াল করো `reset = !btn_reset`, আর LED-তেও `~` — কারণ
+   Tang Nano 9K-এর বোতাম **আর** LED দুটোই **active-low** (বোতাম চাপলে ০; LED-তে ০
+   দিলে জ্বলে)। তাই software যখন GPIO bit `1` করে "LED on" বোঝায়, hardware-এ সেটা
+   `~` দিয়ে ০ হয়ে LED জ্বালায় — নইলে demo উল্টো আচরণ করত।
 2. **Constraints file** — কোন signal বোর্ডের কোন physical পিনে যাবে, সেটা বলে দেওয়া।
    এটা ছাড়া synthesis tool জানবে না `clk` তারটা আসলে চিপের কোন পায়ে আসছে।
 
@@ -1339,8 +1354,8 @@ module top(
     // Map buttons to GPIO input
     assign gpio_in = {30'b0, btn};
     
-    // Map GPIO output to LEDs
-    assign led = gpio_out[5:0];
+    // Map GPIO output to LEDs (Tang Nano 9K LED active-low: 0 = জ্বলে, তাই ~)
+    assign led = ~gpio_out[5:0];
     
     // SoC instance
     riscv_soc soc(
